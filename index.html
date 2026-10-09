@@ -479,6 +479,20 @@
   .roster-day-head .txt { font-family: 'Amiri', serif; font-size: 14.5px; font-weight: 700; }
   .avail-toggle { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--ink-soft); cursor: pointer; white-space: nowrap; }
   .avail-toggle input { accent-color: var(--brass); width: 14px; height: 14px; flex: none; }
+  .wc-hijri { font-size: 12px; color: #174a59; font-weight: 700; margin-top: 4px; min-height: 16px; }
+  .arc-date { margin: 14px 0 6px; padding: 7px 12px; border-radius: 9px; background: #174a59; color: #fff; font-weight: 700; font-size: 13.5px; }
+  .arc-date:first-child { margin-top: 0; }
+  .wt-daybox { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: #e9f4f2; border: 1px solid #b9dcd6; color: #174a59; font-weight: 700; text-align: center; line-height: 1.8; }
+  .wt-slot { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 10px 12px; margin-bottom: 10px; }
+  .wt-slot-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-weight: 800; color: #174a59; margin-bottom: 8px; }
+  .wt-slot-head .cls { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font-weight: 700; color: var(--ink); }
+  .wt-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .wt-row select { flex: 1 1 180px; min-width: 0; }
+  .wt-row select:disabled { opacity: 1; background: #f4f8f7; color: var(--ink); font-weight: 700; }
+  .wt-row button { font: inherit; font-size: 13px; padding: 7px 10px; border-radius: 9px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .wt-row button.on { border-color: #174a59; background: #174a59; color: #fff; }
+  .wt-note { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
+  .wt-saved { font-size: 12px; color: #146c3a; font-weight: 700; }
   .roster-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .roster-chip {
     display: flex; align-items: center; gap: 6px; background: var(--board); color: var(--chalk);
@@ -720,17 +734,10 @@
         <div class="tile-icon">
           <svg viewBox="0 0 24 24"><circle cx="8" cy="10" r="3"/><path d="M2 20c0-3 2.5-5 6-5s6 2 6 5"/><path d="M17 8l2 2 4-4"/></svg>
         </div>
-        <h2>حصص الانتظار</h2>
-        <div class="count">تغطية الحصص الشاغرة</div>
+        <h2>سجل الانتظار</h2>
+        <div class="count">جدول الانتظار والجداول المحفوظة</div>
       </button>
 
-      <button class="tile coverage" id="openCoveragePrint">
-        <div class="tile-icon">
-          <svg viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        </div>
-        <h2>طباعة حصص الانتظار</h2>
-        <div class="count">سجل اليوم الكامل لكل المعلمين</div>
-      </button>
 
       
     </div>
@@ -1396,12 +1403,123 @@
   </div>
 
   <!-- Coverage / substitute lessons -->
-  <div class="detail" id="coverageView">
+  <!-- سجل الانتظار (المحور) -->
+  <div class="detail" id="waitHubView">
     <div class="back-row">
       <button class="back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
     </div>
+    <div class="detail-header"><h2>سجل الانتظار</h2></div>
+    <div class="grid" style="grid-template-columns:repeat(2,1fr);">
+      <button class="tile coverage" id="openWaitTable">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M8 14h3"/><path d="M8 17h6"/></svg></div>
+        <h2>جدول الانتظار</h2>
+        <div class="count">توزيع حصص المعلم الغائب</div>
+      </button>
+      <button class="tile schedule" id="openWaitLog">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg></div>
+        <h2>الجداول المحفوظة</h2>
+        <div class="count" id="waitLogCount">0 جدول</div>
+      </button>
+      <button class="tile duty-manage" id="openWaitDesign">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg></div>
+        <h2>تعيين المنتظرين</h2>
+        <div class="count">منتظر 1 / 2 / 3 لكل حصة</div>
+      </button>
+      <button class="tile reports" id="openWaitCount">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg></div>
+        <h2>حصر حصص الانتظار</h2>
+        <div class="count">ما حضره كل معلم</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- حصر حصص الانتظار -->
+  <div class="detail" id="waitCountView">
+    <div class="back-row">
+      <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
+    </div>
+    <div class="detail-header"><h2>حصر حصص الانتظار</h2></div>
+    <div class="sched-form">
+      <div class="field" style="margin-bottom:10px;">
+        <label for="wcTeacher">المعلم المنتظر</label>
+        <select id="wcTeacher" class="select-styled"></select>
+      </div>
+      <div class="sched-grid">
+        <div class="field">
+          <label for="wcFrom">من تاريخ</label>
+          <input type="date" id="wcFrom" class="date-input">
+          <div class="wc-hijri" id="wcFromH"></div>
+        </div>
+        <div class="field">
+          <label for="wcTo">إلى تاريخ</label>
+          <input type="date" id="wcTo" class="date-input">
+          <div class="wc-hijri" id="wcToH"></div>
+        </div>
+      </div>
+      <div class="field" style="margin-top:10px;">
+        <label for="wcMode">الجداول المعروضة</label>
+        <select id="wcMode" class="select-styled">
+          <option value="both">الجدولان معاً (الانتظار + الغياب)</option>
+          <option value="wait">حصص الانتظار التي حضرها فقط</option>
+          <option value="miss">الحصص التي غابها فقط</option>
+        </select>
+      </div>
+      <div class="export-row" style="margin-top:8px;"><button class="export-btn" id="wcPrintAll">🖨️ طباعة التقرير</button><button class="export-btn" id="wcClear">↺ مسح البحث</button></div>
+    </div>
+    <div id="wcTable"></div>
+    <div id="wcMissed"></div>
+    <div id="wcSummary"></div>
+  </div>
+
+  <!-- تعيين المنتظرين -->
+  <div class="detail" id="waitDesignView">
+    <div class="back-row">
+      <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
+    </div>
+    <div id="waitDesignBody"></div>
+  </div>
+
+  <!-- جدول الانتظار -->
+  <div class="detail" id="waitTableView">
+    <div class="back-row">
+      <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
+    </div>
+    <div class="detail-header"><h2>جدول الانتظار</h2></div>
+    <div class="sched-form">
+      <div class="sched-grid">
+        <div class="field">
+          <label for="wtGreg">التاريخ الميلادي</label>
+          <select id="wtGreg" class="select-styled"></select>
+        </div>
+        <div class="field">
+          <label for="wtHijri">التاريخ الهجري</label>
+          <select id="wtHijri" class="select-styled"></select>
+        </div>
+      </div>
+      <div class="wt-daybox" id="wtDayBox"></div>
+      <div class="field" style="margin-top:10px;">
+        <label for="wtAbsent">المعلم الغائب (من متابعة الدوام)</label>
+        <select id="wtAbsent" class="select-styled"></select>
+      </div>
+      <div class="sched-hint" id="wtAbsentHint" style="text-align:right; margin-top:8px;"></div>
+    </div>
+    <div id="wtSlots"></div>
+    <div id="wtActions" hidden>
+      <button class="submit-btn" id="wtSave">💾 حفظ جدول الانتظار</button>
+      <div class="sched-hint" id="wtSaveHint" style="text-align:right; margin-top:8px;">بعد الحفظ يظهر زر الطباعة، ويُضاف الجدول إلى «الجداول المحفوظة».</div>
+      <div class="export-row" id="wtAfterSave" style="margin-top:10px; display:none;">
+        <button class="export-btn" id="wtPrint">🖨️ طباعة جدول الانتظار</button>
+        <button class="export-btn" id="wtOpenLog">📋 الجداول المحفوظة</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail" id="coverageView">
+    <div class="back-row">
+      <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
+    </div>
     <div class="detail-header">
-      <h2>حصص الانتظار</h2>
+      <h2>تسجيل يدوي وتوزيع تلقائي</h2>
       <div style="display:flex; align-items:center; gap:8px;">
         <button class="settings-btn" id="openAssignmentLog" aria-label="سجل حصص الانتظار" title="سجل حصص الانتظار">
           <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6"/><path d="M9 16h6"/></svg>
@@ -1515,10 +1633,10 @@
   <!-- Assignment-sheet log -->
   <div class="detail" id="assignmentLogView">
     <div class="back-row">
-      <button class="back-btn" data-back="coverage"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>حصص الانتظار</button>
+      <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
     </div>
     <div class="detail-header">
-      <h2>سجل حصص الانتظار</h2>
+      <h2>جداول الانتظار المحفوظة</h2>
       <div style="display:flex; align-items:center; gap:8px;">
         <button class="settings-btn" id="openAssignmentArchive" aria-label="الأرشيف" title="الأرشيف">
           <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8"/><path d="M10 13h4"/></svg>
@@ -1526,8 +1644,8 @@
         <span class="count-pill" id="assignmentLogCount">0 جدول</span>
       </div>
     </div>
-    <div class="sched-hint" style="text-align:right; margin-bottom:8px;">تُضاف جداول الانتظار للغياب والاستئذان هنا تلقائياً عند تسجيل حصص الانتظار. اضغط على الجدول لعرضه وطباعته.</div>
-    <div class="export-row"><button class="export-btn" id="archivePastSheetsBtn">📦 أرشفة جداول الأيام السابقة</button></div>
+    <div class="sched-hint" style="text-align:right; margin-bottom:8px;">تُضاف جداول الانتظار هنا عند حفظها. تُنقل تلقائياً إلى الأرشيف بنهاية دوام الخميس الساعة 2:00 ظهراً.</div>
+    <div class="export-row"><button class="export-btn" id="openArchiveInline">🗄️ الأرشيف</button><button class="export-btn" id="archivePastSheetsBtn">📦 أرشفة جداول الأيام السابقة</button></div>
     <div class="name-list" id="assignmentLogList"></div>
     <div id="assignmentLogViewer"></div>
   </div>
@@ -1535,12 +1653,13 @@
   <!-- Assignment-sheet archive -->
   <div class="detail" id="assignmentArchiveView">
     <div class="back-row">
-      <button class="back-btn" data-back="assignmentLog"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل حصص الانتظار</button>
+      <button class="back-btn" data-back="assignmentLog"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الجداول المحفوظة</button>
     </div>
     <div class="detail-header">
-      <h2>أرشيف حصص الانتظار</h2>
+      <h2>أرشيف جداول الانتظار</h2>
       <span class="count-pill" id="assignmentArchiveCount">0 جدول</span>
     </div>
+    <div class="sched-hint" style="text-align:right; margin-bottom:8px;">تُنقل جداول كل أسبوع إلى الأرشيف تلقائياً بنهاية دوام يوم الخميس (الساعة 2:00 ظهراً)، مرتبة حسب اليوم والتاريخ الهجري والميلادي.</div>
     <div class="name-list" id="assignmentArchiveList"></div>
   </div>
 
@@ -1866,6 +1985,7 @@
     }).filter(r => r.date);
     if (!Array.isArray(out.workAttendance)) out.workAttendance = [];
     if (!Array.isArray(out.coverageRecords)) out.coverageRecords = [];
+    if (!Array.isArray(out.waitUncovered)) out.waitUncovered = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
     if (!Array.isArray(out.coveragePrintArchive)) out.coveragePrintArchive = [];
@@ -2008,6 +2128,7 @@
           data.dutyRoster = (data.dutyRoster || []).filter(r => r.teacher !== name);
           data.workAttendance = data.workAttendance.filter(r => r.teacher !== name);
           data.coverageRecords = data.coverageRecords.filter(r => r.absentTeacher !== name && r.subTeacher !== name);
+          data.waitUncovered = (data.waitUncovered || []).filter(u => u.absentTeacher !== name);
           data.absences = (data.absences || []).filter(a => a.teacher !== name);
           Object.keys(data.substituteDesignation).forEach(key => {
             const d = data.substituteDesignation[key];
@@ -2060,6 +2181,7 @@
     (data.dutyRoster || []).forEach(r => { if (r.teacher === oldName) r.teacher = newName; });
     data.workAttendance.forEach(r => { if (r.teacher === oldName) r.teacher = newName; });
     (data.absences || []).forEach(a => { if (a.teacher === oldName) a.teacher = newName; });
+    (data.waitUncovered || []).forEach(u => { if (u.absentTeacher === oldName) u.absentTeacher = newName; });
     data.coverageRecords.forEach(r => {
       if (r.absentTeacher === oldName) r.absentTeacher = newName;
       if (r.subTeacher === oldName) r.subTeacher = newName;
@@ -2124,6 +2246,7 @@
     data.attendance.forEach(a => { if (a.className === oldName) a.className = newName; });
     data.hiddenClassSlots.forEach(h => { if (h.className === oldName) h.className = newName; });
     data.coverageRecords.forEach(r => { if (r.className === oldName) r.className = newName; });
+    (data.waitUncovered || []).forEach(u => { if (u.className === oldName) u.className = newName; });
   }
 
   function saveClassEdit() {
@@ -4778,7 +4901,7 @@ ${pages}
     sel.className = "select-styled";
     sel.style.minWidth = "170px";
     sel.setAttribute("aria-label", "المعلم المنتظر للحصة " + PERIODS[slot.period - 1] + " " + slot.className);
-    sel.innerHTML = '<option value="">— بدون منتظر —</option>' + avail.map(t =>
+    sel.innerHTML = '<option value="">اختيار</option>' + avail.map(t =>
       `<option value="${acEsc(t)}" ${t === current ? "selected" : ""}>${acEsc(t)} (الرصيد ${totals[t] || 0} · اليوم ${acTodayCount(date, t)})</option>`).join("");
     sel.addEventListener("change", () => acSetSub(date, slot, sel.value));
     return sel;
@@ -4918,7 +5041,7 @@ ${pages}
     const d = getDesignation(day, period);
     const busy = getTeachersBusyAt(day, period);
     const available = data.teachers.filter(t => !busy.includes(t));
-    const options = '<option value="">لا يوجد</option>' +
+    const options = '<option value="">اختيار</option>' +
       available.map(t => `<option value="${t}">${t}</option>`).join("");
     ["subFirstInput", "subSecondInput", "subThirdInput"].forEach((id, i) => {
       const sel = document.getElementById(id);
@@ -5014,7 +5137,7 @@ ${pages}
   function fillCoverageStaticSelects() {
     syncCoverageDayFromDate();
     const tOpts = data.teachers.length
-      ? '<option value="">لا يوجد</option>' + data.teachers.map(t => `<option value="${t}">${t}</option>`).join("")
+      ? '<option value="">اختيار</option>' + data.teachers.map(t => `<option value="${t}">${t}</option>`).join("")
       : '<option value="">أضف معلمين أولاً</option>';
     ["covAbsentInput", "covPermInput"].forEach(id => {
       const sel = document.getElementById(id);
@@ -5093,7 +5216,7 @@ ${pages}
       sel.disabled = true;
     } else {
       sel.disabled = false;
-      sel.innerHTML = '<option value="">اختر المعلم المنتظر</option>' +
+      sel.innerHTML = '<option value="">اختيار</option>' +
         options.map(r => `<option value="${r.name}" data-rank="${r.label}">${r.name} — ${r.label}</option>`).join("");
     }
   }
@@ -5179,7 +5302,7 @@ ${pages}
       '<th>الحصة</th><th>الفصل</th><th>المعلم المنتظر</th><th>التوقيع</th><th>ما تم في حصة الانتظار</th><th>الملاحظات</th>' +
       '</tr></thead><tbody>';
     records.forEach(r => {
-      html += `<tr><td>${PERIODS[r.period - 1]}</td><td>${r.className}</td><td>${r.subTeacher}</td><td></td><td></td><td></td></tr>`;
+      html += `<tr><td>${PERIODS[r.period - 1]}</td><td>${r.className}</td><td>${r.subTeacher || "-"}</td><td></td><td></td><td></td></tr>`;
     });
     html += '</tbody></table></div>';
     html += '</div>';
@@ -5314,7 +5437,8 @@ ${pages}
   /* ===== نموذج طباعة حصص الانتظار الرسمي (جاهز للتوقيع) ===== */
   function wpEsc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
   function wpDateParts(date) {
-    const dayName = dayNameFromDate(date) || "";
+    let dayName = dayNameFromDate(date) || "";
+    if (!dayName) { try { dayName = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"][new Date(date + "T12:00:00").getDay()] || ""; } catch (e) {} }
     let hijri = "";
     try { const h = gregorianDateToHijri(date); hijri = h.day + " " + HIJRI_MONTHS[h.month - 1] + " " + h.year + " هـ"; } catch (e) {}
     const [y, m, d] = String(date).split("-");
@@ -5434,7 +5558,7 @@ ${auto ? '<script>window.addEventListener("load", function () { var go = functio
       const rows = g.records.map(r => `<tr>
         <td class="c-p">${wpEsc(PERIODS[r.period - 1] || r.period)}</td>
         <td class="c-cls">${wpEsc(r.className)}</td>
-        <td class="c-name">${wpEsc(r.subTeacher)}</td>
+        <td class="c-name">${wpEsc(r.subTeacher || "-")}</td>
         <td class="c-sign"></td>
         <td class="c-done"></td>
         <td class="c-note"></td>
@@ -5590,12 +5714,49 @@ ${auto ? '<script>window.addEventListener("load", function () { var go = functio
   }
 
   /* ===== جداول قابلة للطباعة (الطابور، المناوبات، الدوام، سجل الحصص) ===== */
+  // مستند طباعة بدون ترويسة: اسم المدرسة ثم العنوان والجداول والتوقيعان
+  function plainReportDoc(title, bodyHTML) {
+    const p = wpDateParts(todayISODate());
+    return `<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${wpEsc(title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 12mm; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: "Tajawal", Tahoma, Arial, sans-serif; color: #111; background: #fff; margin: 0; padding: 14px; font-size: 14px; }
+  h1 { text-align: center; font-size: 20px; margin: 0 0 4px; font-weight: 800; color: #174a59; }
+  h2 { text-align: center; font-size: 16px; margin: 6px 0 4px; font-weight: 800; color: #174a59; }
+  h3 { font-size: 15px; }
+  .pdate { text-align: center; font-size: 12.5px; color: #333; margin-bottom: 12px; }
+  .mr-table-wrap { margin: 0 0 6px; }
+  table { border-collapse: collapse; width: calc(100% - 3px); margin: 0 auto; border: 1.5px solid #174a59; }
+  th, td { border: 1px solid #174a59; padding: 7px 5px; text-align: center; font-size: 13px; }
+  th { background: #174a59; color: #fff; font-weight: 800; }
+  tbody tr:nth-child(even) td { background: #f3f8f7; }
+  .sigs { display: flex; justify-content: space-between; margin: 36px 30px 0; break-inside: avoid; page-break-inside: avoid; }
+  .sig { text-align: center; min-width: 180px; line-height: 2; }
+  .sig .t { font-weight: 800; color: #174a59; }
+  .bar { background: #fff8dc; border: 1px solid #e5c76b; padding: 8px 12px; margin: -14px -14px 12px; font-size: 13px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .bar button { font: inherit; padding: 5px 14px; border: 1px solid #333; border-radius: 8px; background: #fff; cursor: pointer; }
+  @media print { .bar { display: none; } body { padding: 0; } }
+</style></head><body>
+<div class="bar"><span>معاينة الطباعة</span><button onclick="window.print()">🖨️ طباعة / حفظ PDF</button></div>
+<h1>مدرسة عطاء بن أبي رباح المتوسطة</h1>
+<h2>${wpEsc(title)}</h2>
+<div class="pdate">تاريخ الطباعة: ${wpEsc(p.dayName)} ${wpEsc(p.hijri)} — ${wpEsc(p.greg)}</div>
+${bodyHTML}
+<script>window.addEventListener("load",function(){var go=function(){setTimeout(function(){try{window.print();}catch(e){}},300);};if(document.fonts&&document.fonts.ready)document.fonts.ready.then(go);else go();});<\/script>
+</body></html>`;
+  }
   function wpSigsHTML() {
     return `<div class="sigs"><div class="sig"><div class="t">وكيل الشؤون التعليمية</div><div class="n">موسى آل ضاحي</div></div><div class="sig"><div class="t">مدير المدرسة</div><div class="n">موسى آل عبيد</div></div></div>`;
   }
-  function ptTableHTML(headers, rows) {
+  function ptTableHTML(headers, rows, footer) {
     return '<div class="mr-table-wrap"><table class="mr-table"><thead><tr>' + headers.map(h => "<th>" + wpEsc(h) + "</th>").join("") +
-      "</tr></thead><tbody>" + rows.map(r => "<tr>" + r.map(c => "<td>" + wpEsc(c) + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>";
+      "</tr></thead><tbody>" + rows.map(r => "<tr>" + r.map(c => "<td>" + wpEsc(c) + "</td>").join("") + "</tr>").join("") + "</tbody>" +
+      (footer ? '<tfoot><tr><td colspan="' + headers.length + '" style="font-weight:800; text-align:center; background:#e9f4f2; color:#174a59;">' + wpEsc(footer) + "</td></tr></tfoot>" : "") +
+      "</table></div>";
   }
   // cfg: {title, headers, rows, date, fileBase, sheet, extraButtons:[{label, onClick}]}
   function ptRender(hostId, cfg) {
@@ -5614,7 +5775,7 @@ ${auto ? '<script>window.addEventListener("load", function () { var go = functio
       host.appendChild(e);
     } else {
       const t = document.createElement("div");
-      t.innerHTML = ptTableHTML(cfg.rowAction ? [""].concat(cfg.headers) : cfg.headers, cfg.rowAction ? cfg.rows.map(r => [""].concat(r)) : cfg.rows);
+      t.innerHTML = ptTableHTML(cfg.rowAction ? [""].concat(cfg.headers) : cfg.headers, cfg.rowAction ? cfg.rows.map(r => [""].concat(r)) : cfg.rows, cfg.footer);
       if (cfg.rowAction) {
         t.querySelectorAll("tbody tr").forEach((tr, i) => {
           const b = document.createElement("button");
@@ -5633,13 +5794,15 @@ ${auto ? '<script>window.addEventListener("load", function () { var go = functio
     const mk = (label, fn) => { const b = document.createElement("button"); b.className = "export-btn"; b.textContent = label; b.addEventListener("click", fn); bar.appendChild(b); };
     mk("🖨️ طباعة الجدول", () => {
       if (!cfg.rows.length) { showToast("لا توجد بيانات للطباعة"); return; }
-      wpOpenDoc(wpShellDoc(cfg.title, wpGenericPage(cfg.title, ptTableHTML(cfg.headers, cfg.rows) + wpSigsHTML(), cfg.date)), cfg.fileBase);
+      if (cfg.plain) wpOpenDoc(plainReportDoc(cfg.title, ptTableHTML(cfg.headers, cfg.rows, cfg.footer) + wpSigsHTML()), cfg.fileBase);
+      else wpOpenDoc(wpShellDoc(cfg.title, wpGenericPage(cfg.title, ptTableHTML(cfg.headers, cfg.rows, cfg.footer) + wpSigsHTML(), cfg.date)), cfg.fileBase);
     });
     mk("📊 تصدير Excel", () => {
       if (!cfg.rows.length) { showToast("لا توجد بيانات لتصديرها"); return; }
       if (typeof XLSX === "undefined") { showToast("تعذر تحميل أداة Excel، تحقق من الاتصال"); return; }
       try {
-        const ws = wpSheetFromAoa([cfg.headers].concat(cfg.rows), cfg.title);
+        const ws = wpSheetFromAoa([cfg.headers].concat(cfg.rows).concat(cfg.footer ? [[cfg.footer]] : []), cfg.title,
+          cfg.footer ? [{ s: { r: cfg.rows.length + 1, c: 0 }, e: { r: cfg.rows.length + 1, c: cfg.headers.length - 1 } }] : null);
         ws["!cols"] = cfg.headers.map(h => ({ wch: Math.max(10, h.length + 6) }));
         saveFile(cfg.fileBase + ".xlsx", XLSX.write(wpBook([[ws, cfg.sheet || "الجدول"]]), { bookType: "xlsx", type: "array" }));
       } catch (e) { console.error(e); showToast("تعذر تصدير الملف"); }
@@ -6053,7 +6216,7 @@ window.addEventListener("load",function(){var go=function(){setTimeout(function(
       '<th>الحصة</th><th>الفصل</th><th>المعلم المنتظر</th><th>التوقيع</th><th>ما تم في حصة الانتظار</th><th>الملاحظات</th>' +
       '</tr></thead><tbody>';
     records.forEach(r => {
-      html += `<tr><td>${PERIODS[r.period - 1]}</td><td>${r.className}</td><td>${r.subTeacher}</td><td></td><td></td><td></td></tr>`;
+      html += `<tr><td>${PERIODS[r.period - 1]}</td><td>${r.className}</td><td>${r.subTeacher || "-"}</td><td></td><td></td><td></td></tr>`;
     });
     html += '</tbody></table></div>';
     html += '</div>';
@@ -6148,7 +6311,7 @@ window.addEventListener("load",function(){var go=function(){setTimeout(function(
 
   function printCoveragePrintPage() {
     const wpDate = getCoveragePrintSelectedGregorianDate();
-    const wpRecs = wpDate ? data.coverageRecords.filter(r => r.date === wpDate).sort((a, b) => (a.absentTeacher || "").localeCompare(b.absentTeacher || "", "ar") || a.period - b.period) : [];
+    const wpRecs = wpDate ? data.coverageRecords.filter(r => r.date === wpDate).concat(uncoveredRecs(wpDate)).sort((a, b) => (a.absentTeacher || "").localeCompare(b.absentTeacher || "", "ar") || a.period - b.period) : [];
     if (!wpRecs.length) { showToast("لا توجد بيانات لطباعتها لهذا التاريخ"); return; }
     wpPrint("سجل حصص الانتظار اليومي", wpDate, wpGroupsFromRecords(wpRecs), "سجل_الانتظار");
     return;
@@ -6210,7 +6373,7 @@ ${contentEl.innerHTML}
   function archiveCoveragePrintDay() {
     const date = getCoveragePrintSelectedGregorianDate();
     if (!date) return;
-    const records = data.coverageRecords.filter(r => r.date === date);
+    const records = data.coverageRecords.filter(r => r.date === date).concat(uncoveredRecs(date));
     if (records.length === 0) { showToast("لا توجد حصص انتظار مسجلة في هذا التاريخ لأرشفتها"); return; }
 
     const groups = {};
@@ -6354,10 +6517,16 @@ ${contentEl.innerHTML}
   }
 
   /* مزامنة سجل حصص الانتظار تلقائياً مع حصص الانتظار المسجلة (غياب/استئذان) */
+  // حصص الغائب التي تُركت بدون منتظر في «جدول الانتظار» — تظهر في الجداول بعلامة «-»
+  function uncoveredRecs(date) {
+    return (data.waitUncovered || []).filter(u => !date || u.date === date)
+      .filter(u => !data.coverageRecords.some(r => r.date === u.date && r.period === u.period && r.className === u.className))
+      .map(u => ({ day: dayNameFromDate(u.date), date: u.date, period: u.period, className: u.className, absentTeacher: u.absentTeacher, subTeacher: "", rank: "" }));
+  }
   function syncAssignmentLog() {
     if (!Array.isArray(data.assignmentSheets)) data.assignmentSheets = [];
     const groups = new Map();
-    data.coverageRecords.forEach(r => {
+    data.coverageRecords.concat(uncoveredRecs()).forEach(r => {
       if (!r.absentTeacher || !r.date) return;
       const kind = kindOf(r);
       const key = r.date + "|" + r.absentTeacher + "|" + kind;
@@ -6382,16 +6551,47 @@ ${contentEl.innerHTML}
     if (changed) saveData();
     return changed;
   }
+  function sheetDateText(date) {
+    const p = wpDateParts(date);
+    const [y, m, d] = String(date).split("-");
+    return (p.dayName ? p.dayName + " — " : "") + p.hijri + " — " + (+d) + "/" + (+m) + "/" + y + " م";
+  }
   function sheetSubText(sheet) {
-    const p = wpDateParts(sheet.date);
-    return (p.dayName ? p.dayName + " " : "") + p.hijri + " — " + sheet.records.length + " حصة";
+    return sheetDateText(sheet.date) + " — " + sheet.records.length + " حصة";
   }
 
+  // الأرشفة التلقائية: بنهاية دوام الخميس (الساعة 2:00 ظهراً) تُنقل جداول ذلك الأسبوع إلى الأرشيف
+  function sheetArchiveCutoff(date) {
+    const d = new Date(date + "T00:00:00");
+    if (isNaN(d)) return null;
+    d.setDate(d.getDate() + ((4 - d.getDay() + 7) % 7));
+    d.setHours(14, 0, 0, 0);
+    return d;
+  }
+  function autoArchiveSheets() {
+    if (!Array.isArray(data.assignmentSheets)) return 0;
+    const now = new Date();
+    let n = 0;
+    data.assignmentSheets.forEach(sh => {
+      if (sh.archived || sh.deleted || sh.keepOpen) return;
+      const c = sheetArchiveCutoff(sh.date);
+      if (c && now >= c) { sh.archived = true; sh.autoArchived = true; sh.archivedAt = todayISODate(); n++; }
+    });
+    if (n) saveData();
+    return n;
+  }
   function renderAssignmentLogList() {
     syncAssignmentLog();
+    autoArchiveSheets();
+    const arcN = data.assignmentSheets.filter(s => s.archived && !s.deleted).length;
+    const arcBtn = document.getElementById("openArchiveInline");
+    if (arcBtn) arcBtn.textContent = "🗄️ الأرشيف (" + arcN + ")";
     const listEl = document.getElementById("assignmentLogList");
     document.getElementById("assignmentLogViewer").innerHTML = "";
-    const sheets = data.assignmentSheets.filter(s => !s.archived && !s.deleted).sort((a, b) => b.id - a.id);
+    // الترتيب حسب تاريخ الغياب (الأحدث أولاً) وليس حسب وقت الإنشاء
+    const sheets = data.assignmentSheets.filter(s => !s.archived && !s.deleted)
+      .sort((a, b) => (b.date || "").localeCompare(a.date || "") || String(a.absentTeacher).localeCompare(String(b.absentTeacher), "ar"));
+    let lastDate = null;
     document.getElementById("assignmentLogCount").textContent = sheets.length + " جدول";
 
     listEl.innerHTML = "";
@@ -6401,6 +6601,13 @@ ${contentEl.innerHTML}
     }
 
     sheets.forEach(sheet => {
+      if (sheet.date !== lastDate) {
+        lastDate = sheet.date;
+        const hd = document.createElement("div");
+        hd.className = "arc-date";
+        hd.textContent = sheetDateText(sheet.date);
+        listEl.appendChild(hd);
+      }
       const li = document.createElement("div");
       li.className = "name-item";
       li.style.cursor = "pointer";
@@ -6420,7 +6627,7 @@ ${contentEl.innerHTML}
       const sub = document.createElement("span");
       sub.style.fontSize = "11px";
       sub.style.color = "var(--ink-soft)";
-      sub.textContent = sheetSubText(sheet);
+      sub.textContent = sheet.records.length + " حصة";
       txtWrap.appendChild(txt);
       txtWrap.appendChild(sub);
       label.appendChild(avatar);
@@ -6431,6 +6638,7 @@ ${contentEl.innerHTML}
       actions.style.display = "flex";
       actions.style.alignItems = "center";
       actions.style.gap = "4px";
+      actions.style.flexWrap = "wrap";
 
       const archiveBtn = document.createElement("button");
       archiveBtn.className = "export-btn";
@@ -6482,6 +6690,16 @@ ${contentEl.innerHTML}
         showToast("تم حذف الجدول");
       });
 
+      const printBtn = document.createElement("button");
+      printBtn.className = "export-btn";
+      printBtn.style.padding = "5px 10px";
+      printBtn.style.fontSize = "12px";
+      printBtn.textContent = "🖨️ طباعة";
+      printBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        wpPrint("نموذج تكليف بحصص الانتظار", sheet.date, [{ absentTeacher: sheet.absentTeacher, records: sheet.records, kind: sheet.kind || kindOf(sheet.records[0]) }], "تكليف_انتظار");
+      });
+      actions.appendChild(printBtn);
       actions.appendChild(archiveBtn);
       actions.appendChild(delBtn);
       li.appendChild(label);
@@ -6492,7 +6710,8 @@ ${contentEl.innerHTML}
 
   function renderAssignmentArchiveList() {
     const listEl = document.getElementById("assignmentArchiveList");
-    const sheets = data.assignmentSheets.filter(s => s.archived && !s.deleted).sort((a, b) => b.id - a.id);
+    const sheets = data.assignmentSheets.filter(s => s.archived && !s.deleted).sort((a, b) => (b.date || "").localeCompare(a.date || "") || String(a.absentTeacher).localeCompare(String(b.absentTeacher), "ar"));
+    let lastDate = null;
     document.getElementById("assignmentArchiveCount").textContent = sheets.length + " جدول";
 
     listEl.innerHTML = "";
@@ -6502,6 +6721,13 @@ ${contentEl.innerHTML}
     }
 
     sheets.forEach(sheet => {
+      if (sheet.date !== lastDate) {
+        lastDate = sheet.date;
+        const hd = document.createElement("div");
+        hd.className = "arc-date";
+        hd.textContent = sheetDateText(sheet.date);
+        listEl.appendChild(hd);
+      }
       const li = document.createElement("div");
       li.className = "name-item";
 
@@ -6520,7 +6746,7 @@ ${contentEl.innerHTML}
       const sub = document.createElement("span");
       sub.style.fontSize = "11px";
       sub.style.color = "var(--ink-soft)";
-      sub.textContent = sheetSubText(sheet);
+      sub.textContent = sheet.records.length + " حصة" + (sheet.autoArchived ? " — أُرشف تلقائياً" : "");
       txtWrap.appendChild(txt);
       txtWrap.appendChild(sub);
       label.appendChild(avatar);
@@ -6541,6 +6767,7 @@ ${contentEl.innerHTML}
       restoreBtn.textContent = "↩️ استعادة";
       restoreBtn.addEventListener("click", () => {
         sheet.archived = false;
+        sheet.keepOpen = true;
         saveData();
         renderAssignmentArchiveList();
         showToast("تمت استعادة الجدول");
@@ -6557,6 +6784,14 @@ ${contentEl.innerHTML}
         showToast("تم حذف الجدول نهائيًا");
       });
 
+      const aPrint = document.createElement("button");
+      aPrint.className = "export-btn";
+      aPrint.style.padding = "5px 10px";
+      aPrint.style.fontSize = "12px";
+      aPrint.textContent = "🖨️ طباعة";
+      aPrint.addEventListener("click", () => wpPrint("نموذج تكليف بحصص الانتظار", sheet.date, [{ absentTeacher: sheet.absentTeacher, records: sheet.records, kind: sheet.kind || kindOf(sheet.records[0]) }], "تكليف_انتظار"));
+      actions.style.flexWrap = "wrap";
+      actions.appendChild(aPrint);
       actions.appendChild(restoreBtn);
       actions.appendChild(delBtn);
       li.appendChild(label);
@@ -7079,6 +7314,320 @@ ${contentEl.innerHTML}
     info.textContent = "المرفق: " + file.name + (isPdf ? " — يُرسَل بزر «إرسال PDF»" : " — يُرسَل بزر «إرسال صورة» أو يُحوَّل إلى PDF");
   }
 
+  /* ===== جدول الانتظار: اختيار التاريخ ← الغائب (من متابعة الدوام) ← المنتظرون ===== */
+  const WT_RANK_LABELS = ["منتظر 1", "منتظر 2", "منتظر 3"];
+  const wt = { date: "", absent: "", choices: {}, modes: {} };
+  function wtGregText(iso) { const [y, m, d] = iso.split("-"); return +d + "/" + +m + "/" + y + " م"; }
+  function wtAbsentees(date) {
+    return [...new Set((data.workAttendance || []).filter(r => r.date === date && r.status === "absent").map(r => r.teacher))]
+      .filter(t => data.teachers.includes(t)).sort((a, b) => a.localeCompare(b, "ar"));
+  }
+  function wtDates() {
+    const set = new Set();
+    const base = new Date(todayISODate() + "T12:00:00");
+    const iso = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    for (let i = -30; i <= 30; i++) { const d = new Date(base); d.setDate(d.getDate() + i); const v = iso(d); if (dayNameFromDate(v)) set.add(v); }
+    (data.workAttendance || []).forEach(r => { if (r.status === "absent" && r.date && dayNameFromDate(r.date)) set.add(r.date); });
+    return [...set].sort();
+  }
+  function wtDefaultDate(dates) {
+    const t = todayISODate();
+    return dates.find(d => d >= t) || dates[dates.length - 1] || t;
+  }
+  function wtFillDates() {
+    const dates = wtDates();
+    if (wt.date && !dates.includes(wt.date)) wt.date = "";
+    const mk = fmt => dates.map(d => { const n = wtAbsentees(d).length; return '<option value="' + d + '">' + acEsc(fmt(d)) + (n ? "  (" + n + " غائب)" : "") + "</option>"; }).join("");
+    document.getElementById("wtGreg").innerHTML = '<option value="">اختيار</option>' + mk(d => (dayNameFromDate(d) + " " + wtGregText(d)));
+    document.getElementById("wtHijri").innerHTML = '<option value="">اختيار</option>' + mk(d => wpDateParts(d).hijri || d);
+    document.getElementById("wtGreg").value = wt.date;
+    document.getElementById("wtHijri").value = wt.date;
+    if (!wt.date) { document.getElementById("wtDayBox").textContent = "اختر التاريخ ليظهر اليوم والتاريخ الهجري والميلادي"; return; }
+    const p = wpDateParts(wt.date);
+    document.getElementById("wtDayBox").innerHTML = "اليوم: " + acEsc(p.dayName) + " &nbsp;—&nbsp; " + acEsc(p.hijri) + " &nbsp;—&nbsp; " + acEsc(wtGregText(wt.date));
+  }
+  function wtFillAbsent() {
+    const sel = document.getElementById("wtAbsent"), hint = document.getElementById("wtAbsentHint");
+    if (!wt.date) { wt.absent = ""; sel.innerHTML = '<option value="">اختيار</option>'; sel.disabled = true; hint.textContent = "اختر التاريخ أولاً لتظهر قائمة الغائبين من متابعة الدوام."; return; }
+    const list = wtAbsentees(wt.date);
+    if (!list.includes(wt.absent)) wt.absent = "";
+    if (!list.length) {
+      sel.innerHTML = '<option value="">اختيار</option>';
+      sel.disabled = true;
+      hint.innerHTML = 'لا يوجد غائبون في هذا اليوم — لم يُسجَّل أي معلم «غياب» في متابعة الدوام لهذا التاريخ. <button class="export-btn" id="wtGoWork" style="margin-top:6px;">📝 فتح متابعة الدوام</button>';
+      document.getElementById("wtGoWork").addEventListener("click", () => {
+        document.getElementById("workDateInput").value = wt.date;
+        document.getElementById("openWorkTile").click();
+      });
+      return;
+    }
+    sel.disabled = false;
+    sel.innerHTML = '<option value="">اختيار</option>' + list.map(t => {
+      const done = data.coverageRecords.some(r => r.date === wt.date && r.absentTeacher === t) || (data.waitUncovered || []).some(u => u.date === wt.date && u.absentTeacher === t);
+      return '<option value="' + acEsc(t) + '">' + acEsc(t) + (done ? "  ✓ محفوظ" : "") + "</option>";
+    }).join("");
+    sel.value = wt.absent;
+    hint.textContent = "الغائبون حسب متابعة الدوام: " + list.length + " — عند اختيار المعلم تظهر حصصه والمنتظر الأول لكل حصة.";
+  }
+  function wtSlots() {
+    const day = dayNameFromDate(wt.date);
+    if (!day || !wt.absent) return [];
+    return data.schedule.filter(s => s.day === day && s.teacher === wt.absent)
+      .map(s => ({ period: Number(s.period), className: s.className }))
+      .sort((a, b) => a.period - b.period || String(a.className).localeCompare(String(b.className), "ar"));
+  }
+  function wtKey(sl) { return sl.period + "|" + sl.className; }
+  function wtUnavailReason(t, sl, day, absentSet) {
+    if (t === wt.absent || absentSet.has(t)) return "غائب";
+    if (getTeachersBusyAt(day, sl.period).includes(t)) return "لديه حصة";
+    if (getSubTeachersAlreadyBooked(wt.date, sl.period, sl.className).filter(x => x).some(x => x === t)) {
+      const r = data.coverageRecords.find(r => r.date === wt.date && r.period === sl.period && r.subTeacher === t && r.className !== sl.className);
+      if (r && r.absentTeacher !== wt.absent) return "مكلّف بانتظار آخر";
+    }
+    const other = Object.entries(wt.choices).some(([k, v]) => v === t && k !== wtKey(sl) && Number(k.split("|")[0]) === sl.period);
+    if (other) return "مختار لحصة أخرى";
+    return "";
+  }
+  function wtDesignated(sl, day) {
+    const d = getDesignation(day, sl.period);
+    return [d.first, d.second, d.third].map((t, i) => ({ t, label: WT_RANK_LABELS[i] })).filter(x => x.t);
+  }
+  function wtTodayCount(t) { return data.coverageRecords.filter(r => r.date === wt.date && r.subTeacher === t && r.absentTeacher !== wt.absent).length + Object.values(wt.choices).filter(v => v === t).length; }
+  function wtBuildOptions(sel, sl, mode, day, absentSet) {
+    const cur = wt.choices[wtKey(sl)] || "";
+    let h = '<option value="">اختيار</option>';
+    if (mode === "free") {
+      const des = wtDesignated(sl, day);
+      const free = data.teachers.filter(t => t === cur || !wtUnavailReason(t, sl, day, absentSet))
+        .sort((a, b) => a.localeCompare(b, "ar"));
+      h += free.map(t => { const d = des.find(x => x.t === t); return '<option value="' + acEsc(t) + '">' + acEsc(t) + (d ? " (" + d.label + ")" : "") + "</option>"; }).join("");
+      if (!free.length) h += '<option value="" disabled>لا يوجد معلمون متاحون في هذه الحصة</option>';
+    } else {
+      h += wtDesignated(sl, day).map(x => {
+        const why = x.t === cur ? "" : wtUnavailReason(x.t, sl, day, absentSet);
+        return '<option value="' + acEsc(x.t) + '"' + (why ? " disabled" : "") + ">" + x.label + " — " + acEsc(x.t) + (why ? " (" + why + ")" : "") + "</option>";
+      }).join("");
+      if (cur && !wtDesignated(sl, day).some(x => x.t === cur)) h += '<option value="' + acEsc(cur) + '">' + acEsc(cur) + "</option>";
+    }
+    sel.innerHTML = h;
+    sel.value = cur;
+  }
+  function wtInitChoices() {
+    wt.choices = {}; wt.modes = {};
+    const day = dayNameFromDate(wt.date);
+    const absentSet = new Set(wtAbsentees(wt.date));
+    wtSlots().forEach(sl => {
+      const k = wtKey(sl);
+      const rec = data.coverageRecords.find(r => r.date === wt.date && r.period === sl.period && r.className === sl.className);
+      if (rec && rec.subTeacher) {
+        wt.choices[k] = rec.subTeacher;
+        wt.modes[k] = wtDesignated(sl, day).some(x => x.t === rec.subTeacher) ? "des" : "free";
+        return;
+      }
+      wt.modes[k] = "des";
+      const first = wtDesignated(sl, day).find(x => !wtUnavailReason(x.t, sl, day, absentSet));
+      wt.choices[k] = first ? first.t : "";
+    });
+  }
+  function wtRenderSlots() {
+    const box = document.getElementById("wtSlots"), act = document.getElementById("wtActions");
+    box.innerHTML = "";
+    if (!wt.absent) { act.hidden = true; return; }
+    const slots = wtSlots();
+    if (!slots.length) { box.innerHTML = '<div class="empty-state">لا توجد حصص لهذا المعلم يوم ' + acEsc(dayNameFromDate(wt.date)) + "</div>"; act.hidden = true; return; }
+    const day = dayNameFromDate(wt.date);
+    const absentSet = new Set(wtAbsentees(wt.date));
+    const saved = data.coverageRecords.some(r => r.date === wt.date && r.absentTeacher === wt.absent) || (data.waitUncovered || []).some(u => u.date === wt.date && u.absentTeacher === wt.absent);
+    const cap = document.createElement("div");
+    cap.className = "table-caption";
+    cap.innerHTML = "حصص المعلم " + acEsc(wt.absent) + " — " + slots.length + " حصة" + (saved ? ' &nbsp;<span class="wt-saved">✓ محفوظ في السجل</span>' : "");
+    box.appendChild(cap);
+    slots.forEach(sl => {
+      const k = wtKey(sl);
+      const card = document.createElement("div"); card.className = "wt-slot";
+      card.innerHTML = '<div class="wt-slot-head"><span>الحصة ' + acEsc(PERIODS[sl.period - 1] || sl.period) + '</span><span class="cls">الفصل: ' + acEsc(sl.className) + "</span></div>";
+      const row = document.createElement("div"); row.className = "wt-row";
+      const sel = document.createElement("select"); sel.className = "select-styled";
+      sel.setAttribute("aria-label", "المنتظر للحصة " + (PERIODS[sl.period - 1] || sl.period));
+      const bEdit = document.createElement("button"); bEdit.type = "button"; bEdit.textContent = "✏️ تعديل";
+      const bFree = document.createElement("button"); bFree.type = "button"; bFree.textContent = "👥 من غير المنتظرين";
+      const note = document.createElement("div"); note.className = "wt-note";
+      const paint = () => {
+        const mode = wt.modes[k] || "des";
+        wtBuildOptions(sel, sl, mode, day, absentSet);
+        sel.disabled = mode === "des" && !card.dataset.edit;
+        bEdit.classList.toggle("on", mode === "des" && !!card.dataset.edit);
+        bFree.classList.toggle("on", mode === "free");
+        const des = wtDesignated(sl, day);
+        note.textContent = mode === "free" ? "تُعرض جميع المعلمين المتاحين الذين ليس لديهم حصة في هذا الوقت، ومنهم المنتظرون المعيّنون."
+          : !des.length ? "لا يوجد منتظرون معيّنون لهذه الحصة — استخدم «من غير المنتظرين» أو عيّنهم من «تعيين المنتظرين»."
+          : !wt.choices[k] ? "المنتظرون المعيّنون غير متاحين — اختر «من غير المنتظرين»." : "";
+      };
+      sel.addEventListener("change", () => { wt.choices[k] = sel.value; wtSetSaved(false); wtRenderSlots(); });
+      bEdit.addEventListener("click", () => { wt.modes[k] = "des"; card.dataset.edit = "1"; (wt._editing = wt._editing || new Set()).add(k); paint(); sel.focus(); });
+      bFree.addEventListener("click", () => {
+        if (wt.modes[k] === "free") { wt.modes[k] = "des"; card.dataset.edit = "1"; }
+        else wt.modes[k] = "free";
+        paint(); sel.focus();
+      });
+      if (wt.modes[k] === "des" && wt._editing && wt._editing.has(k)) card.dataset.edit = "1";
+      sel.addEventListener("focus", () => { (wt._editing = wt._editing || new Set()).add(k); });
+      row.appendChild(sel); row.appendChild(bEdit); row.appendChild(bFree);
+      card.appendChild(row); card.appendChild(note);
+      paint();
+      box.appendChild(card);
+    });
+    act.hidden = false;
+  }
+  function wtSetSaved(v) {
+    wt.saved = !!v;
+    document.getElementById("wtAfterSave").style.display = wt.saved ? "" : "none";
+    document.getElementById("wtSaveHint").style.display = wt.saved ? "none" : "";
+  }
+  function wtRecordsForPrint() {
+    return wtSlots().map(sl => ({ period: sl.period, className: sl.className, subTeacher: wt.choices[wtKey(sl)] || "", kind: "absence" }));
+  }
+  function wtSave() {
+    if (!wt.absent) { showToast("اختر المعلم الغائب أولاً"); return false; }
+    const day = dayNameFromDate(wt.date);
+    const slots = wtSlots();
+    if (!slots.length) { showToast("لا توجد حصص لهذا المعلم"); return false; }
+    if (!Array.isArray(data.waitUncovered)) data.waitUncovered = [];
+    data.waitUncovered = data.waitUncovered.filter(u => !(u.date === wt.date && u.absentTeacher === wt.absent));
+    slots.forEach(sl => {
+      const i = data.coverageRecords.findIndex(r => r.date === wt.date && r.period === sl.period && r.className === sl.className);
+      if (i > -1) data.coverageRecords.splice(i, 1);
+      const sub = wt.choices[wtKey(sl)];
+      if (!sub) { data.waitUncovered.push({ date: wt.date, absentTeacher: wt.absent, period: sl.period, className: sl.className }); return; }
+      const des = wtDesignated(sl, day).find(x => x.t === sub);
+      data.coverageRecords.push({ day, date: wt.date, period: sl.period, className: sl.className, absentTeacher: wt.absent, subTeacher: sub, rank: des ? des.label : "من غير المنتظرين" });
+    });
+    saveData();
+    syncAssignmentLog();
+    wtFillAbsent();
+    wtRenderSlots();
+    wtSetSaved(true);
+    showToast("تم حفظ جدول الانتظار في الجداول المحفوظة");
+    return true;
+  }
+  function wtRefresh(resetChoices) {
+    wtFillDates();
+    wtFillAbsent();
+    if (resetChoices) { wt._editing = new Set(); wtInitChoices(); wtSetSaved(false); }
+    wtRenderSlots();
+  }
+  function wtOpen() { wt.date = ""; wt.absent = ""; wtRefresh(true); showView("waitTable"); }
+  function waitHubOpen() {
+    try { syncAssignmentLog(); autoArchiveSheets(); } catch (e) {}
+    const n = (data.assignmentSheets || []).filter(s => !s.archived && !s.deleted).length;
+    document.getElementById("waitLogCount").textContent = n + " جدول";
+    showView("waitHub");
+  }
+
+  /* ===== حصر حصص الانتظار التي حضرها المعلم ===== */
+  function wcHijriLabel(id, v) {
+    const el = document.getElementById(id);
+    if (!v) { el.textContent = ""; return; }
+    const p = wpDateParts(v);
+    el.textContent = (dayNameFromDate(v) || new Intl.DateTimeFormat("ar-SA", { weekday: "long" }).format(new Date(v + "T12:00:00"))) + " — " + p.hijri;
+  }
+  function wcOpen() {
+    const sel = document.getElementById("wcTeacher");
+    const cur = sel.value;
+    const subs = new Set(data.coverageRecords.filter(r => r.subTeacher).map(r => r.subTeacher));
+    const list = data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar"));
+    subs.forEach(t => { if (!list.includes(t)) list.push(t); });
+    sel.innerHTML = '<option value="">اختيار (جميع المعلمين)</option>' + list.map(t => '<option value="' + acEsc(t) + '">' + acEsc(t) + "</option>").join("");
+    sel.value = list.includes(cur) ? cur : "";
+    wcRender();
+    showView("waitCount");
+  }
+  function wcRender() {
+    const t = document.getElementById("wcTeacher").value;
+    const mode = document.getElementById("wcMode").value || "both";
+    const showWait = mode !== "miss", showMiss = mode !== "wait";
+    let from = document.getElementById("wcFrom").value, to = document.getElementById("wcTo").value;
+    if (from && to && from > to) { const x = from; from = to; to = x; }
+    wcHijriLabel("wcFromH", document.getElementById("wcFrom").value);
+    wcHijriLabel("wcToH", document.getElementById("wcTo").value);
+    const greg = d => { const [y, m, dd] = d.split("-"); return +dd + "/" + +m + "/" + y + " م"; };
+    const range = (from ? " من " + wpDateParts(from).hijri : "") + (to ? " إلى " + wpDateParts(to).hijri : "");
+    const who = t ? "المعلم " + t : "المعلمون";
+    ["wcTable", "wcMissed", "wcSummary"].forEach(id => { document.getElementById(id).innerHTML = ""; });
+    const parts = [];   // أجزاء الطباعة المجمّعة
+    // ١) حصص الانتظار التي حضرها
+    const recs = data.coverageRecords
+      .filter(r => r.subTeacher && r.date && (!t || r.subTeacher === t) && (!from || r.date >= from) && (!to || r.date <= to))
+      .sort((a, b) => a.date.localeCompare(b.date) || a.period - b.period || String(a.subTeacher).localeCompare(String(b.subTeacher), "ar"));
+    if (showWait) {
+      const headers = ["م", "اليوم", "التاريخ الهجري", "التاريخ الميلادي", "الحصة", "الفصل"].concat(t ? [] : ["المعلم المنتظر"]).concat(["المعلم الغائب"]);
+      const rows = recs.map((r, i) => [String(i + 1), dayNameFromDate(r.date) || r.day || "", wpDateParts(r.date).hijri, greg(r.date), PERIODS[r.period - 1] || String(r.period), r.className]
+        .concat(t ? [] : [r.subTeacher]).concat([(r.absentTeacher || "—") + (r.absentTeacher && kindOf(r) === "permission" ? " (مستأذن)" : "")]));
+      const title = "حصص الانتظار التي حضرها " + who + range + " — المجموع: " + recs.length + " حصة";
+      const footer = "مجموع الحصص التي حضرها " + who + " كمنتظر: " + recs.length + " حصة";
+      ptRender("wcTable", { plain: true, title, headers, rows, footer, date: todayISODate(), fileBase: "حصر_الانتظار" + (t ? "_" + t.replace(/\s+/g, "_") : ""), sheet: "حصص الانتظار", emptyText: "لا توجد حصص انتظار مطابقة للبحث" });
+      parts.push('<h3 style="color:#174a59;margin:10px 0 6px">حصص الانتظار التي حضرها ' + wpEsc(who) + "</h3>" + (rows.length ? ptTableHTML(headers, rows, footer) : "<p>لا توجد حصص انتظار في هذه الفترة.</p>"));
+    }
+    // ٢) الحصص التي غابها
+    const missedAll = wcMissed(from, to);
+    const miss = t ? missedAll.filter(m => m.teacher === t) : missedAll;
+    if (showMiss) {
+      const mHeaders = ["م", "اليوم", "التاريخ الهجري", "التاريخ الميلادي", "الحصة", "الفصل"].concat(t ? [] : ["المعلم"]).concat(["السبب", "المنتظر بدلاً عنه"]);
+      const mRows = miss.map((m, i) => [String(i + 1), dayNameFromDate(m.date) || "", wpDateParts(m.date).hijri, greg(m.date), PERIODS[m.period - 1] || String(m.period), m.className]
+        .concat(t ? [] : [m.teacher]).concat([m.reason, m.sub || "-"]));
+      const mTitle = "الحصص التي غابها " + who + range + " — المجموع: " + miss.length + " حصة";
+      const mFooter = "مجموع الحصص التي غابها " + who + ": " + miss.length + " حصة";
+      ptRender("wcMissed", { plain: true, title: mTitle, headers: mHeaders, rows: mRows, footer: mFooter, date: todayISODate(), fileBase: "حصص_الغياب" + (t ? "_" + t.replace(/\s+/g, "_") : ""), sheet: "الحصص الغائبة", emptyText: "لا توجد حصص غائبة في هذه الفترة" });
+      parts.push('<h3 style="color:#174a59;margin:18px 0 6px">الحصص التي غابها ' + wpEsc(who) + "</h3>" + (mRows.length ? ptTableHTML(mHeaders, mRows, mFooter) : "<p>لا توجد حصص غائبة في هذه الفترة.</p>"));
+    }
+    // ٣) ملخص لكل معلم (عند عدم اختيار معلم)
+    if (!t && (recs.length || miss.length)) {
+      const by = {};
+      if (showWait) recs.forEach(r => { by[r.subTeacher] = by[r.subTeacher] || [0, 0]; by[r.subTeacher][0]++; });
+      if (showMiss) miss.forEach(m => { by[m.teacher] = by[m.teacher] || [0, 0]; by[m.teacher][1]++; });
+      const sHeaders = ["م", "المعلم"].concat(showWait ? ["حضرها كمنتظر"] : []).concat(showMiss ? ["الحصص التي غابها"] : []);
+      const srows = Object.entries(by).sort((a, b) => (showWait ? b[1][0] - a[1][0] : b[1][1] - a[1][1]) || a[0].localeCompare(b[0], "ar"))
+        .map(([n, c], i) => [String(i + 1), n].concat(showWait ? [String(c[0])] : []).concat(showMiss ? [String(c[1])] : []));
+      const sFooter = "المجموع:" + (showWait ? " حضور كمنتظر " + recs.length + " حصة" : "") + (showWait && showMiss ? " —" : "") + (showMiss ? " غياب " + miss.length + " حصة" : "");
+      if (srows.length) {
+        ptRender("wcSummary", { plain: true, title: "ملخص لكل معلم" + range, headers: sHeaders, rows: srows, footer: sFooter, date: todayISODate(), fileBase: "ملخص_الانتظار_والغياب", sheet: "الملخص" });
+        parts.push('<h3 style="color:#174a59;margin:18px 0 6px">ملخص لكل معلم</h3>' + ptTableHTML(sHeaders, srows, sFooter));
+      }
+    }
+    if (showWait && showMiss && t) parts.push('<p style="font-weight:800;color:#174a59;text-align:center;margin-top:12px">حضر كمنتظر: ' + recs.length + " حصة — غاب: " + miss.length + " حصة</p>");
+    const ttl = (mode === "wait" ? "تقرير حصص الانتظار" : mode === "miss" ? "تقرير الحصص الغائبة" : "تقرير الانتظار والغياب") + (t ? " — المعلم: " + t : "") + range;
+    wc.printDoc = () => wpOpenDoc(plainReportDoc(ttl, parts.join("") + wpSigsHTML()), "تقرير" + (t ? "_" + t.replace(/\s+/g, "_") : ""));
+  }
+  const wc = { printDoc: null };
+  // الحصص التي غابها المعلم: أيام «غياب» في متابعة الدوام (كل حصصه)، و«مستأذن» (الحصص بعد وقت الاستئذان)، وأي حصة سُجّل لها انتظار عنه
+  function wcMissed(from, to) {
+    const inRange = d => d && (!from || d >= from) && (!to || d <= to);
+    const out = [], seen = new Set();
+    const add = (teacher, date, period, className, reason) => {
+      const k = teacher + "|" + date + "|" + period + "|" + className;
+      if (seen.has(k)) return; seen.add(k);
+      const c = data.coverageRecords.find(r => r.date === date && r.period === period && r.className === className && r.subTeacher);
+      out.push({ teacher, date, period, className, reason, sub: c ? c.subTeacher : "" });
+    };
+    (data.workAttendance || []).forEach(w => {
+      if (!inRange(w.date) || (w.status !== "absent" && w.status !== "permission")) return;
+      const day = dayNameFromDate(w.date);
+      if (!day) return;
+      data.schedule.filter(x => x.day === day && x.teacher === w.teacher).forEach(x => {
+        const p = Number(x.period);
+        if (w.status === "permission") {
+          const pt = (data.periodTimes || [])[p - 1];
+          if (w.time && pt && pt.end && pt.end <= w.time) return;
+        }
+        add(w.teacher, w.date, p, x.className, w.status === "absent" ? "غياب" : "استئذان" + (w.time ? " (" + w.time + ")" : ""));
+      });
+    });
+    data.coverageRecords.concat(uncoveredRecs()).forEach(r => {
+      if (r.absentTeacher && inRange(r.date)) add(r.absentTeacher, r.date, Number(r.period), r.className, kindOf(r) === "permission" ? "استئذان" : "غياب");
+    });
+    return out.sort((a, b) => a.date.localeCompare(b.date) || a.period - b.period);
+  }
+
   function showView(view) {
     document.getElementById("homeView").classList.toggle("hidden", view !== "home");
     document.getElementById("teachersView").classList.toggle("active", view === "teachers");
@@ -7107,6 +7656,10 @@ ${contentEl.innerHTML}
     document.getElementById("comprehensiveView").classList.toggle("active", view === "comprehensive");
     document.getElementById("masterView").classList.toggle("active", view === "master");
     document.getElementById("notifyView").classList.toggle("active", view === "notify");
+    document.getElementById("waitHubView").classList.toggle("active", view === "waitHub");
+    document.getElementById("waitTableView").classList.toggle("active", view === "waitTable");
+    document.getElementById("waitDesignView").classList.toggle("active", view === "waitDesign");
+    document.getElementById("waitCountView").classList.toggle("active", view === "waitCount");
     document.getElementById("teacherSchedView").classList.toggle("active", view === "teacherSched");
     window.scrollTo(0, 0);
   }
@@ -7268,7 +7821,28 @@ ${contentEl.innerHTML}
     showView("coverage");
   }
 
-  document.getElementById("openCoverage").addEventListener("click", () => openCoverageView(null));
+  document.getElementById("openCoverage").addEventListener("click", waitHubOpen);
+  document.getElementById("openWaitTable").addEventListener("click", wtOpen);
+  document.getElementById("openWaitLog").addEventListener("click", () => { renderAssignmentLogList(); showView("assignmentLog"); });
+  document.getElementById("openWaitCount").addEventListener("click", wcOpen);
+  ["wcTeacher", "wcFrom", "wcTo", "wcMode"].forEach(id => document.getElementById(id).addEventListener("change", wcRender));
+  document.getElementById("wcPrintAll").addEventListener("click", () => { wcRender(); if (wc.printDoc) wc.printDoc(); });
+  document.getElementById("wcClear").addEventListener("click", () => {
+    document.getElementById("wcTeacher").value = ""; document.getElementById("wcFrom").value = ""; document.getElementById("wcTo").value = "";
+    document.getElementById("wcMode").value = "both";
+    wcRender();
+  });
+  document.getElementById("openWaitDesign").addEventListener("click", openWaitDesignView);
+  ["wtGreg", "wtHijri"].forEach(id => document.getElementById(id).addEventListener("change", e => { wt.date = e.target.value; wt.absent = ""; wtRefresh(true); }));
+  document.getElementById("wtAbsent").addEventListener("change", e => { wt.absent = e.target.value; wt._editing = new Set(); wtInitChoices(); wtSetSaved(false); wtRenderSlots(); });
+  document.getElementById("wtSave").addEventListener("click", wtSave);
+  document.getElementById("wtPrint").addEventListener("click", () => {
+    const recs = wtRecordsForPrint();
+    if (!recs.length) { showToast("لا توجد حصص لهذا المعلم"); return; }
+    if (!wt.saved) { showToast("احفظ الجدول أولاً"); return; }
+    wpPrint("نموذج تكليف بحصص الانتظار", wt.date, [{ absentTeacher: wt.absent, records: recs, kind: "absence" }], "تكليف_انتظار");
+  });
+  document.getElementById("wtOpenLog").addEventListener("click", () => { renderAssignmentLogList(); showView("assignmentLog"); });
   document.getElementById("covPeriodInput").addEventListener("change", () => { fillCoverageClassSelect(); fillCoverageSubSelect(); });
   document.getElementById("covShowAllToggle").addEventListener("change", fillCoverageSubSelect);
   document.getElementById("covPermInput").addEventListener("change", () => {
@@ -7301,11 +7875,17 @@ ${contentEl.innerHTML}
     renderAssignmentLogList();
     showToast("تمت أرشفة " + past.length + " جدول");
   });
+  document.getElementById("openArchiveInline").addEventListener("click", () => { renderAssignmentArchiveList(); showView("assignmentArchive"); });
+  setInterval(() => {
+    try {
+      if (autoArchiveSheets() && document.getElementById("assignmentLogView").classList.contains("active")) renderAssignmentLogList();
+    } catch (e) {}
+  }, 60000);
   document.getElementById("openAssignmentArchive").addEventListener("click", () => {
     renderAssignmentArchiveList();
     showView("assignmentArchive");
   });
-  document.getElementById("openCoveragePrint").addEventListener("click", () => {
+  document.getElementById("openCoveragePrint")?.addEventListener("click", () => {
     fillCoveragePrintDateSelects();
     renderCoveragePrintContent();
     showView("coveragePrint");
@@ -7360,13 +7940,15 @@ ${contentEl.innerHTML}
     if (!w.hidden) acRenderBalance();
   });
 
-  document.getElementById("openSubDesignation").addEventListener("click", () => {
+  // «تعيين المنتظرين» شاشة مستقلة تحتوي فقط: اليوم، الحصة، المنتظر الأول/الثاني/الثالث، حفظ
+  document.getElementById("waitDesignBody").appendChild(document.getElementById("subDesignationPanel"));
+  function openWaitDesignView() {
     fillSubDesignationPanel();
     document.getElementById("subDesignationPanel").hidden = false;
-  });
-  document.getElementById("closeSubDesignation").addEventListener("click", () => {
-    document.getElementById("subDesignationPanel").hidden = true;
-  });
+    showView("waitDesign");
+  }
+  document.getElementById("openSubDesignation").addEventListener("click", openWaitDesignView);
+  document.getElementById("closeSubDesignation").addEventListener("click", waitHubOpen);
   document.getElementById("subDesignDayInput").addEventListener("change", fillSubDesignationSelectsForSlot);
   document.getElementById("subDesignPeriodInput").addEventListener("change", fillSubDesignationSelectsForSlot);
   document.getElementById("saveSubDesignation").addEventListener("click", () => {
