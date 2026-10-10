@@ -592,6 +592,11 @@
   .nf-text { width: 100%; padding: 10px 12px; border-radius: 9px; border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); font-family: inherit; font-size: 15px; line-height: 1.8; resize: vertical; }
   .nf-preview { margin: 12px 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
   .nf-preview canvas { width: 100%; height: auto; display: block; }
+  .nf-style { display: flex; gap: 8px; margin-top: 12px; }
+  .nf-style-btn { flex: 1; font: inherit; font-weight: 800; font-size: 15px; padding: 10px 8px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .nf-style-btn small { font-weight: 500; font-size: 11.5px; color: var(--ink-soft); }
+  .nf-style-btn.on { border-color: #174a59; background: #174a59; color: #fff; }
+  .nf-style-btn.on small { color: #cfe9e5; }
   .nf-wa { background: #e7f7ee !important; border-color: #25a35a !important; color: #146c3a !important; font-weight: 700; }
   .nf-list { display: flex; flex-direction: column; gap: 6px; }
   .nf-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--paper); flex-wrap: wrap; }
@@ -1351,8 +1356,12 @@
         <label for="nfFile">إرفاق صورة أو ملف PDF (اختياري)</label>
         <input type="file" id="nfFile" accept="image/*,application/pdf" class="date-input" style="width:100%;">
       </div>
-      <div class="sched-hint" id="nfFileInfo" style="text-align:right;">بدون مرفق: تُرسَل ورقة الإشعار بالترويسة كصورة أو PDF. مع مرفق: يُرسَل المرفق نفسه.</div>
+      <div class="sched-hint" id="nfFileInfo" style="text-align:right;">بدون مرفق: تُرسَل ورقة الإشعار (رسمية بالترويسة أو غير رسمية) كصورة أو PDF. مع مرفق: يُرسَل المرفق نفسه.</div>
       <div class="export-row" id="nfClearRow" style="display:none;"><button class="export-btn" id="nfClearFile">✖ إزالة المرفق</button></div>
+    </div>
+    <div class="nf-style" role="group" aria-label="نوع الإشعار">
+      <button type="button" class="nf-style-btn" id="nfStyleOfficial" data-style="official">📜 رسمي<small>بالترويسة</small></button>
+      <button type="button" class="nf-style-btn" id="nfStyleInformal" data-style="informal">📝 غير رسمي<small>بدون ترويسة</small></button>
     </div>
     <div class="nf-preview"><canvas id="nfCanvas" width="1240" height="1754"></canvas></div>
     <div class="export-row">
@@ -7124,6 +7133,14 @@ ${contentEl.innerHTML}
 
   /* ===== إشعار المعلمين (واتساب: نص / صورة / PDF) ===== */
   let nfAttach = null; // { file, kind: "image"|"pdf", img }
+  let nfStyle = "official";
+  try { if (localStorage.getItem("nf_style") === "informal") nfStyle = "informal"; } catch (e) {}
+  function nfSetStyle(v) {
+    nfStyle = v === "informal" ? "informal" : "official";
+    try { localStorage.setItem("nf_style", nfStyle); } catch (e) {}
+    document.querySelectorAll(".nf-style-btn").forEach(b => b.classList.toggle("on", b.dataset.style === nfStyle));
+    nfRender();
+  }
   const nfLogo = new Image();
   try { if (MOE_LOGO) nfLogo.src = MOE_LOGO; } catch (e) {}
   function nfWaPhone(raw) {
@@ -7153,7 +7170,8 @@ ${contentEl.innerHTML}
     });
     return out;
   }
-  function nfRender() {
+  function nfRender(forPdf) {
+    if (nfStyle === "informal") return nfRenderInformal(forPdf ? 1754 : 1240);
     const cv = document.getElementById("nfCanvas");
     const W = 1240, F = "Tajawal, Tahoma, Arial, sans-serif";
     const title = document.getElementById("nfTitle").value.trim();
@@ -7211,6 +7229,41 @@ ${contentEl.innerHTML}
     ctx.fillStyle = "#44b7a6"; ctx.fillRect(0, H - 32, W, 6);
     return cv;
   }
+  // إشعار غير رسمي: بدون ترويسة — العنوان، ثم اليوم والتاريخ الهجري والميلادي، ثم النص
+  function nfRenderInformal(minH) {
+    const cv = document.getElementById("nfCanvas");
+    const W = 1240, F = "Tajawal, Tahoma, Arial, sans-serif";
+    const title = document.getElementById("nfTitle").value.trim();
+    const body = document.getElementById("nfBody").value;
+    const sign = document.getElementById("nfSign").checked;
+    let ctx = cv.getContext("2d");
+    ctx.font = "500 34px " + F;
+    const lines = nfWrap(ctx, body, W - 200);
+    const top = title ? 150 : 90;
+    const bodyTop = top + 195, LH = 66;
+    const H = Math.max(minH || 1240, bodyTop + lines.length * LH + (sign ? 230 : 90));
+    cv.width = W; cv.height = H;
+    ctx = cv.getContext("2d");
+    ctx.direction = "rtl";
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
+    ctx.textAlign = "center";
+    if (title) {
+      ctx.fillStyle = "#174a59"; ctx.font = "800 50px " + F; ctx.fillText(title, W / 2, top);
+    }
+    const iso = todayISODate(), dp = wpDateParts(iso);
+    const [y, m, d] = iso.split("-");
+    ctx.fillStyle = "#333"; ctx.font = "700 30px " + F;
+    ctx.fillText("اليوم: " + (dp.dayName || "") + "   —   " + (dp.hijri || "") + "   —   " + (+d) + "/" + (+m) + "/" + y + " م", W / 2, top + 72);
+    ctx.fillStyle = "#44b7a6"; ctx.fillRect(100, top + 108, W - 200, 3);
+    ctx.textAlign = "right"; ctx.fillStyle = "#111"; ctx.font = "500 34px " + F;
+    lines.forEach((ln, i) => ctx.fillText(ln, W - 100, bodyTop + i * LH));
+    if (sign) {
+      const sy = bodyTop + lines.length * LH + 90;
+      ctx.textAlign = "center"; ctx.font = "800 30px " + F; ctx.fillStyle = "#174a59";
+      ctx.fillText("وكيل الشؤون التعليمية", 260, sy); ctx.fillStyle = "#111"; ctx.fillText("موسى آل ضاحي", 260, sy + 52);
+    }
+    return cv;
+  }
   function nfDataUrlToBytes(url) {
     const bin = atob(url.split(",")[1]); const u = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
@@ -7266,7 +7319,9 @@ ${contentEl.innerHTML}
       if (!nfAttach.img || !nfAttach.img.naturalWidth) { showToast("جاري تحميل الصورة، حاول مرة أخرى"); return; }
       shareFile(nfFileBase() + ".pdf", nfPdfFromCanvas(nfImageCanvas(nfAttach.img)), "application/pdf", "إشعار"); return;
     }
-    shareFile(nfFileBase() + ".pdf", nfPdfFromCanvas(nfRender()), "application/pdf", "إشعار");
+    const pdf = nfPdfFromCanvas(nfRender(true));
+    if (nfStyle === "informal") nfRender();
+    shareFile(nfFileBase() + ".pdf", pdf, "application/pdf", "إشعار");
   }
   function nfSendText(phone) {
     const text = nfMessageText();
@@ -7292,6 +7347,7 @@ ${contentEl.innerHTML}
   let nfTimer = null;
   function nfSchedule() { clearTimeout(nfTimer); nfTimer = setTimeout(nfRender, 150); }
   function nfOpen() {
+    document.querySelectorAll(".nf-style-btn").forEach(b => b.classList.toggle("on", b.dataset.style === nfStyle));
     nfRenderTeachers();
     nfRender();
     if (document.fonts && document.fonts.load) Promise.all([document.fonts.load("800 30px Tajawal"), document.fonts.load("500 30px Tajawal"), document.fonts.load("700 30px Tajawal")]).then(nfRender).catch(() => {});
@@ -7302,7 +7358,7 @@ ${contentEl.innerHTML}
     if (!file) {
       nfAttach = null; document.getElementById("nfFile").value = "";
       document.getElementById("nfClearRow").style.display = "none";
-      info.textContent = "بدون مرفق: تُرسَل ورقة الإشعار بالترويسة كصورة أو PDF. مع مرفق: يُرسَل المرفق نفسه.";
+      info.textContent = "بدون مرفق: تُرسَل ورقة الإشعار (رسمية بالترويسة أو غير رسمية) كصورة أو PDF. مع مرفق: يُرسَل المرفق نفسه.";
       return;
     }
     const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
@@ -8068,6 +8124,7 @@ ${contentEl.innerHTML}
   document.getElementById("nfSendText").addEventListener("click", () => nfSendText(""));
   document.getElementById("nfSendImage").addEventListener("click", nfSendImage);
   document.getElementById("nfSendPdf").addEventListener("click", nfSendPdf);
+  document.querySelectorAll(".nf-style-btn").forEach(b => b.addEventListener("click", () => nfSetStyle(b.dataset.style)));
   document.getElementById("msWithWait").addEventListener("change", msRender);
   document.getElementById("msPrintBtn").addEventListener("click", msPrint);
   document.getElementById("msExcelBtn").addEventListener("click", tsExportMaster);
