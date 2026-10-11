@@ -910,6 +910,7 @@
       <button class="export-btn" id="tsMasterExportBtn">📄 الجدول العام Excel</button>
       <button class="export-btn" id="csClassesExportBtn">🏫 جداول الفصول Excel</button>
       <button class="export-btn" id="openTeacherSched">👤 جداول المعلمين</button>
+      <button class="export-btn" id="openTimesFromSched">⏰ أوقات الحصص</button>
     </div>
 
     <div class="sched-form" id="schedForm">
@@ -1423,7 +1424,7 @@
     <div class="back-row">
       <button class="back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
     </div>
-    <div class="detail-header"><h2>سجل الانتظار</h2></div>
+    <div class="detail-header"><h2>سجل الانتظار</h2><button class="export-btn" id="openTimesFromWait" style="padding:6px 12px;">⏰ أوقات الحصص</button></div>
     <div class="grid" style="grid-template-columns:repeat(2,1fr);">
       <button class="tile coverage" id="openWaitTable">
         <div class="tile-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M8 14h3"/><path d="M8 17h6"/></svg></div>
@@ -1512,9 +1513,15 @@
         </div>
       </div>
       <div class="wt-daybox" id="wtDayBox"></div>
-      <div class="field" style="margin-top:10px;">
-        <label for="wtAbsent">المعلم الغائب (من متابعة الدوام)</label>
-        <select id="wtAbsent" class="select-styled"></select>
+      <div class="sched-grid" style="margin-top:10px;">
+        <div class="field">
+          <label for="wtAbsent">المعلم الغائب (من متابعة الدوام)</label>
+          <select id="wtAbsent" class="select-styled"></select>
+        </div>
+        <div class="field">
+          <label for="wtPerm">المعلم المستأذن (من متابعة الدوام)</label>
+          <select id="wtPerm" class="select-styled"></select>
+        </div>
       </div>
       <div class="sched-hint" id="wtAbsentHint" style="text-align:right; margin-top:8px;"></div>
     </div>
@@ -6538,7 +6545,7 @@ ${contentEl.innerHTML}
   function uncoveredRecs(date) {
     return (data.waitUncovered || []).filter(u => !date || u.date === date)
       .filter(u => !data.coverageRecords.some(r => r.date === u.date && r.period === u.period && r.className === u.className))
-      .map(u => ({ day: dayNameFromDate(u.date), date: u.date, period: u.period, className: u.className, absentTeacher: u.absentTeacher, subTeacher: "", rank: "" }));
+      .map(u => ({ day: dayNameFromDate(u.date), date: u.date, period: u.period, className: u.className, absentTeacher: u.absentTeacher, subTeacher: "", rank: "", kind: u.kind }));
   }
   function syncAssignmentLog() {
     if (!Array.isArray(data.assignmentSheets)) data.assignmentSheets = [];
@@ -7380,18 +7387,31 @@ ${contentEl.innerHTML}
 
   /* ===== جدول الانتظار: اختيار التاريخ ← الغائب (من متابعة الدوام) ← المنتظرون ===== */
   const WT_RANK_LABELS = ["منتظر 1", "منتظر 2", "منتظر 3"];
-  const wt = { date: "", absent: "", choices: {}, modes: {} };
+  const wt = { date: "", absent: "", kind: "absence", choices: {}, modes: {} };
   function wtGregText(iso) { const [y, m, d] = iso.split("-"); return +d + "/" + +m + "/" + y + " م"; }
   function wtAbsentees(date) {
     return [...new Set((data.workAttendance || []).filter(r => r.date === date && r.status === "absent").map(r => r.teacher))]
       .filter(t => data.teachers.includes(t)).sort((a, b) => a.localeCompare(b, "ar"));
+  }
+  // المستأذنون في التاريخ مع وقت الاستئذان
+  function wtPermitted(date) {
+    const m = new Map();
+    (data.workAttendance || []).filter(r => r.date === date && r.status === "permission" && data.teachers.includes(r.teacher)).forEach(r => m.set(r.teacher, r.time || ""));
+    return [...m.entries()].map(([teacher, time]) => ({ teacher, time })).sort((a, b) => a.teacher.localeCompare(b.teacher, "ar"));
+  }
+  function wtPermTime(date, teacher) { const p = wtPermitted(date).find(x => x.teacher === teacher); return p ? p.time : ""; }
+  // الحصة لم تنتهِ قبل وقت الاستئذان ← تحتاج منتظراً
+  function wtAfterPerm(period, time) {
+    if (!time) return true;
+    const pt = (data.periodTimes || [])[period - 1];
+    return !(pt && pt.end && pt.end <= time);
   }
   function wtDates() {
     const set = new Set();
     const base = new Date(todayISODate() + "T12:00:00");
     const iso = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
     for (let i = -30; i <= 30; i++) { const d = new Date(base); d.setDate(d.getDate() + i); const v = iso(d); if (dayNameFromDate(v)) set.add(v); }
-    (data.workAttendance || []).forEach(r => { if (r.status === "absent" && r.date && dayNameFromDate(r.date)) set.add(r.date); });
+    (data.workAttendance || []).forEach(r => { if ((r.status === "absent" || r.status === "permission") && r.date && dayNameFromDate(r.date)) set.add(r.date); });
     return [...set].sort();
   }
   function wtDefaultDate(dates) {
@@ -7401,7 +7421,11 @@ ${contentEl.innerHTML}
   function wtFillDates() {
     const dates = wtDates();
     if (wt.date && !dates.includes(wt.date)) wt.date = "";
-    const mk = fmt => dates.map(d => { const n = wtAbsentees(d).length; return '<option value="' + d + '">' + acEsc(fmt(d)) + (n ? "  (" + n + " غائب)" : "") + "</option>"; }).join("");
+    const mk = fmt => dates.map(d => {
+      const n = wtAbsentees(d).length, q = wtPermitted(d).length;
+      const tag = [n ? n + " غائب" : "", q ? q + " مستأذن" : ""].filter(Boolean).join("، ");
+      return '<option value="' + d + '">' + acEsc(fmt(d)) + (tag ? "  (" + tag + ")" : "") + "</option>";
+    }).join("");
     document.getElementById("wtGreg").innerHTML = '<option value="">اختيار</option>' + mk(d => (dayNameFromDate(d) + " " + wtGregText(d)));
     document.getElementById("wtHijri").innerHTML = '<option value="">اختيار</option>' + mk(d => wpDateParts(d).hijri || d);
     document.getElementById("wtGreg").value = wt.date;
@@ -7410,39 +7434,47 @@ ${contentEl.innerHTML}
     const p = wpDateParts(wt.date);
     document.getElementById("wtDayBox").innerHTML = "اليوم: " + acEsc(p.dayName) + " &nbsp;—&nbsp; " + acEsc(p.hijri) + " &nbsp;—&nbsp; " + acEsc(wtGregText(wt.date));
   }
+  function wtDoneMark(t) {
+    return data.coverageRecords.some(r => r.date === wt.date && r.absentTeacher === t) || (data.waitUncovered || []).some(u => u.date === wt.date && u.absentTeacher === t);
+  }
   function wtFillAbsent() {
-    const sel = document.getElementById("wtAbsent"), hint = document.getElementById("wtAbsentHint");
-    if (!wt.date) { wt.absent = ""; sel.innerHTML = '<option value="">اختيار</option>'; sel.disabled = true; hint.textContent = "اختر التاريخ أولاً لتظهر قائمة الغائبين من متابعة الدوام."; return; }
-    const list = wtAbsentees(wt.date);
-    if (!list.includes(wt.absent)) wt.absent = "";
-    if (!list.length) {
-      sel.innerHTML = '<option value="">اختيار</option>';
-      sel.disabled = true;
-      hint.innerHTML = 'لا يوجد غائبون في هذا اليوم — لم يُسجَّل أي معلم «غياب» في متابعة الدوام لهذا التاريخ. <button class="export-btn" id="wtGoWork" style="margin-top:6px;">📝 فتح متابعة الدوام</button>';
+    const sel = document.getElementById("wtAbsent"), psel = document.getElementById("wtPerm"), hint = document.getElementById("wtAbsentHint");
+    if (!wt.date) {
+      wt.absent = "";
+      sel.innerHTML = psel.innerHTML = '<option value="">اختيار</option>'; sel.disabled = psel.disabled = true;
+      hint.textContent = "اختر التاريخ أولاً لتظهر قائمة الغائبين والمستأذنين من متابعة الدوام."; return;
+    }
+    const list = wtAbsentees(wt.date), perms = wtPermitted(wt.date);
+    if (wt.kind === "permission" ? !perms.some(p => p.teacher === wt.absent) : !list.includes(wt.absent)) wt.absent = "";
+    sel.disabled = !list.length; psel.disabled = !perms.length;
+    sel.innerHTML = '<option value="">اختيار</option>' + list.map(t => '<option value="' + acEsc(t) + '">' + acEsc(t) + (wtDoneMark(t) ? "  ✓ محفوظ" : "") + "</option>").join("");
+    psel.innerHTML = '<option value="">اختيار</option>' + perms.map(p => '<option value="' + acEsc(p.teacher) + '">' + acEsc(p.teacher) + (p.time ? "  (" + p.time + ")" : "") + (wtDoneMark(p.teacher) ? "  ✓ محفوظ" : "") + "</option>").join("");
+    sel.value = wt.kind === "absence" ? wt.absent : "";
+    psel.value = wt.kind === "permission" ? wt.absent : "";
+    if (!list.length && !perms.length) {
+      hint.innerHTML = 'لا يوجد غائبون ولا مستأذنون في هذا اليوم — لم يُسجَّل أي معلم «غياب» أو «مستأذن» في متابعة الدوام لهذا التاريخ. <button class="export-btn" id="wtGoWork" style="margin-top:6px;">📝 فتح متابعة الدوام</button>';
       document.getElementById("wtGoWork").addEventListener("click", () => {
         document.getElementById("workDateInput").value = wt.date;
         document.getElementById("openWorkTile").click();
       });
       return;
     }
-    sel.disabled = false;
-    sel.innerHTML = '<option value="">اختيار</option>' + list.map(t => {
-      const done = data.coverageRecords.some(r => r.date === wt.date && r.absentTeacher === t) || (data.waitUncovered || []).some(u => u.date === wt.date && u.absentTeacher === t);
-      return '<option value="' + acEsc(t) + '">' + acEsc(t) + (done ? "  ✓ محفوظ" : "") + "</option>";
-    }).join("");
-    sel.value = wt.absent;
-    hint.textContent = "الغائبون حسب متابعة الدوام: " + list.length + " — عند اختيار المعلم تظهر حصصه والمنتظر الأول لكل حصة.";
+    hint.textContent = "حسب متابعة الدوام: " + list.length + " غائب، " + perms.length + " مستأذن — اختر معلماً لتظهر حصصه (للمستأذن: الحصص المتبقية من وقت استئذانه) والمنتظر الأول لكل حصة.";
   }
   function wtSlots() {
     const day = dayNameFromDate(wt.date);
     if (!day || !wt.absent) return [];
-    return data.schedule.filter(s => s.day === day && s.teacher === wt.absent)
+    const ptime = wt.kind === "permission" ? wtPermTime(wt.date, wt.absent) : "";
+    return data.schedule.filter(s => s.day === day && s.teacher === wt.absent && (wt.kind !== "permission" || wtAfterPerm(Number(s.period), ptime)))
       .map(s => ({ period: Number(s.period), className: s.className }))
       .sort((a, b) => a.period - b.period || String(a.className).localeCompare(String(b.className), "ar"));
   }
   function wtKey(sl) { return sl.period + "|" + sl.className; }
   function wtUnavailReason(t, sl, day, absentSet) {
-    if (t === wt.absent || absentSet.has(t)) return "غائب";
+    if (t === wt.absent) return wt.kind === "permission" ? "مستأذن" : "غائب";
+    if (absentSet.has(t)) return "غائب";
+    const pt = wtPermitted(wt.date).find(x => x.teacher === t);
+    if (pt && wtAfterPerm(sl.period, pt.time)) return "مستأذن";
     if (getTeachersBusyAt(day, sl.period).includes(t)) return "لديه حصة";
     if (getSubTeachersAlreadyBooked(wt.date, sl.period, sl.className).filter(x => x).some(x => x === t)) {
       const r = data.coverageRecords.find(r => r.date === wt.date && r.period === sl.period && r.subTeacher === t && r.className !== sl.className);
@@ -7498,13 +7530,14 @@ ${contentEl.innerHTML}
     box.innerHTML = "";
     if (!wt.absent) { act.hidden = true; return; }
     const slots = wtSlots();
-    if (!slots.length) { box.innerHTML = '<div class="empty-state">لا توجد حصص لهذا المعلم يوم ' + acEsc(dayNameFromDate(wt.date)) + "</div>"; act.hidden = true; return; }
+    if (!slots.length) { box.innerHTML = '<div class="empty-state">' + (wt.kind === "permission" ? "لا توجد حصص متبقية لهذا المعلم بعد وقت استئذانه" : "لا توجد حصص لهذا المعلم يوم " + acEsc(dayNameFromDate(wt.date))) + "</div>"; act.hidden = true; return; }
     const day = dayNameFromDate(wt.date);
     const absentSet = new Set(wtAbsentees(wt.date));
     const saved = data.coverageRecords.some(r => r.date === wt.date && r.absentTeacher === wt.absent) || (data.waitUncovered || []).some(u => u.date === wt.date && u.absentTeacher === wt.absent);
     const cap = document.createElement("div");
     cap.className = "table-caption";
-    cap.innerHTML = "حصص المعلم " + acEsc(wt.absent) + " — " + slots.length + " حصة" + (saved ? ' &nbsp;<span class="wt-saved">✓ محفوظ في السجل</span>' : "");
+    const ptm = wt.kind === "permission" ? wtPermTime(wt.date, wt.absent) : "";
+    cap.innerHTML = "حصص المعلم " + acEsc(wt.absent) + (wt.kind === "permission" ? " (مستأذن" + (ptm ? " من الساعة " + acEsc(ptm) : "") + ") — الحصص المتبقية" : "") + " — " + slots.length + " حصة" + (saved ? ' &nbsp;<span class="wt-saved">✓ محفوظ في السجل</span>' : "");
     box.appendChild(cap);
     slots.forEach(sl => {
       const k = wtKey(sl);
@@ -7568,7 +7601,7 @@ ${contentEl.innerHTML}
     document.getElementById("wtSaveHint").style.display = wt.saved ? "none" : "";
   }
   function wtRecordsForPrint() {
-    return wtSlots().map(sl => ({ period: sl.period, className: sl.className, subTeacher: wt.choices[wtKey(sl)] || "", kind: "absence" }));
+    return wtSlots().map(sl => ({ period: sl.period, className: sl.className, subTeacher: wt.choices[wtKey(sl)] || "", kind: wt.kind }));
   }
   function wtSave() {
     if (!wt.absent) { showToast("اختر المعلم الغائب أولاً"); return false; }
@@ -7581,9 +7614,11 @@ ${contentEl.innerHTML}
       const i = data.coverageRecords.findIndex(r => r.date === wt.date && r.period === sl.period && r.className === sl.className);
       if (i > -1) data.coverageRecords.splice(i, 1);
       const sub = wt.choices[wtKey(sl)];
-      if (!sub) { data.waitUncovered.push({ date: wt.date, absentTeacher: wt.absent, period: sl.period, className: sl.className }); return; }
+      if (!sub) { data.waitUncovered.push({ date: wt.date, absentTeacher: wt.absent, period: sl.period, className: sl.className, kind: wt.kind }); return; }
       const des = wtDesignated(sl, day).find(x => x.t === sub);
-      data.coverageRecords.push({ day, date: wt.date, period: sl.period, className: sl.className, absentTeacher: wt.absent, subTeacher: sub, rank: des ? des.label : "من غير المنتظرين" });
+      const rec = { day, date: wt.date, period: sl.period, className: sl.className, absentTeacher: wt.absent, subTeacher: sub, rank: des ? des.label : "من غير المنتظرين" };
+      if (wt.kind === "permission") rec.kind = "permission";
+      data.coverageRecords.push(rec);
     });
     saveData();
     syncAssignmentLog();
@@ -7599,7 +7634,7 @@ ${contentEl.innerHTML}
     if (resetChoices) { wt._editing = new Set(); wtInitChoices(); wtSetSaved(false); }
     wtRenderSlots();
   }
-  function wtOpen() { wt.date = ""; wt.absent = ""; wtRefresh(true); showView("waitTable"); }
+  function wtOpen() { wt.date = ""; wt.absent = ""; wt.kind = "absence"; wtRefresh(true); showView("waitTable"); }
   function waitHubOpen() {
     try { syncAssignmentLog(); autoArchiveSheets(); } catch (e) {}
     const n = (data.assignmentSheets || []).filter(s => !s.archived && !s.deleted).length;
@@ -7916,14 +7951,20 @@ ${contentEl.innerHTML}
     wcRender();
   });
   document.getElementById("openWaitDesign").addEventListener("click", openWaitDesignView);
-  ["wtGreg", "wtHijri"].forEach(id => document.getElementById(id).addEventListener("change", e => { wt.date = e.target.value; wt.absent = ""; wtRefresh(true); }));
-  document.getElementById("wtAbsent").addEventListener("change", e => { wt.absent = e.target.value; wt._editing = new Set(); wtInitChoices(); wtSetSaved(false); wtRenderSlots(); });
+  ["wtGreg", "wtHijri"].forEach(id => document.getElementById(id).addEventListener("change", e => { wt.date = e.target.value; wt.absent = ""; wt.kind = "absence"; wtRefresh(true); }));
+  const wtPick = (kind, v) => {
+    wt.kind = kind; wt.absent = v;
+    if (kind === "absence") document.getElementById("wtPerm").value = ""; else document.getElementById("wtAbsent").value = "";
+    wt._editing = new Set(); wtInitChoices(); wtSetSaved(false); wtRenderSlots();
+  };
+  document.getElementById("wtAbsent").addEventListener("change", e => wtPick("absence", e.target.value));
+  document.getElementById("wtPerm").addEventListener("change", e => wtPick("permission", e.target.value));
   document.getElementById("wtSave").addEventListener("click", wtSave);
   document.getElementById("wtPrint").addEventListener("click", () => {
     const recs = wtRecordsForPrint();
     if (!recs.length) { showToast("لا توجد حصص لهذا المعلم"); return; }
     if (!wt.saved) { showToast("احفظ الجدول أولاً"); return; }
-    wpPrint("نموذج تكليف بحصص الانتظار", wt.date, [{ absentTeacher: wt.absent, records: recs, kind: "absence" }], "تكليف_انتظار");
+    wpPrint("نموذج تكليف بحصص الانتظار", wt.date, [{ absentTeacher: wt.absent, records: recs, kind: wt.kind }], "تكليف_انتظار");
   });
   document.getElementById("wtOpenLog").addEventListener("click", () => { renderAssignmentLogList(); showView("assignmentLog"); });
   document.getElementById("covPeriodInput").addEventListener("change", () => { fillCoverageClassSelect(); fillCoverageSubSelect(); });
@@ -8202,10 +8243,22 @@ ${contentEl.innerHTML}
       renderInquiryResult();
     }
   });
-  document.getElementById("openTimeSettings").addEventListener("click", () => {
+  // لوحة أوقات الحصص تظهر مباشرة تحت بطاقة «متابعة الحصص» ويُنتقل إليها تلقائياً
+  (function () {
+    const panel = document.getElementById("timeSettings");
+    const card = document.getElementById("openTimeSettings").closest(".quick-card");
+    if (panel && card && card.parentNode) card.parentNode.insertBefore(panel, card.nextSibling);
+  })();
+  function openTimeSettingsPanel() {
+    showView("home");
     fillTimeSettingsRows();
-    document.getElementById("timeSettings").hidden = false;
-  });
+    const panel = document.getElementById("timeSettings");
+    panel.hidden = false;
+    setTimeout(() => panel.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }
+  document.getElementById("openTimeSettings").addEventListener("click", openTimeSettingsPanel);
+  document.getElementById("openTimesFromWait").addEventListener("click", openTimeSettingsPanel);
+  document.getElementById("openTimesFromSched").addEventListener("click", openTimeSettingsPanel);
   document.getElementById("closeTimeSettings").addEventListener("click", () => {
     document.getElementById("timeSettings").hidden = true;
   });
