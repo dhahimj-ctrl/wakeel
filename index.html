@@ -491,6 +491,12 @@
   .wt-row select:disabled { opacity: 1; background: #f4f8f7; color: var(--ink); font-weight: 700; }
   .wt-row button { font: inherit; font-size: 13px; padding: 7px 10px; border-radius: 9px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; white-space: nowrap; }
   .wt-row button.on { border-color: #174a59; background: #174a59; color: #fff; }
+  .wt-send { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+  .wt-send button { font: inherit; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 9px; cursor: pointer; }
+  .wt-send button.wa { border: 1px solid #25a35a; background: #e7f7ee; color: #146c3a; }
+  .wt-send button.sms { border: 1px solid #2f6fb3; background: #eaf2fb; color: #1d4f86; }
+  .wt-send .st { font-size: 12px; color: var(--ink-soft); }
+  .wt-send .st.ok { color: #146c3a; font-weight: 700; }
   .wt-note { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
   .wt-saved { font-size: 12px; color: #146c3a; font-weight: 700; }
   .roster-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
@@ -5263,28 +5269,30 @@ ${pages}
   function buildCoverageMessage(record) {
     const dateObj = new Date(record.date + "T00:00:00");
     return "السلام عليكم ورحمة الله وبركاته\n\n" +
-      "نظراً " + kindVerb(kindOf(record)) + " زميلنا المعلم،(" + (record.absentTeacher || "لا يوجد") + ") فقد تم تكليفكم بحصة الانتظار الموضحة بياناتها أدناه:\n\n" +
-      "📅 التاريخ: " + formatDisplayDate(dateObj) + "\n" +
-      "📅 اليوم: " + record.day + "\n" +
+      "نظراً " + kindVerb(kindOf(record)) + " زميلنا المعلم (" + (record.absentTeacher || "لا يوجد") + ") فقد تم تكليفكم بحصة الانتظار الموضحة بياناتها أدناه:\n\n" +
+      "📅 اليوم: " + (record.day || dayNameFromDate(record.date)) + "\n" +
+      "📅 التاريخ: " + wpDateParts(record.date).hijri + " — " + formatDisplayDate(dateObj) + "\n" +
       "🕐 الحصة: " + PERIODS[record.period - 1] + "\n" +
       "🏫 الفصل: " + record.className + "\n" +
-      "📚 المادة: \n" +
       "👤 المعلم المكلف بالانتظار: " + record.subTeacher + "\n\n" +
       "شاكرين لكم تعاونكم، وتقديرنا لجهودكم.";
   }
 
+  function covAfterSend(record) {
+    if (document.getElementById("waitTableView").classList.contains("active")) wtRenderSlots();
+    else if (document.getElementById("coverageView").classList.contains("active")) renderCoverageList(record.date);
+  }
   function sendCoverageWhatsApp(record) {
     const phone = (data.teacherPhones[record.subTeacher] || "").trim();
     if (!phone) {
       showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين");
       return;
     }
-    const digits = phone.replace(/[^\d+]/g, "").replace(/^0+/, "");
-    const url = "https://wa.me/" + digits + "?text=" + encodeURIComponent(buildCoverageMessage(record));
+    const url = "https://wa.me/" + nfWaPhone(phone) + "?text=" + encodeURIComponent(buildCoverageMessage(record));
     openExternalLink(url);
     record.messageSent = true;
     saveData();
-    renderCoverageList(record.date);
+    covAfterSend(record);
   }
 
   function sendCoverageSMS(record) {
@@ -5297,7 +5305,7 @@ ${pages}
     window.location.href = "sms:" + digits + "?body=" + encodeURIComponent(buildCoverageMessage(record));
     record.messageSent = true;
     saveData();
-    renderCoverageList(record.date);
+    covAfterSend(record);
   }
 
   function buildAssignmentSheetHTML(absentTeacher, records, contentId, kind) {
@@ -7530,6 +7538,25 @@ ${contentEl.innerHTML}
       sel.addEventListener("focus", () => { (wt._editing = wt._editing || new Set()).add(k); });
       row.appendChild(sel); row.appendChild(bEdit); row.appendChild(bFree);
       card.appendChild(row); card.appendChild(note);
+      // أزرار إرسال التكليف للمنتظر (بعد الحفظ)
+      const savedRec = data.coverageRecords.find(r => r.date === wt.date && r.period === sl.period && r.className === sl.className && r.subTeacher);
+      if (savedRec && savedRec.subTeacher === (wt.choices[k] || "")) {
+        const sendRow = document.createElement("div"); sendRow.className = "wt-send";
+        const hasPhone = !!(data.teacherPhones[savedRec.subTeacher] || "").trim();
+        const bWa = document.createElement("button"); bWa.type = "button"; bWa.className = "wa"; bWa.textContent = "💬 واتساب";
+        const bSms = document.createElement("button"); bSms.type = "button"; bSms.className = "sms"; bSms.textContent = "✉️ رسالة SMS";
+        bWa.addEventListener("click", () => sendCoverageWhatsApp(savedRec));
+        bSms.addEventListener("click", () => sendCoverageSMS(savedRec));
+        sendRow.appendChild(bWa); sendRow.appendChild(bSms);
+        const st = document.createElement("span"); st.className = "st";
+        st.textContent = !hasPhone ? "لا يوجد رقم جوال للمنتظر — أضفه من إدارة المعلمين" : savedRec.messageSent ? "✓ أُرسل التكليف" : "لم يُرسل بعد";
+        if (savedRec.messageSent) st.classList.add("ok");
+        sendRow.appendChild(st);
+        card.appendChild(sendRow);
+      } else if (wt.choices[k]) {
+        const h = document.createElement("div"); h.className = "wt-note"; h.textContent = "احفظ الجدول لتظهر أزرار الإرسال (واتساب / SMS) للمنتظر.";
+        card.appendChild(h);
+      }
       paint();
       box.appendChild(card);
     });
