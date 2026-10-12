@@ -4283,12 +4283,18 @@
     }
 
     const typeLabel = document.getElementById("mrTypeSelect").selectedOptions[0].textContent;
-    let html = '<div id="mrTableWrapContent"><div class="table-caption">تقرير المتابعة — ' + typeLabel + '</div>' +
+    // عند اختيار معلم: يُكتب اسمه أعلى الجدول، ويحل التاريخ الهجري محل عمود المعلم
+    const gregTxt = d => { if (!d) return "—"; const [y, m, dd] = d.split("-"); return +dd + "/" + +m + "/" + y + " م"; };
+    let html = '<div id="mrTableWrapContent"><div class="table-caption">تقرير المتابعة — ' + typeLabel + (teacherFilter ? " — المعلم: " + acEsc(teacherFilter) : "") + '</div>' +
       '<div class="mr-table-wrap"><table class="mr-table"><thead><tr>' +
-      '<th>اليوم</th><th>التاريخ</th><th>المعلم</th><th>الحالة</th><th>تفاصيل</th><th>الإجراء المتخذ</th>' +
+      (teacherFilter ? '<th>اليوم</th><th>التاريخ الهجري</th><th>التاريخ الميلادي</th>' : '<th>اليوم</th><th>التاريخ</th><th>المعلم</th>') +
+      '<th>الحالة</th><th>تفاصيل</th><th>الإجراء</th><th>الملاحظات</th>' +
       '</tr></thead><tbody>';
     records.forEach(r => {
-      html += `<tr><td>${r.day || "—"}</td><td>${r.date || "—"}</td><td>${r.teacher}</td><td>${statusLabel(r.status)}</td><td>${r.detail || "—"}</td><td>${getMonitorActionSummary(r)}</td></tr>`;
+      const first = teacherFilter
+        ? `<td>${r.day || "—"}</td><td>${r.date ? wpDateParts(r.date).hijri : "—"}</td><td>${gregTxt(r.date)}</td>`
+        : `<td>${r.day || "—"}</td><td>${r.date ? wpDateParts(r.date).hijri : "—"}</td><td>${r.teacher}</td>`;
+      html += `<tr>${first}<td>${statusLabel(r.status)}</td><td>${r.detail || "—"}</td><td>${getMonitorActionSummary(r)}</td><td></td></tr>`;
     });
     html += "</tbody>";
 
@@ -4318,7 +4324,7 @@
         if (totalLateMin > 0) extra += " — إجمالي دقائق التأخير: " + formatDurationBadge(totalLateMin);
         if (totalEarlyMin > 0) extra += " — إجمالي دقائق الانصراف المبكر: " + formatDurationBadge(totalEarlyMin);
       }
-      html += `<tfoot><tr><td colspan="6">إجمالي ${teacher}: ${parts.join(" — ") || "لا شيء"}${extra}</td></tr></tfoot>`;
+      html += `<tfoot><tr><td colspan="7">إجمالي ${teacher}: ${parts.join(" — ") || "لا شيء"}${extra}</td></tr></tfoot>`;
     }
 
     html += "</table></div></div>";
@@ -4389,7 +4395,8 @@
     const table = document.querySelector("#mrTableWrap table");
     if (!table) return null;
     const t = document.getElementById("mrTypeSelect");
-    const wb = wpBook([[wpSheetFromTable(table, "تقرير المتابعة" + (t && t.selectedOptions[0] ? " — " + t.selectedOptions[0].textContent : "")), "التقرير"]]);
+    const tch = document.getElementById("mrTeacherSelect").value;
+    const wb = wpBook([[wpSheetFromTable(table, "تقرير المتابعة" + (t && t.selectedOptions[0] ? " — " + t.selectedOptions[0].textContent : "") + (tch ? " — المعلم: " + tch : "")), "التقرير"]]);
     return XLSX.write(wb, { bookType: "xlsx", type: "array" });
   }
 
@@ -4420,7 +4427,8 @@
     const table = document.querySelector("#mrTableWrap table");
     if (!table) return null;
     const typeLabel = document.getElementById("mrTypeSelect").selectedOptions[0].textContent;
-    const title = "تقرير المتابعة — " + typeLabel;
+    const tch = document.getElementById("mrTeacherSelect").value;
+    const title = "تقرير المتابعة — " + typeLabel + (tch ? " — المعلم: " + tch : "");
     return wpShellDoc(title, wpGenericPage(title, table.outerHTML), { autoPrint: false });
   }
 
@@ -4449,7 +4457,7 @@
     const contentEl = document.getElementById(wrapId + "Content") || document.getElementById(wrapId);
     if (!contentEl || !contentEl.querySelector("table")) { showToast("لا يوجد جدول للطباعة"); return; }
     let title = "";
-    if (wrapId === "mrTableWrap") { const t = document.getElementById("mrTypeSelect"); title = "تقرير المتابعة" + (t && t.selectedOptions[0] ? " — " + t.selectedOptions[0].textContent : ""); }
+    if (wrapId === "mrTableWrap") { const t = document.getElementById("mrTypeSelect"); const tch = document.getElementById("mrTeacherSelect").value; title = "تقرير المتابعة" + (t && t.selectedOptions[0] ? " — " + t.selectedOptions[0].textContent : "") + (tch ? " — المعلم: " + tch : ""); }
     else if (wrapId === "repTableWrap") title = contentEl.querySelector(".table-caption") ? "" : "تقرير الحصص";
     wpOpenDoc(wpShellDoc(title || "طباعة", wpGenericPage(title, wpCleanClone(contentEl))), "للطباعة");
   }
