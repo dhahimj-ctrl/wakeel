@@ -491,10 +491,16 @@
   .wt-row select:disabled { opacity: 1; background: #f4f8f7; color: var(--ink); font-weight: 700; }
   .wt-row button { font: inherit; font-size: 13px; padding: 7px 10px; border-radius: 9px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; white-space: nowrap; }
   .wt-row button.on { border-color: #174a59; background: #174a59; color: #fff; }
+  .log-send { margin: -4px 0 10px; padding: 8px 10px; border: 1px dashed #174a59; border-radius: 10px; background: #f3f8f7; }
+  .log-send-row { padding: 6px 0; border-bottom: 1px solid var(--line); }
+  .log-send-row:last-child { border-bottom: 0; }
+  .log-send-row .info { font-size: 13px; line-height: 1.7; }
+  .log-send-row .info span { color: var(--ink-soft); }
   .wt-send { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
   .wt-send button { font: inherit; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 9px; cursor: pointer; }
   .wt-send button.wa { border: 1px solid #25a35a; background: #e7f7ee; color: #146c3a; }
   .wt-send button.sms { border: 1px solid #2f6fb3; background: #eaf2fb; color: #1d4f86; }
+  .wt-send button.resend { border-color: #c77c0e !important; background: #fff4df !important; color: #8a5200 !important; }
   .wt-send .st { font-size: 12px; color: var(--ink-soft); }
   .wt-send .st.ok { color: #146c3a; font-weight: 700; }
   .wt-note { font-size: 12px; color: var(--ink-soft); margin-top: 6px; }
@@ -1667,7 +1673,7 @@
       </div>
     </div>
     <div class="sched-hint" style="text-align:right; margin-bottom:8px;">تُضاف جداول الانتظار هنا عند حفظها. تُنقل تلقائياً إلى الأرشيف بنهاية دوام الخميس الساعة 2:00 ظهراً.</div>
-    <div class="export-row"><button class="export-btn" id="openArchiveInline">🗄️ الأرشيف</button><button class="export-btn" id="archivePastSheetsBtn">📦 أرشفة جداول الأيام السابقة</button></div>
+    <div class="export-row"><button class="export-btn" id="openArchiveInline">🗄️ الأرشيف</button><button class="export-btn" id="openDeletedSheets">♻️ المحذوفة</button><button class="export-btn" id="archivePastSheetsBtn">📦 أرشفة جداول الأيام السابقة</button></div>
     <div class="name-list" id="assignmentLogList"></div>
     <div id="assignmentLogViewer"></div>
   </div>
@@ -5285,8 +5291,20 @@ ${pages}
       "شاكرين لكم تعاونكم، وتقديرنا لجهودكم.";
   }
 
+  // إذا سبق الإرسال: الضغطة الأولى تنبّه، والثانية (خلال 6 ثوانٍ) ترسل مرة أخرى
+  function guardResend(btn, record, fn) {
+    if (!record.messageSent || btn.dataset.confirm === "1") { fn(record); return; }
+    const orig = btn.textContent;
+    btn.dataset.confirm = "1";
+    btn.classList.add("resend");
+    btn.textContent = "⚠️ أُرسل سابقاً — اضغط للإرسال مرة أخرى";
+    showToast("تم إرسال التكليف لهذا المعلم سابقاً — اضغط مرة أخرى لإعادة الإرسال");
+    setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.classList.remove("resend"); btn.textContent = orig; } }, 6000);
+  }
   function covAfterSend(record) {
     if (document.getElementById("waitTableView").classList.contains("active")) wtRenderSlots();
+    else if (document.getElementById("assignmentLogView").classList.contains("active")) renderAssignmentLogList();
+    else if (document.getElementById("assignmentArchiveView").classList.contains("active")) renderAssignmentArchiveList();
     else if (document.getElementById("coverageView").classList.contains("active")) renderCoverageList(record.date);
   }
   function sendCoverageWhatsApp(record) {
@@ -6610,6 +6628,9 @@ ${contentEl.innerHTML}
     const arcN = data.assignmentSheets.filter(s => s.archived && !s.deleted).length;
     const arcBtn = document.getElementById("openArchiveInline");
     if (arcBtn) arcBtn.textContent = "🗄️ الأرشيف (" + arcN + ")";
+    const delN = data.assignmentSheets.filter(s => s.deleted).length;
+    const delBtnTop = document.getElementById("openDeletedSheets");
+    if (delBtnTop) delBtnTop.textContent = "♻️ المحذوفة (" + delN + ")";
     const listEl = document.getElementById("assignmentLogList");
     document.getElementById("assignmentLogViewer").innerHTML = "";
     // الترتيب حسب تاريخ الغياب (الأحدث أولاً) وليس حسب وقت الإنشاء
@@ -6711,7 +6732,7 @@ ${contentEl.innerHTML}
         sheet.deleted = true;
         saveData();
         renderAssignmentLogList();
-        showToast("تم حذف الجدول");
+        showToast("تم حذف الجدول — يمكنك استعادته من «المحذوفة»");
       });
 
       const printBtn = document.createElement("button");
@@ -6723,15 +6744,90 @@ ${contentEl.innerHTML}
         e.stopPropagation();
         wpPrint("نموذج تكليف بحصص الانتظار", sheet.date, [{ absentTeacher: sheet.absentTeacher, records: sheet.records, kind: sheet.kind || kindOf(sheet.records[0]) }], "تكليف_انتظار");
       });
+      const sendBtn = mkSmallBtn("📤 إرسال", () => {
+        if (logSendOpen.has(sheet.id)) logSendOpen.delete(sheet.id); else logSendOpen.add(sheet.id);
+        renderAssignmentLogList();
+      });
+      const editBtn = mkSmallBtn("✏️ تعديل", () => wtLoadSheet(sheet));
+      actions.appendChild(sendBtn);
+      actions.appendChild(editBtn);
       actions.appendChild(printBtn);
       actions.appendChild(archiveBtn);
       actions.appendChild(delBtn);
       li.appendChild(label);
       li.appendChild(actions);
       listEl.appendChild(li);
+      if (logSendOpen.has(sheet.id)) listEl.appendChild(buildSheetSendPanel(sheet));
     });
   }
 
+  /* ===== إرسال/تعديل/استعادة الجداول المحفوظة ===== */
+  const logSendOpen = new Set();
+  function sheetCoverageRecs(sheet) {
+    return data.coverageRecords.filter(r => r.date === sheet.date && r.absentTeacher === sheet.absentTeacher && r.subTeacher)
+      .sort((a, b) => a.period - b.period);
+  }
+  function buildSheetSendPanel(sheet) {
+    const box = document.createElement("div");
+    box.className = "log-send";
+    const recs = sheetCoverageRecs(sheet);
+    if (!recs.length) { box.innerHTML = '<div class="wt-note">لا توجد حصص لها منتظر في هذا الجدول.</div>'; return box; }
+    recs.forEach(r => {
+      const row = document.createElement("div"); row.className = "log-send-row";
+      const info = document.createElement("div"); info.className = "info";
+      info.innerHTML = "<b>الحصة " + acEsc(PERIODS[r.period - 1] || r.period) + "</b> — الفصل " + acEsc(r.className) + "<br><span>المنتظر: " + acEsc(r.subTeacher) + "</span>";
+      const btns = document.createElement("div"); btns.className = "wt-send"; btns.style.borderTop = "0"; btns.style.marginTop = "4px"; btns.style.paddingTop = "0";
+      const hasPhone = !!(data.teacherPhones[r.subTeacher] || "").trim();
+      const bWa = document.createElement("button"); bWa.type = "button"; bWa.className = "wa"; bWa.textContent = "💬 واتساب";
+      const bSms = document.createElement("button"); bSms.type = "button"; bSms.className = "sms"; bSms.textContent = "✉️ رسالة SMS";
+      bWa.addEventListener("click", e => { e.stopPropagation(); guardResend(bWa, r, sendCoverageWhatsApp); });
+      bSms.addEventListener("click", e => { e.stopPropagation(); guardResend(bSms, r, sendCoverageSMS); });
+      const st = document.createElement("span"); st.className = "st" + (r.messageSent ? " ok" : "");
+      st.textContent = !hasPhone ? "لا يوجد رقم جوال" : r.messageSent ? "✓ تم الإرسال" : "لم يُرسل";
+      btns.appendChild(bWa); btns.appendChild(bSms); btns.appendChild(st);
+      row.appendChild(info); row.appendChild(btns);
+      box.appendChild(row);
+    });
+    return box;
+  }
+  function mkSmallBtn(label, onClick) {
+    const b = document.createElement("button");
+    b.className = "export-btn"; b.style.padding = "5px 10px"; b.style.fontSize = "12px";
+    b.textContent = label;
+    b.addEventListener("click", e => { e.stopPropagation(); onClick(e); });
+    return b;
+  }
+  // فتح الجدول المحفوظ في «جدول الانتظار» للتعديل والإرسال
+  function wtLoadSheet(sheet) {
+    const kind = (sheet.kind || kindOf(sheet.records && sheet.records[0])) === "permission" ? "permission" : "absence";
+    if (ensureWorkStatus(sheet.date, sheet.absentTeacher, kind === "permission" ? "permission" : "absent")) saveData();
+    wt.date = sheet.date; wt.kind = kind; wt.absent = sheet.absentTeacher;
+    wtFillDates(); wtFillAbsent();
+    wt._editing = new Set(); wtInitChoices(); wtSetSaved(true); wtRenderSlots();
+    showView("waitTable");
+  }
+  function renderDeletedSheets() {
+    const box = document.getElementById("assignmentLogViewer");
+    const del = data.assignmentSheets.filter(s => s.deleted).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    box.innerHTML = "";
+    const cap = document.createElement("div"); cap.className = "table-caption"; cap.style.marginTop = "14px";
+    cap.textContent = "الجداول المحذوفة (" + del.length + ")";
+    box.appendChild(cap);
+    if (!del.length) { const e = document.createElement("div"); e.className = "empty-state"; e.textContent = "لا توجد جداول محذوفة"; box.appendChild(e); return; }
+    del.forEach(sheet => {
+      const li = document.createElement("div"); li.className = "name-item";
+      const lb = document.createElement("div"); lb.className = "label";
+      lb.innerHTML = '<div style="display:flex;flex-direction:column"><span class="txt"></span><span style="font-size:11px;color:var(--ink-soft)"></span></div>';
+      lb.querySelector(".txt").textContent = sheet.absentTeacher + (sheet.kind === "permission" ? " (مستأذن)" : "");
+      lb.querySelector("span[style]").textContent = sheetSubText(sheet);
+      const r = mkSmallBtn("♻️ استعادة", () => {
+        sheet.deleted = false; sheet.keepOpen = true;
+        saveData(); renderAssignmentLogList(); renderDeletedSheets();
+        showToast("تمت استعادة الجدول إلى الجداول المحفوظة");
+      });
+      li.appendChild(lb); li.appendChild(r); box.appendChild(li);
+    });
+  }
   function renderAssignmentArchiveList() {
     const listEl = document.getElementById("assignmentArchiveList");
     const sheets = data.assignmentSheets.filter(s => s.archived && !s.deleted).sort((a, b) => (b.date || "").localeCompare(a.date || "") || String(a.absentTeacher).localeCompare(String(b.absentTeacher), "ar"));
@@ -6815,12 +6911,17 @@ ${contentEl.innerHTML}
       aPrint.textContent = "🖨️ طباعة";
       aPrint.addEventListener("click", () => wpPrint("نموذج تكليف بحصص الانتظار", sheet.date, [{ absentTeacher: sheet.absentTeacher, records: sheet.records, kind: sheet.kind || kindOf(sheet.records[0]) }], "تكليف_انتظار"));
       actions.style.flexWrap = "wrap";
+      actions.appendChild(mkSmallBtn("📤 إرسال", () => {
+        if (logSendOpen.has(sheet.id)) logSendOpen.delete(sheet.id); else logSendOpen.add(sheet.id);
+        renderAssignmentArchiveList();
+      }));
       actions.appendChild(aPrint);
       actions.appendChild(restoreBtn);
       actions.appendChild(delBtn);
       li.appendChild(label);
       li.appendChild(actions);
       listEl.appendChild(li);
+      if (logSendOpen.has(sheet.id)) listEl.appendChild(buildSheetSendPanel(sheet));
     });
   }
 
@@ -7521,6 +7622,8 @@ ${contentEl.innerHTML}
         return;
       }
       wt.modes[k] = "des";
+      // حصة حُفظت سابقاً بدون منتظر تبقى «اختيار»
+      if ((data.waitUncovered || []).some(u => u.date === wt.date && u.absentTeacher === wt.absent && u.period === sl.period && u.className === sl.className)) { wt.choices[k] = ""; return; }
       const first = wtDesignated(sl, day).find(x => !wtUnavailReason(x.t, sl, day, absentSet));
       wt.choices[k] = first ? first.t : "";
     });
@@ -7578,11 +7681,11 @@ ${contentEl.innerHTML}
         const hasPhone = !!(data.teacherPhones[savedRec.subTeacher] || "").trim();
         const bWa = document.createElement("button"); bWa.type = "button"; bWa.className = "wa"; bWa.textContent = "💬 واتساب";
         const bSms = document.createElement("button"); bSms.type = "button"; bSms.className = "sms"; bSms.textContent = "✉️ رسالة SMS";
-        bWa.addEventListener("click", () => sendCoverageWhatsApp(savedRec));
-        bSms.addEventListener("click", () => sendCoverageSMS(savedRec));
+        bWa.addEventListener("click", () => guardResend(bWa, savedRec, sendCoverageWhatsApp));
+        bSms.addEventListener("click", () => guardResend(bSms, savedRec, sendCoverageSMS));
         sendRow.appendChild(bWa); sendRow.appendChild(bSms);
         const st = document.createElement("span"); st.className = "st";
-        st.textContent = !hasPhone ? "لا يوجد رقم جوال للمنتظر — أضفه من إدارة المعلمين" : savedRec.messageSent ? "✓ أُرسل التكليف" : "لم يُرسل بعد";
+        st.textContent = !hasPhone ? "لا يوجد رقم جوال للمنتظر — أضفه من إدارة المعلمين" : savedRec.messageSent ? "✓ تم الإرسال" : "لم يُرسل بعد";
         if (savedRec.messageSent) st.classList.add("ok");
         sendRow.appendChild(st);
         card.appendChild(sendRow);
@@ -8000,6 +8103,7 @@ ${contentEl.innerHTML}
     showToast("تمت أرشفة " + past.length + " جدول");
   });
   document.getElementById("openArchiveInline").addEventListener("click", () => { renderAssignmentArchiveList(); showView("assignmentArchive"); });
+  document.getElementById("openDeletedSheets").addEventListener("click", renderDeletedSheets);
   setInterval(() => {
     try {
       if (autoArchiveSheets() && document.getElementById("assignmentLogView").classList.contains("active")) renderAssignmentLogList();
