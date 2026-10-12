@@ -500,6 +500,7 @@
   .wt-send button { font: inherit; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 9px; cursor: pointer; }
   .wt-send button.wa { border: 1px solid #25a35a; background: #e7f7ee; color: #146c3a; }
   .wt-send button.sms { border: 1px solid #2f6fb3; background: #eaf2fb; color: #1d4f86; }
+  .export-btn.danger { border-color: #b3261e !important; background: #fdecea !important; color: #8c1d18 !important; }
   .wt-send button.resend { border-color: #c77c0e !important; background: #fff4df !important; color: #8a5200 !important; }
   .wt-send .st { font-size: 12px; color: var(--ink-soft); }
   .wt-send .st.ok { color: #146c3a; font-weight: 700; }
@@ -6825,8 +6826,32 @@ ${contentEl.innerHTML}
         saveData(); renderAssignmentLogList(); renderDeletedSheets();
         showToast("تمت استعادة الجدول إلى الجداول المحفوظة");
       });
-      li.appendChild(lb); li.appendChild(r); box.appendChild(li);
+      const purge = mkSmallBtn("🗑️ حذف نهائي", () => {
+        if (purge.dataset.confirm !== "1") {
+          purge.dataset.confirm = "1";
+          purge.classList.add("danger");
+          purge.textContent = "⚠️ تأكيد الحذف النهائي";
+          setTimeout(() => { if (purge.isConnected) { purge.dataset.confirm = ""; purge.classList.remove("danger"); purge.textContent = "🗑️ حذف نهائي"; } }, 6000);
+          return;
+        }
+        purgeSheet(sheet);
+        renderAssignmentLogList(); renderDeletedSheets();
+        showToast("تم حذف الجدول نهائياً");
+      });
+      const acts = document.createElement("div");
+      acts.style.display = "flex"; acts.style.gap = "4px"; acts.style.flexWrap = "wrap";
+      acts.appendChild(r); acts.appendChild(purge);
+      li.appendChild(lb); li.appendChild(acts); box.appendChild(li);
     });
+  }
+  // حذف نهائي: يزيل الجدول وحصص الانتظار المسجلة فيه (فلا يعود للظهور ولا يُحسب في التقارير)
+  function purgeSheet(sheet) {
+    const k = kindOf(sheet) === "permission" ? "permission" : "absence";
+    const same = r => r.date === sheet.date && r.absentTeacher === sheet.absentTeacher && (kindOf(r) === "permission" ? "permission" : "absence") === k;
+    data.coverageRecords = data.coverageRecords.filter(r => !same(r));
+    data.waitUncovered = (data.waitUncovered || []).filter(u => !(u.date === sheet.date && u.absentTeacher === sheet.absentTeacher));
+    data.assignmentSheets = data.assignmentSheets.filter(x => x !== sheet && !(x.deleted && x.date === sheet.date && x.absentTeacher === sheet.absentTeacher && kindOf(x) === kindOf(sheet)));
+    saveData();
   }
   function renderAssignmentArchiveList() {
     const listEl = document.getElementById("assignmentArchiveList");
