@@ -3677,7 +3677,7 @@
   /* ===== Monitoring: lineup attendance ===== */
   function setLineupAttendance(date, teacher, status) {
     const idx = data.lineupAttendance.findIndex(r => r.date === date && r.teacher === teacher);
-    if (status === "") {
+    if (status === "" || status === "present") { // حاضر هو الافتراضي فلا يُخزَّن
       if (idx > -1) data.lineupAttendance.splice(idx, 1);
     } else if (idx > -1) {
       data.lineupAttendance[idx].status = status;
@@ -3759,7 +3759,7 @@
     }
     data.teachers.forEach(name => {
       const record = data.lineupAttendance.find(r => r.date === dateStr && r.teacher === name);
-      const value = record ? record.status : "";
+      const value = (record && record.status) || "present"; // الافتراضي: حاضر
 
       const li = document.createElement("div");
       li.className = "name-item";
@@ -3786,7 +3786,7 @@
       sel.style.padding = "7px 10px 7px 26px";
       sel.style.fontSize = "12.5px";
       sel.innerHTML = `
-        <option value="" ${value === "" ? "selected" : ""}>اختر الحالة</option>
+        <option value="" disabled>اختر</option>
         <option value="present" ${value === "present" ? "selected" : ""}>حاضر</option>
         <option value="absent" ${value === "absent" ? "selected" : ""}>غائب</option>
         <option value="late" ${value === "late" ? "selected" : ""}>متأخر</option>
@@ -3843,7 +3843,8 @@
     if (status === "late" && time) diffMinutes = computeLateDiff(time);
     if (status === "early_leave" && time) diffMinutes = computeEarlyDiff(time);
     const record = { date, teacher, status, time: time || "", diffMinutes };
-    if (idx > -1) data.workAttendance[idx] = record;
+    if (status === "" || status === "present") { if (idx > -1) data.workAttendance.splice(idx, 1); } // حاضر هو الافتراضي فلا يُخزَّن
+    else if (idx > -1) data.workAttendance[idx] = record;
     else data.workAttendance.push(record);
     saveData();
   }
@@ -3858,7 +3859,7 @@
     }
     data.teachers.forEach(name => {
       const record = data.workAttendance.find(r => r.date === dateStr && r.teacher === name);
-      const status = record ? record.status : "";
+      const status = (record && record.status) || "present"; // الافتراضي: حاضر
 
       const row = document.createElement("div");
       row.className = "work-row";
@@ -3880,7 +3881,7 @@
       const sel = document.createElement("select");
       sel.className = "select-styled";
       sel.innerHTML = `
-        <option value="" ${status === "" ? "selected" : ""}>اختر الحالة</option>
+        <option value="" disabled>اختر</option>
         <option value="present" ${status === "present" ? "selected" : ""}>حاضر</option>
         <option value="absent" ${status === "absent" ? "selected" : ""}>غياب</option>
         <option value="late" ${status === "late" ? "selected" : ""}>متأخر</option>
@@ -5865,7 +5866,7 @@ ${bodyHTML}
   function ptLineup(dateStr) {
     const rows = data.teachers.map((name, i) => {
       const r = data.lineupAttendance.find(x => x.date === dateStr && x.teacher === name);
-      return [i + 1, name, r && r.status ? statusLabel(r.status) : "لم يُسجَّل", ptActions(r)];
+      return [i + 1, name, r && r.status ? statusLabel(r.status) : "حاضر", ptActions(r)];
     });
     ptRender("lineupTable", { title: "متابعة حضور الطابور — " + (dayNameFromDate(dateStr) || "") + " " + wpDateParts(dateStr).hijri, headers: ["م", "المعلم", "الحالة", "الإجراء المتخذ"], rows, date: dateStr, fileBase: "الطابور_" + dateStr, sheet: "الطابور" });
   }
@@ -5918,7 +5919,7 @@ ${bodyHTML}
         const m = r.status === "late" ? computeLateDiff(r.time) : computeEarlyDiff(r.time);
         if (m > 0) diff = formatDurationBadge(m);
       }
-      return [i + 1, name, r && r.status ? statusLabel(r.status) : "لم يُسجَّل", r && r.time ? r.time : "—", diff, ptActions(r)];
+      return [i + 1, name, r && r.status ? statusLabel(r.status) : "حاضر", r && r.time ? r.time : "—", diff, ptActions(r)];
     });
     ptRender("workTable", { title: "متابعة الدوام — " + (dayNameFromDate(dateStr) || "") + " " + wpDateParts(dateStr).hijri, headers: ["م", "المعلم", "الحالة", "الوقت", "مدة التأخير / الخروج", "الإجراء المتخذ"], rows, date: dateStr, fileBase: "الدوام_" + dateStr, sheet: "الدوام" });
   }
