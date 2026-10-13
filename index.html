@@ -482,6 +482,9 @@
   .wc-hijri { font-size: 12px; color: #174a59; font-weight: 700; margin-top: 4px; min-height: 16px; }
   .arc-date { margin: 14px 0 6px; padding: 7px 12px; border-radius: 9px; background: #174a59; color: #fff; font-weight: 700; font-size: 13.5px; }
   .arc-date:first-child { margin-top: 0; }
+  .lv-range { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; background: var(--paper); }
+  .lv-range-h { font-weight: 800; color: #174a59; margin-bottom: 4px; }
+  .lv-day { font-size: 12.5px; font-weight: 700; color: #174a59; min-height: 18px; margin-top: 4px; }
   .wt-daybox { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: #e9f4f2; border: 1px solid #b9dcd6; color: #174a59; font-weight: 700; text-align: center; line-height: 1.8; }
   .wt-slot { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 10px 12px; margin-bottom: 10px; }
   .wt-slot-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-weight: 800; color: #174a59; margin-bottom: 8px; }
@@ -1091,6 +1094,14 @@
         <h2>سجل الاستئذان</h2>
         <div class="count">بحث بالتاريخ والمعلم</div>
       </button>
+
+      <button class="tile reports" id="openLateLog">
+        <div class="tile-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M9 2h6"/><path d="M12 2v3"/></svg>
+        </div>
+        <h2>سجل التأخير</h2>
+        <div class="count">بحث بالتاريخ والمعلم</div>
+      </button>
     </div>
   </div>
 
@@ -1103,15 +1114,25 @@
       <h2 id="lvTitle">سجل الغياب</h2>
     </div>
     <div class="export-row"><button class="export-btn" id="lvArchiveBtn">🗄️ الأرشيف</button></div>
-    <div class="sched-grid" style="margin-bottom:6px;">
-      <div class="field">
-        <label for="lvDate">التاريخ</label>
-        <input type="date" id="lvDate" class="date-input">
+    <div class="field" style="margin-bottom:8px;">
+      <label for="lvTeacher">المعلم</label>
+      <select id="lvTeacher" class="select-styled"></select>
+    </div>
+    <div class="lv-range">
+      <div class="lv-range-h">من تاريخ</div>
+      <div class="sched-grid">
+        <div class="field"><label for="lvFromG">ميلادي</label><select id="lvFromG" class="select-styled"></select></div>
+        <div class="field"><label for="lvFromH">هجري</label><select id="lvFromH" class="select-styled"></select></div>
       </div>
-      <div class="field">
-        <label for="lvTeacher">المعلم</label>
-        <select id="lvTeacher" class="select-styled"></select>
+      <div class="lv-day" id="lvFromDay"></div>
+    </div>
+    <div class="lv-range">
+      <div class="lv-range-h">إلى تاريخ</div>
+      <div class="sched-grid">
+        <div class="field"><label for="lvToG">ميلادي</label><select id="lvToG" class="select-styled"></select></div>
+        <div class="field"><label for="lvToH">هجري</label><select id="lvToH" class="select-styled"></select></div>
       </div>
+      <div class="lv-day" id="lvToDay"></div>
     </div>
     <div class="sched-hint" id="lvDayInfo" style="text-align:right; margin-bottom:6px;"></div>
     <div class="export-row"><button class="export-btn" id="lvClearDate">↺ عرض كل التواريخ</button></div>
@@ -5804,9 +5825,10 @@ ${bodyHTML}
   function wpSigsHTML() {
     return `<div class="sigs"><div class="sig"><div class="t">وكيل الشؤون التعليمية</div><div class="n">موسى آل ضاحي</div></div><div class="sig"><div class="t">مدير المدرسة</div><div class="n">موسى آل عبيد</div></div></div>`;
   }
-  function ptTableHTML(headers, rows, footer) {
+  function ptTableHTML(headers, rows, footer, emptyRow) {
     return '<div class="mr-table-wrap"><table class="mr-table"><thead><tr>' + headers.map(h => "<th>" + wpEsc(h) + "</th>").join("") +
-      "</tr></thead><tbody>" + rows.map(r => "<tr>" + r.map(c => "<td>" + wpEsc(c) + "</td>").join("") + "</tr>").join("") + "</tbody>" +
+      "</tr></thead><tbody>" + (rows.length || !emptyRow ? rows.map(r => "<tr>" + r.map(c => "<td>" + wpEsc(c) + "</td>").join("") + "</tr>").join("")
+        : '<tr><td colspan="' + headers.length + '" style="font-weight:700;">' + wpEsc(emptyRow) + "</td></tr>") + "</tbody>" +
       (footer ? '<tfoot><tr><td colspan="' + headers.length + '" style="font-weight:800; text-align:center; background:#e9f4f2; color:#174a59;">' + wpEsc(footer) + "</td></tr></tfoot>" : "") +
       "</table></div>";
   }
@@ -5820,7 +5842,11 @@ ${bodyHTML}
     cap.style.marginTop = "18px";
     cap.textContent = cfg.title;
     host.appendChild(cap);
-    if (!cfg.rows.length) {
+    if (!cfg.rows.length && cfg.emptyRow) {
+      const t = document.createElement("div");
+      t.innerHTML = ptTableHTML(cfg.headers, [], "", cfg.emptyRow);
+      host.appendChild(t);
+    } else if (!cfg.rows.length) {
       const e = document.createElement("div");
       e.className = "empty-state";
       e.textContent = cfg.emptyText || "لا توجد بيانات لعرضها في الجدول";
@@ -5845,9 +5871,9 @@ ${bodyHTML}
     bar.className = "export-row";
     const mk = (label, fn) => { const b = document.createElement("button"); b.className = "export-btn"; b.textContent = label; b.addEventListener("click", fn); bar.appendChild(b); };
     mk("🖨️ طباعة الجدول", () => {
-      if (!cfg.rows.length) { showToast("لا توجد بيانات للطباعة"); return; }
-      if (cfg.plain) wpOpenDoc(plainReportDoc(cfg.title, ptTableHTML(cfg.headers, cfg.rows, cfg.footer) + wpSigsHTML()), cfg.fileBase);
-      else wpOpenDoc(wpShellDoc(cfg.title, wpGenericPage(cfg.title, ptTableHTML(cfg.headers, cfg.rows, cfg.footer) + wpSigsHTML(), cfg.date)), cfg.fileBase);
+      if (!cfg.rows.length && !cfg.emptyRow) { showToast("لا توجد بيانات للطباعة"); return; }
+      if (cfg.plain) wpOpenDoc(plainReportDoc(cfg.title, ptTableHTML(cfg.headers, cfg.rows, cfg.footer, cfg.emptyRow) + wpSigsHTML()), cfg.fileBase);
+      else wpOpenDoc(wpShellDoc(cfg.title, wpGenericPage(cfg.title, ptTableHTML(cfg.headers, cfg.rows, cfg.footer, cfg.emptyRow) + wpSigsHTML(), cfg.date)), cfg.fileBase);
     });
     mk("📊 تصدير Excel", () => {
       if (!cfg.rows.length) { showToast("لا توجد بيانات لتصديرها"); return; }
@@ -5958,61 +5984,103 @@ ${bodyHTML}
   }
   function lvCollect(mode) {
     const out = [], seen = new Set();
-    const add = (date, teacher, time, source) => {
+    const add = (date, teacher, time, source, minutes) => {
       if (!date || !teacher) return;
       const k = date + "|" + teacher;
       if (seen.has(k)) { const e = out.find(x => x.k === k); if (e && time && !e.time) e.time = time; if (e && source && !e.sources.includes(source)) e.sources.push(source); return; }
-      seen.add(k); out.push({ k, date, teacher, time: time || "", sources: source ? [source] : [] });
+      seen.add(k); out.push({ k, date, teacher, time: time || "", minutes: minutes || 0, sources: source ? [source] : [] });
     };
     // المرجع الوحيد هو الحالة في «متابعة الدوام»: غياب ← سجل الغياب، مستأذن ← سجل الاستئذان
     backfillWorkStatus();
+    if (mode === "late") {
+      data.workAttendance.filter(r => r.status === "late").forEach(r => add(r.date, r.teacher, r.time, "متابعة الدوام", r.diffMinutes || (r.time ? computeLateDiff(r.time) : 0)));
+      return out;
+    }
     const want = mode === "absence" ? "absent" : "permission";
     data.workAttendance.filter(r => r.status === want).forEach(r => add(r.date, r.teacher, want === "permission" ? r.time : "", "متابعة الدوام"));
     return out;
+  }
+  // قوائم التاريخ (ميلادي/هجري متزامنتان) لسجل الغياب والاستئذان
+  const lv = { from: "", to: "" };
+  function lvDateList() {
+    const set = new Set();
+    const pad = n => String(n).padStart(2, "0");
+    const iso = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    const base = new Date(todayISODate() + "T12:00:00");
+    for (let i = -200; i <= 7; i++) { const d = new Date(base); d.setDate(d.getDate() + i); const v = iso(d); if (dayNameFromDate(v)) set.add(v); }
+    lvCollect(lvMode).forEach(r => { if (r.date) set.add(r.date); });
+    return [...set].sort().reverse();
+  }
+  function lvFillDates() {
+    const dates = lvDateList();
+    const counts = {};
+    lvCollect(lvMode).forEach(r => { counts[r.date] = (counts[r.date] || 0) + 1; });
+    const word = lvMode === "permission" ? "مستأذن" : lvMode === "late" ? "متأخر" : "غائب";
+    const mk = fmt => '<option value="">اختيار</option>' + dates.map(d => '<option value="' + d + '">' + wpEsc(fmt(d)) + (counts[d] ? "  (" + counts[d] + " " + word + ")" : "") + "</option>").join("");
+    const g = d => { const [y, m, dd] = d.split("-"); return (wpDateParts(d).dayName || "") + " " + (+dd) + "/" + (+m) + "/" + y + " م"; };
+    const h = d => wpDateParts(d).hijri;
+    [["lvFromG", g], ["lvToG", g], ["lvFromH", h], ["lvToH", h]].forEach(([id, f]) => { document.getElementById(id).innerHTML = mk(f); });
+    lvSyncDates();
+  }
+  function lvSyncDates() {
+    document.getElementById("lvFromG").value = document.getElementById("lvFromH").value = lv.from;
+    document.getElementById("lvToG").value = document.getElementById("lvToH").value = lv.to;
+    const lab = d => { if (!d) return ""; const p = wpDateParts(d); return "اليوم: " + (p.dayName || "") + " — " + p.hijri + " — " + p.greg; };
+    document.getElementById("lvFromDay").textContent = lab(lv.from);
+    document.getElementById("lvToDay").textContent = lab(lv.to);
   }
   function lvOpen(mode) {
     lvMode = mode;
     lvArchiveMode = false;
     const sel = document.getElementById("lvTeacher");
     sel.innerHTML = '<option value="">كل المعلمين</option>' + data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar")).map(t => `<option value="${wpEsc(t)}">${wpEsc(t)}</option>`).join("");
-    document.getElementById("lvDate").value = "";
+    lv.from = ""; lv.to = "";
+    lvFillDates();
     lvRender();
     showView("leaveLog");
   }
   function lvRender() {
-    const date = document.getElementById("lvDate").value;
+    let from = lv.from, to = lv.to;
+    if (from && !to) to = from;        // تاريخ واحد فقط ← ذلك اليوم
+    if (to && !from) from = to;
+    if (from && to && from > to) { const x = from; from = to; to = x; }
+    const date = from && to && from === to ? from : "";   // يوم واحد
     const teacher = document.getElementById("lvTeacher").value;
     const info = document.getElementById("lvDayInfo");
-    if (date) {
-      const p = wpDateParts(date);
-      info.innerHTML = `<b>اليوم:</b> ${wpEsc(p.dayName || "عطلة نهاية أسبوع")} &nbsp;—&nbsp; <b>التاريخ الهجري:</b> ${wpEsc(p.hijri)}`;
-    } else info.textContent = "عرض كل التواريخ — اختر تاريخاً لتضييق البحث";
-    document.getElementById("lvTitle").textContent = (lvArchiveMode ? "أرشيف " : "") + (lvMode === "absence" ? "سجل الغياب" : "سجل الاستئذان");
+    info.textContent = !from && !to ? "عرض كل التواريخ — اختر تاريخاً واحداً لعرض يوم محدد، أو «من» و«إلى» لفترة" : "";
+    document.getElementById("lvTitle").textContent = (lvArchiveMode ? "أرشيف " : "") + (lvMode === "absence" ? "سجل الغياب" : lvMode === "late" ? "سجل التأخير" : "سجل الاستئذان");
     document.getElementById("lvArchiveBtn").textContent = lvArchiveMode ? "⬅ العودة إلى السجل" : "🗄️ الأرشيف (" + (data.leaveArchive || []).filter(a => a.mode === lvMode).length + ")";
     const archived = lvArchivedSet();
     let recs = lvCollect(lvMode).filter(r => archived.has(lvKey(lvMode, r)) === lvArchiveMode);
-    if (date) recs = recs.filter(r => r.date === date);
+    if (from) recs = recs.filter(r => r.date >= from);
+    if (to) recs = recs.filter(r => r.date <= to);
     if (teacher) recs = recs.filter(r => r.teacher === teacher);
     recs.sort((a, b) => b.date.localeCompare(a.date) || a.teacher.localeCompare(b.teacher, "ar"));
-    const isPerm = lvMode === "permission";
-    const headers = isPerm ? ["م", "المعلم", "اليوم", "التاريخ الهجري", "التاريخ الميلادي", "وقت الاستئذان"] : ["م", "المعلم", "اليوم", "التاريخ الهجري", "التاريخ الميلادي"];
+    const isPerm = lvMode === "permission", isLate = lvMode === "late";
+    const base = ["م", "المعلم", "اليوم", "التاريخ الهجري", "التاريخ الميلادي"];
+    const headers = isPerm ? base.concat(["وقت الاستئذان"]) : isLate ? base.concat(["وقت الحضور", "مدة التأخير"]) : base;
     const rows = recs.map((r, i) => {
       const p = wpDateParts(r.date);
       const row = [i + 1, r.teacher, p.dayName || "—", p.hijri, p.greg];
       if (isPerm) row.push(r.time || "—");
+      if (isLate) { row.push(r.time || "—"); row.push(r.minutes ? formatDurationBadge(r.minutes) : "—"); }
       return row;
     });
-    const word = isPerm ? "الاستئذان" : "الغياب";
+    const word = isPerm ? "الاستئذان" : isLate ? "التأخير" : "الغياب";
+    const lateTotal = isLate ? recs.reduce((n, r) => n + (r.minutes || 0), 0) : 0;
     let title = (lvArchiveMode ? "أرشيف " : "") + "سجل " + word;
     if (teacher) title += " — " + teacher;
     if (date) title += " — " + (wpDateParts(date).dayName || "") + " " + wpDateParts(date).hijri;
+    else if (from || to) title += (from ? " — من " + wpDateParts(from).hijri : "") + (to ? " إلى " + wpDateParts(to).hijri : "");
     const sum = document.getElementById("lvSummary");
-    if (teacher) sum.textContent = "إجمالي " + word + " للمعلم " + teacher + ": " + rows.length + (isPerm ? " مرة" : " يوم");
-    else if (date) sum.textContent = "عدد " + (isPerm ? "المستأذنين" : "الغائبين") + " في هذا اليوم: " + rows.length;
-    else sum.textContent = "إجمالي السجلات: " + rows.length;
+    const lateTxt = isLate && lateTotal ? " — إجمالي مدة التأخير: " + formatDurationBadge(lateTotal) : "";
+    if (teacher) sum.textContent = "إجمالي " + word + " للمعلم " + teacher + ": " + rows.length + (isPerm ? " مرة" : " يوم") + lateTxt;
+    else if (date) sum.textContent = "عدد " + (isPerm ? "المستأذنين" : isLate ? "المتأخرين" : "الغائبين") + " في هذا اليوم: " + rows.length + lateTxt;
+    else sum.textContent = "إجمالي السجلات" + (from || to ? " في الفترة" : "") + ": " + rows.length + lateTxt;
     ptRender("lvTable", {
-      title, headers, rows, date: date || todayISODate(), fileBase: (lvArchiveMode ? "أرشيف_" : "سجل_") + word + (date ? "_" + date : ""), sheet: "سجل " + word,
+      title, headers, rows, footer: rows.length ? sum.textContent : "", date: date || todayISODate(), fileBase: (lvArchiveMode ? "أرشيف_" : "سجل_") + word + (date ? "_" + date : from || to ? "_" + (from || "") + "_" + (to || "") : ""), sheet: "سجل " + word,
       emptyText: lvArchiveMode ? "لا توجد سجلات مؤرشفة مطابقة" : "لا توجد سجلات " + word + " مطابقة",
+      emptyRow: from || to || teacher ? "لا يوجد" : "",
       rowAction: { label: lvArchiveMode ? "↩️ استعادة" : "📦 أرشفة", onClick: i => lvSetArchived([recs[i]], !lvArchiveMode) },
       extraButtons: recs.length ? [{ label: (lvArchiveMode ? "↩️ استعادة المعروض (" : "📦 أرشفة المعروض (") + recs.length + ")", onClick: () => {
         if (Date.now() > lvConfirmUntil) { lvConfirmUntil = Date.now() + 5000; showToast("اضغط الزر مرة أخرى خلال 5 ثوانٍ للتأكيد"); return; }
@@ -7960,10 +8028,12 @@ ${contentEl.innerHTML}
   ["crFrom", "crTo", "crTeacher", "crShowDetails", "crShowAll"].forEach(id => document.getElementById(id).addEventListener("change", crRender));
   document.getElementById("openAbsenceLog").addEventListener("click", () => lvOpen("absence"));
   document.getElementById("openPermissionLog").addEventListener("click", () => lvOpen("permission"));
-  document.getElementById("lvDate").addEventListener("change", lvRender);
+  document.getElementById("openLateLog").addEventListener("click", () => lvOpen("late"));
+  [["lvFromG", "from"], ["lvFromH", "from"], ["lvToG", "to"], ["lvToH", "to"]].forEach(([id, k]) =>
+    document.getElementById(id).addEventListener("change", e => { lv[k] = e.target.value; lvSyncDates(); lvRender(); }));
   document.getElementById("lvTeacher").addEventListener("change", lvRender);
   document.getElementById("lvArchiveBtn").addEventListener("click", lvToggleArchive);
-  document.getElementById("lvClearDate").addEventListener("click", () => { document.getElementById("lvDate").value = ""; lvRender(); });
+  document.getElementById("lvClearDate").addEventListener("click", () => { lv.from = ""; lv.to = ""; lvSyncDates(); lvRender(); });
   document.getElementById("openClassAttendanceLog").addEventListener("click", () => {
     const dateInput = document.getElementById("calDateInput");
     if (!dateInput.value) dateInput.value = todayISODate();
