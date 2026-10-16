@@ -67,6 +67,19 @@
     padding: 24px 20px calc(40px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* التقارير والمتابعة وسجل الانتظار تُفتح من القائمة السريعة فقط */
+  #openReportsHub, #openMonitoring, #openCoverage { display: none !important; }
+  /* ===== القائمة السريعة (ثلاث نقاط) ===== */
+  .qnav { position: sticky; top: 0; z-index: 60; display: flex; justify-content: flex-start; margin: -14px -8px 6px; padding: 6px 0; pointer-events: none; }
+  .qnav-btn { pointer-events: auto; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper-2); color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 3px 10px var(--card-shadow); }
+  .qnav-btn svg { fill: currentColor; }
+  .qnav-btn[aria-expanded="true"] { background: #174a59; color: #fff; border-color: #174a59; }
+  .qnav-menu { pointer-events: auto; position: absolute; top: 50px; right: 0; min-width: 190px; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 30px rgba(0,0,0,.18); padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+  .qnav-menu[hidden] { display: none; }
+  .qnav-menu button { font: inherit; font-size: 15px; font-weight: 700; color: var(--ink); background: none; border: 0; border-radius: 10px; padding: 9px 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: right; }
+  .qnav-menu button:hover, .qnav-menu button:focus-visible { background: var(--paper-2); outline: none; }
+  .qnav-menu .qi { width: 30px; height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; background: color-mix(in srgb, var(--c) 18%, transparent); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); }
+
   /* ===== Header ===== */
   .masthead {
     display: flex; align-items: center; justify-content: space-between;
@@ -719,6 +732,17 @@
 </head>
 <body>
 <div class="app">
+  <div class="qnav" id="qnav">
+    <button class="qnav-btn" id="qnavBtn" aria-label="القائمة السريعة" aria-haspopup="true" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+    </button>
+    <div class="qnav-menu" id="qnavMenu" hidden>
+      <button data-go="home"><span class="qi" style="--c:#5E6B74">🏠</span>الرئيسية</button>
+      <button data-go="reports"><span class="qi" style="--c:#7B4B94">📊</span>التقارير</button>
+      <button data-go="monitoring"><span class="qi" style="--c:#3E8E41">👁️</span>المتابعة</button>
+      <button data-go="wait"><span class="qi" style="--c:#138D90">⏱️</span>سجل الانتظار</button>
+    </div>
+  </div>
 
   <div class="home" id="homeView">
     <div class="masthead">
@@ -8037,6 +8061,23 @@ ${contentEl.innerHTML}
   document.getElementById("selectRepTable").addEventListener("click", () => selectTableText("repTableWrap"));
   document.getElementById("copyRepTable").addEventListener("click", () => copySelection("repTableWrap"));
 
+  // القائمة السريعة
+  (function () {
+    const btn = document.getElementById("qnavBtn"), menu = document.getElementById("qnavMenu");
+    const close = () => { menu.hidden = true; btn.setAttribute("aria-expanded", "false"); };
+    btn.addEventListener("click", e => { e.stopPropagation(); const open = menu.hidden; menu.hidden = !open; btn.setAttribute("aria-expanded", String(open)); });
+    document.addEventListener("click", e => { if (!menu.hidden && !menu.contains(e.target)) close(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+    menu.querySelectorAll("button[data-go]").forEach(b => b.addEventListener("click", () => {
+      close();
+      const go = b.dataset.go;
+      if (go === "home") showView("home");
+      else if (go === "reports") document.getElementById("openReportsHub").click();
+      else if (go === "monitoring") document.getElementById("openMonitoring").click();
+      else if (go === "wait") document.getElementById("openCoverage").click();
+      window.scrollTo(0, 0);
+    }));
+  })();
   document.getElementById("openMonitoring").addEventListener("click", () => {
     document.getElementById("inquiriesCount").textContent = getInquiryCandidates().length + " حالة";
     showView("monitoring");
