@@ -538,6 +538,14 @@
   .lv-range { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; background: var(--paper); }
   .lv-range-h { font-weight: 800; color: #174a59; margin-bottom: 4px; }
   .lv-day { font-size: 12.5px; font-weight: 700; color: #174a59; min-height: 18px; margin-top: 4px; }
+  .dt-box { border: 1px solid var(--line); border-radius: 12px; background: var(--paper-2); padding: 10px; margin-bottom: 12px; }
+  .dt-head { font-weight: 800; color: #174a59; margin-bottom: 8px; }
+  .dt-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+  .dt-row select, .dt-row input { flex: 1 1 160px; min-width: 0; }
+  .dt-btns .export-btn { flex: 1 1 auto; font-size: 12.5px; }
+  .dt-preview { font-size: 12px; color: var(--ink-soft); line-height: 1.8; margin: 2px 2px 8px; }
+  .dt-preview b { color: var(--ink); }
+  .export-btn.danger { border-color: #b3261e !important; background: #fdecea !important; color: #8c1d18 !important; }
   .wt-daybox { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: #e9f4f2; border: 1px solid #b9dcd6; color: #174a59; font-weight: 700; text-align: center; line-height: 1.8; }
   .wt-slot { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 10px 12px; margin-bottom: 10px; }
   .wt-slot-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-weight: 800; color: #174a59; margin-bottom: 8px; }
@@ -1370,6 +1378,22 @@
       <input type="date" id="recessDateInput" class="date-input">
     </div>
     <div class="sched-hint" id="recessDayLabel" style="text-align:right; margin-bottom:8px;"></div>
+    <div class="dt-box" id="recessTplBox">
+      <div class="dt-head">📁 نماذج المناوبة الأسبوعية</div>
+      <div class="dt-row">
+        <select class="select-styled" id="recessTplSelect"></select>
+        <button class="export-btn" id="recessTplApply">📥 تطبيق</button>
+      </div>
+      <div class="dt-preview" id="recessTplPreview"></div>
+      <div class="dt-row">
+        <input type="text" class="date-input" id="recessTplName" placeholder="اسم النموذج (مثال: الفصل الأول)" maxlength="40">
+      </div>
+      <div class="dt-row dt-btns">
+        <button class="export-btn" id="recessTplSaveNew">💾 حفظ الجدول الحالي كنموذج جديد</button>
+        <button class="export-btn" id="recessTplUpdate">✏️ تحديث النموذج المختار</button>
+        <button class="export-btn" id="recessTplDelete">🗑️ حذف النموذج</button>
+      </div>
+    </div>
     <div style="margin-bottom:10px;">
       <select class="select-styled" id="recessAddSelect"></select>
     </div>
@@ -1391,6 +1415,22 @@
       <input type="date" id="endDateInput" class="date-input">
     </div>
     <div class="sched-hint" id="endDayLabel" style="text-align:right; margin-bottom:8px;"></div>
+    <div class="dt-box" id="endOfDayTplBox">
+      <div class="dt-head">📁 نماذج المناوبة الأسبوعية</div>
+      <div class="dt-row">
+        <select class="select-styled" id="endOfDayTplSelect"></select>
+        <button class="export-btn" id="endOfDayTplApply">📥 تطبيق</button>
+      </div>
+      <div class="dt-preview" id="endOfDayTplPreview"></div>
+      <div class="dt-row">
+        <input type="text" class="date-input" id="endOfDayTplName" placeholder="اسم النموذج (مثال: الفصل الأول)" maxlength="40">
+      </div>
+      <div class="dt-row dt-btns">
+        <button class="export-btn" id="endOfDayTplSaveNew">💾 حفظ الجدول الحالي كنموذج جديد</button>
+        <button class="export-btn" id="endOfDayTplUpdate">✏️ تحديث النموذج المختار</button>
+        <button class="export-btn" id="endOfDayTplDelete">🗑️ حذف النموذج</button>
+      </div>
+    </div>
     <div style="margin-bottom:10px;">
       <select class="select-styled" id="endAddSelect"></select>
     </div>
@@ -2107,6 +2147,7 @@
     if (!Array.isArray(out.workAttendance)) out.workAttendance = [];
     if (!Array.isArray(out.coverageRecords)) out.coverageRecords = [];
     if (!Array.isArray(out.waitUncovered)) out.waitUncovered = [];
+    if (!Array.isArray(out.dutyTemplates)) out.dutyTemplates = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
     if (!Array.isArray(out.coveragePrintArchive)) out.coveragePrintArchive = [];
@@ -3384,7 +3425,7 @@
       showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين");
       return;
     }
-    const digits = phone.replace(/[^\d+]/g, "").replace(/^0+/, "");
+    const digits = nfWaPhone(phone);
     const message =
       "السلام عليكم ورحمة الله وبركاته\n" +
       "نحيطكم علمًا بتسجيل تأخركم عن حصة " + className + " (" + periodLabel + ") يوم " + day + "\n" +
@@ -3766,12 +3807,16 @@
 
   function buildInquiryMessage(context, status, day, teacher) {
     const reason = status === "late" ? "التأخر عن" : "عدم التواجد في";
-    return "السلام عليكم ورحمة الله وبركاته\n" +
-      "نأمل التكرم بتوضيح سبب " + reason + " " + context + "\n\n" +
-      "📅 التاريخ: " + formatDisplayDate(new Date()) + "\n" +
+    const iso = todayISODate();
+    return "السلام عليكم ورحمة الله وبركاته\n\n" +
+      "👤 المعلم: " + teacher + "\n" +
       "📅 اليوم: " + day + "\n" +
-      "👤 المعلم: " + teacher + "\n\n" +
-      "نشكر تعاونكم وتقديركم لأهمية الالتزام.";
+      "📅 التاريخ: " + wpDateParts(iso).hijri + " — " + formatDisplayDate(new Date()) + "\n\n" +
+      "لوحظ " + reason + " " + context + "،\n" +
+      "آمل مراجعة إدارة المدرسة للإفادة عن سبب ذلك.\n\n" +
+      "وشكرًا\n\n" +
+      "وكيل الشؤون التعليمية\n" +
+      "موسى آل ضاحي";
   }
 
   function sendInquiryMessage(context, status, day, teacher) {
@@ -3780,7 +3825,7 @@
       showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين");
       return;
     }
-    const digits = phone.replace(/[^\d+]/g, "").replace(/^0+/, "");
+    const digits = nfWaPhone(phone);
     const message = buildInquiryMessage(context, status, day, teacher);
     const url = "https://wa.me/" + digits + "?text=" + encodeURIComponent(message);
     openExternalLink(url);
@@ -3806,7 +3851,7 @@
       showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين");
       return false;
     }
-    const digits = phone.replace(/[^\d+]/g, "").replace(/^0+/, "");
+    const digits = nfWaPhone(phone);
     const dateText = date ? formatDisplayDate(new Date(date + "T00:00:00")) : formatDisplayDate(new Date());
     const message =
       "السلام عليكم ورحمة الله وبركاته\n" +
@@ -4121,7 +4166,7 @@
       showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين");
       return;
     }
-    const digits = phone.replace(/[^\d+]/g, "").replace(/^0+/, "");
+    const digits = nfWaPhone(phone);
     const observedPhrase = candidate.status === "late"
       ? "تأخرك عن " + candidate.contextLabel
       : "عدم تواجدك في " + candidate.contextLabel;
@@ -4131,8 +4176,11 @@
       "عزيزي المعلم (" + candidate.teacher + ")\n" +
       "لوحظ " + observedPhrase + "\n" +
       "اليوم: " + (candidate.day || "—") + "\n" +
-      "التاريخ: " + dateStr + "\n" +
-      "آمل إفادة إدارة المدرسة عن سبب ذلك شاكرين ومقدرين اهتمامكم";
+      "التاريخ: " + (candidate.date ? wpDateParts(candidate.date).hijri + " — " : "") + dateStr + "\n\n" +
+      "آمل مراجعة إدارة المدرسة للإفادة عن سبب ذلك.\n\n" +
+      "وشكرًا\n\n" +
+      "وكيل الشؤون التعليمية\n" +
+      "موسى آل ضاحي";
     const url = "https://wa.me/" + digits + "?text=" + encodeURIComponent(message);
     openExternalLink(url);
     candidate.record.inquirySent = true;
@@ -7234,7 +7282,7 @@ ${contentEl.innerHTML}
       showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين");
       return;
     }
-    const digits = phone.replace(/[^\d+]/g, "").replace(/^0+/, "");
+    const digits = nfWaPhone(phone);
     const periodLabel = type === "recess" ? "مناوبة الفسحة" : "مناوبة نهاية الدوام";
     const message =
       "السلام عليكم ورحمة الله وبركاته\n" +
@@ -7287,6 +7335,7 @@ ${contentEl.innerHTML}
 
   function renderDutyDay(type, date) {
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) date = dutyCurrentDate(type);
+    try { dtRender(type); } catch (e) {}
     const day = dayNameFromDate(date) || "";
     const lbl = document.getElementById(type === "recess" ? "recessDayLabel" : "endDayLabel");
     if (lbl) lbl.innerHTML = day ? "<b>اليوم:</b> " + day + " &nbsp;—&nbsp; <b>التاريخ الهجري:</b> " + wpDateParts(date).hijri + " &nbsp;<span style='opacity:.75'>(قائمة المناوبين ثابتة لكل " + day + "، والحالة تُسجَّل لهذا التاريخ)</span>" : "التاريخ المحدد عطلة نهاية أسبوع";
@@ -8042,6 +8091,87 @@ ${contentEl.innerHTML}
     return out.sort((a, b) => a.date.localeCompare(b.date) || a.period - b.period);
   }
 
+  /* ===== نماذج المناوبة الأسبوعية (حفظ أكثر من نموذج وتطبيقه وتعديله) ===== */
+  const dtSel = {};
+  function dtList(type) { return (data.dutyTemplates || []).filter(t => t.type === type); }
+  function dtCurrentRoster(type) { return (data.dutyRoster || []).filter(r => r.type === type).map(r => ({ day: r.day, teacher: r.teacher })); }
+  function dtRender(type) {
+    const sel = document.getElementById(type + "TplSelect");
+    if (!sel) return;
+    const list = dtList(type);
+    if (dtSel[type] && !list.some(t => t.id === dtSel[type])) dtSel[type] = "";
+    sel.innerHTML = '<option value="">اختيار</option>' + list.map(t => '<option value="' + t.id + '">' + wpEsc(t.name) + " (" + t.roster.length + " مناوب)</option>").join("");
+    sel.value = dtSel[type] || "";
+    const tpl = list.find(t => t.id === sel.value);
+    const prev = document.getElementById(type + "TplPreview");
+    if (tpl) {
+      prev.innerHTML = DAYS.map(d => { const n = tpl.roster.filter(r => r.day === d).map(r => wpEsc(r.teacher)); return "<b>" + d + ":</b> " + (n.length ? n.join("، ") : "—"); }).join("<br>");
+      document.getElementById(type + "TplName").value = tpl.name;
+    } else prev.textContent = list.length ? "اختر نموذجاً لعرضه وتطبيقه." : "لا توجد نماذج محفوظة بعد — رتّب المناوبين ثم احفظ الجدول كنموذج.";
+    document.getElementById(type + "TplApply").disabled = !tpl;
+    document.getElementById(type + "TplUpdate").disabled = !tpl;
+    document.getElementById(type + "TplDelete").disabled = !tpl;
+  }
+  function dtRefreshView(type) {
+    const di = document.getElementById(type === "recess" ? "recessDateInput" : "endDateInput");
+    renderDutyDay(type, di.value || dutyCurrentDate(type));
+    dtRender(type);
+  }
+  function dtInit(type) {
+    if (!Array.isArray(data.dutyTemplates)) data.dutyTemplates = [];
+    document.getElementById(type + "TplSelect").addEventListener("change", e => { dtSel[type] = e.target.value; dtRender(type); });
+    document.getElementById(type + "TplApply").addEventListener("click", e => {
+      const tpl = dtList(type).find(t => t.id === dtSel[type]);
+      if (!tpl) return;
+      const btn = e.currentTarget;
+      if (btn.dataset.confirm !== "1") {
+        btn.dataset.confirm = "1"; btn.classList.add("danger"); btn.textContent = "⚠️ تأكيد الاستبدال";
+        showToast("سيُستبدل الجدول الأسبوعي الحالي بالنموذج — اضغط مرة أخرى للتأكيد");
+        setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.classList.remove("danger"); btn.textContent = "📥 تطبيق"; } }, 6000);
+        return;
+      }
+      btn.dataset.confirm = ""; btn.classList.remove("danger"); btn.textContent = "📥 تطبيق";
+      data.dutyRoster = (data.dutyRoster || []).filter(r => r.type !== type).concat(tpl.roster.filter(r => data.teachers.includes(r.teacher)).map(r => ({ type, day: r.day, teacher: r.teacher })));
+      saveData(); dtRefreshView(type);
+      showToast("تم تطبيق النموذج «" + tpl.name + "»");
+    });
+    document.getElementById(type + "TplSaveNew").addEventListener("click", () => {
+      const name = document.getElementById(type + "TplName").value.trim();
+      if (!name) { showToast("اكتب اسماً للنموذج أولاً"); document.getElementById(type + "TplName").focus(); return; }
+      if (dtList(type).some(t => t.name === name)) { showToast("يوجد نموذج بهذا الاسم — غيّر الاسم أو استخدم «تحديث»"); return; }
+      const roster = dtCurrentRoster(type);
+      if (!roster.length) { showToast("الجدول الأسبوعي فارغ — أضف المناوبين أولاً"); return; }
+      const tpl = { id: "t" + Date.now(), type, name, roster };
+      data.dutyTemplates.push(tpl); dtSel[type] = tpl.id;
+      saveData(); dtRender(type);
+      showToast("تم حفظ النموذج «" + name + "»");
+    });
+    document.getElementById(type + "TplUpdate").addEventListener("click", () => {
+      const tpl = dtList(type).find(t => t.id === dtSel[type]);
+      if (!tpl) return;
+      const name = document.getElementById(type + "TplName").value.trim() || tpl.name;
+      if (dtList(type).some(t => t.name === name && t.id !== tpl.id)) { showToast("يوجد نموذج آخر بهذا الاسم"); return; }
+      tpl.name = name; tpl.roster = dtCurrentRoster(type);
+      saveData(); dtRender(type);
+      showToast("تم تحديث النموذج «" + name + "» بالجدول الحالي");
+    });
+    document.getElementById(type + "TplDelete").addEventListener("click", e => {
+      const tpl = dtList(type).find(t => t.id === dtSel[type]);
+      if (!tpl) return;
+      const btn = e.currentTarget;
+      if (btn.dataset.confirm !== "1") {
+        btn.dataset.confirm = "1"; btn.classList.add("danger"); btn.textContent = "⚠️ تأكيد الحذف";
+        setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.classList.remove("danger"); btn.textContent = "🗑️ حذف النموذج"; } }, 6000);
+        return;
+      }
+      btn.dataset.confirm = ""; btn.classList.remove("danger"); btn.textContent = "🗑️ حذف النموذج";
+      data.dutyTemplates = data.dutyTemplates.filter(t => t !== tpl); dtSel[type] = "";
+      document.getElementById(type + "TplName").value = "";
+      saveData(); dtRender(type);
+      showToast("تم حذف النموذج");
+    });
+  }
+
   function showView(view) {
     document.getElementById("homeView").classList.toggle("hidden", view !== "home");
     document.getElementById("teachersView").classList.toggle("active", view === "teachers");
@@ -8436,6 +8566,7 @@ ${contentEl.innerHTML}
     renderDutyDay("recess", dutyCurrentDate("recess"));
     showView("recessDuty");
   });
+  dtInit("recess"); dtInit("endOfDay");
   document.getElementById("recessDateInput").addEventListener("change", e => renderDutyDay("recess", e.target.value || dutyCurrentDate("recess")));
   document.getElementById("recessAddSelect").addEventListener("change", e => {
     if (e.target.value) {
