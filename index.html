@@ -7351,7 +7351,8 @@ ${contentEl.innerHTML}
     const designated = data.dutyDesignated[type];
     const assignedNames = dutyRosterFor(type, day);
     const dayRecords = assignedNames.map(t => dutyRecord(type, date, t) || { type, date, day, teacher: t, status: "", _virtual: true });
-    const pool = designated.filter(t => data.teachers.includes(t) && !assignedNames.includes(t) && !isAbsentToday(t));
+    // القائمة أسبوعية ثابتة، فلا يُستبعد المعلم لغيابه اليوم (يُشار إليه فقط)
+    const pool = designated.filter(t => data.teachers.includes(t) && !assignedNames.includes(t));
 
     if (designated.length === 0) {
       hintEl.textContent = 'لم تعيّن بعد معلمين مؤهلين لهذه المناوبة — افتح "إدارة المناوبين" أولاً.';
@@ -7361,7 +7362,7 @@ ${contentEl.innerHTML}
 
     addSel.innerHTML = '<option value="">' +
       (pool.length ? "اختر معلمًا لإضافته" : "لا يوجد معلمون معيّنون متاحون") +
-      '</option>' + pool.map(t => `<option value="${t}">${t}</option>`).join("");
+      '</option>' + pool.map(t => `<option value="${t}">${t}${isAbsentToday(t) ? " (غائب اليوم)" : ""}</option>`).join("");
     addSel.disabled = pool.length === 0;
 
     listEl.innerHTML = "";
