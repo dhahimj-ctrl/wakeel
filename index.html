@@ -562,6 +562,17 @@
   .ack-note, .ack-load { text-align: center; font-size: 12px; color: var(--ink-soft); margin-top: 12px; }
   .nf-ack { border: 1px solid var(--line); border-radius: 12px; background: var(--paper-2); padding: 10px 12px; margin: 12px 0; }
   .nf-ack .lnk { direction: ltr; font-size: 12px; word-break: break-all; color: #174a59; background: var(--paper); border: 1px dashed var(--line); border-radius: 8px; padding: 6px 8px; margin-top: 6px; }
+  .ack-card2 { border: 1px solid var(--line); border-right: 4px solid #174a59; border-radius: 12px; background: var(--paper-2); padding: 10px 12px; margin-bottom: 8px; }
+  .ack-card2 .hd { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .ack-card2 .ic { width: 38px; height: 38px; border-radius: 11px; background: #e9f4f2; display: inline-flex; align-items: center; justify-content: center; font-size: 19px; flex: none; }
+  .ack-card2 .tx { flex: 1; min-width: 0; }
+  .ack-card2 .tx b { display: block; color: #174a59; font-size: 14.5px; }
+  .ack-card2 .sub { font-size: 11.5px; color: var(--ink-soft); }
+  .ack-card2 .pill { font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 99px; background: #e7f7ee; color: #146c3a; white-space: nowrap; }
+  .ack-card2 .pill.part { background: #fff4df; color: #8a5200; }
+  .ack-card2 .pill.none { background: #fdecea; color: #8c1d18; }
+  .ack-card2 .ack-rows { display: none; margin-top: 8px; }
+  .ack-card2.open .ack-rows { display: block; }
   .ack-item { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 10px 12px; margin-bottom: 8px; }
   .ack-item .hd { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; }
   .ack-item .hd b { color: #174a59; }
@@ -789,6 +800,7 @@
       <button data-go="reports"><span class="qi" style="--c:#7B4B94">📊</span>التقارير</button>
       <button data-go="monitoring"><span class="qi" style="--c:#3E8E41">👁️</span>المتابعة</button>
       <button data-go="wait"><span class="qi" style="--c:#138D90">⏱️</span>سجل الانتظار</button>
+      <button data-go="ack"><span class="qi" style="--c:#2E6FB0">📋</span>متابعة الاطلاع</button>
     </div>
   </div>
 
@@ -1563,8 +1575,8 @@
     <div class="detail-header" style="margin-top:14px;"><h2 style="font-size:16px;">إرسال الرسالة النصية لمعلم مباشرة</h2></div>
     <div id="nfTeachers" class="nf-list"></div>
     <div class="detail-header" style="margin-top:18px;"><h2 style="font-size:16px;">📋 متابعة الاطلاع على الإشعارات</h2>
-      <button class="export-btn" id="ackRefreshAll" style="padding:6px 12px;">🔄 تحديث</button></div>
-    <div class="sched-hint" style="text-align:right;">يظهر هنا كل إشعار أُنشئ له رابط تأكيد، ومن أكد اطلاعه برقم السجل المدني ومن لم يؤكد.</div>
+      <button class="export-btn" id="ackRefreshAll" style="padding:6px 12px; display:none;">🔄 تحديث</button></div>
+    <div class="sched-hint" style="text-align:right;">لكل تعميم أو حصة انتظار أو مساءلة أو مناوبة بطاقة فيها حالة تأكيد المعلمين.</div>
     <div id="ackList"></div>
   </div>
 
@@ -1634,6 +1646,21 @@
         <div class="count">ما حضره كل معلم</div>
       </button>
     </div>
+  </div>
+
+  <!-- متابعة الاطلاع -->
+  <div class="detail" id="ackView">
+    <div class="back-row">
+      <button class="back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
+    </div>
+    <div class="detail-header"><h2 id="ackViewTitle">متابعة الاطلاع</h2></div>
+    <div class="export-row">
+      <button class="export-btn" id="ackRefreshView">🔄 تحديث الكل</button>
+      <button class="export-btn" id="ackArcBtn">🗄️ الأرشيف</button>
+    </div>
+    <div class="field" style="margin:6px 0 10px;"><label for="ackFilter">النوع</label><select id="ackFilter" class="select-styled"></select></div>
+    <div class="sched-hint" style="text-align:right;">اضغط على أي عنصر لعرض حالة تأكيد المعلمين.</div>
+    <div id="ackViewList"></div>
   </div>
 
   <!-- حصر حصص الانتظار -->
@@ -8447,63 +8474,129 @@ ${contentEl.innerHTML}
     if (!db) return false;
     const snap = await db.collection("acks").where("noticeId", "==", n.id).get();
     const byHash = {};
-    snap.forEach(d => { const x = d.data(); byHash[x.h] = x.at || true; });
+    // وقت التأكيد الفعلي كما سجّله المعلم (Timestamp من السحابة) — لا يتغير مع التحديث
+    const toIso = v => { try { if (v && typeof v.toDate === "function") return v.toDate().toISOString(); if (v && typeof v.seconds === "number") return new Date(v.seconds * 1000).toISOString(); if (typeof v === "string") return v; } catch (e) {} return ""; };
+    snap.forEach(d => { const x = d.data(); byHash[x.h] = toIso(x.at) || "?"; });
+    const prev = n.acks || {};
     n.acks = {};
-    Object.entries(n.recipients || {}).forEach(([t, h]) => { if (byHash[h]) n.acks[t] = typeof byHash[h] === "string" ? byHash[h] : new Date().toISOString(); });
+    Object.entries(n.recipients || {}).forEach(([t, h]) => {
+      if (!byHash[h]) return;
+      n.acks[t] = byHash[h] !== "?" ? byHash[h] : (prev[t] || "?");
+    });
     n.checkedAt = Date.now();
     return true;
   }
   const ackOpen = new Set();
+  const ackUi = { archive: false, filter: "" };
+  const ACK_TYPES = [["general", "📢", "تعميم / إشعار"], ["wait", "⏱️", "حصة انتظار"], ["inquiry", "⚠️", "مساءلة"], ["duty", "🛡️", "مناوبة"], ["alert", "🔔", "تنبيه"]];
+  function ackTypeOf(n) {
+    const t = n.title || "";
+    if (/^تكليف بحصة انتظار/.test(t)) return "wait";
+    if (/^مساءلة/.test(t)) return "inquiry";
+    if (/^تكليف بالمناوبة/.test(t)) return "duty";
+    if (/^تنبيه/.test(t)) return "alert";
+    return "general";
+  }
+  async function ackDeleteCloud(n) {
+    const db = window.__fbdb;
+    if (!db) return;
+    try {
+      const snap = await db.collection("acks").where("noticeId", "==", n.id).get();
+      const dels = []; snap.forEach(d => { if (d.ref && d.ref.delete) dels.push(d.ref.delete()); });
+      await Promise.all(dels);
+      const doc = db.collection("notices").doc(n.id); if (doc.delete) await doc.delete();
+    } catch (e) { console.warn("cloud delete failed", e); }
+  }
   function ackRenderList() {
+    // القائمة المختصرة داخل «إشعار المعلمين»: آخر 3 إشعارات + زر للصفحة الكاملة
     const box = document.getElementById("ackList");
-    if (!box) return;
-    const list = (data.notices || []).slice(0, 30);
-    if (!list.length) { box.innerHTML = '<div class="empty-state">لا توجد إشعارات بروابط تأكيد بعد</div>'; return; }
-    box.innerHTML = "";
-    list.forEach(n => {
-      const names = Object.keys(n.recipients || {});
-      const okN = names.filter(t => (n.acks || {})[t]).length;
-      const it = document.createElement("div"); it.className = "ack-item" + (ackOpen.has(n.id) ? " open" : "");
-      const p = wpDateParts(n.date);
-      it.innerHTML = '<div class="hd"><div><b></b><div style="font-size:12px;color:var(--ink-soft)"></div></div><span class="pill"></span></div><div class="ack-rows"></div>';
-      it.querySelector("b").textContent = n.title + (n.single ? " — " + Object.keys(n.recipients || {})[0] : "");
-      it.querySelector(".hd div div").textContent = (p.dayName || "") + " " + p.hijri;
-      it.querySelector(".pill").textContent = n.single ? (okN ? "✓ اطلع" : "لم يطلع") : "اطلع " + okN + " من " + names.length;
-      if (n.single && !okN) { it.querySelector(".pill").style.background = "#fdecea"; it.querySelector(".pill").style.color = "#8c1d18"; }
-      it.querySelector(".hd").style.cursor = "pointer";
-      it.querySelector(".hd").addEventListener("click", () => { if (ackOpen.has(n.id)) ackOpen.delete(n.id); else ackOpen.add(n.id); ackRenderList(); });
-      const rows = it.querySelector(".ack-rows");
-      const link = ackBaseUrl() + "?ack=" + n.id;
-      const tools = document.createElement("div"); tools.className = "export-row"; tools.style.margin = "6px 0";
-      const mk = (label, fn) => { const b = document.createElement("button"); b.className = "export-btn"; b.style.padding = "5px 10px"; b.style.fontSize = "12px"; b.textContent = label; b.addEventListener("click", e => { e.stopPropagation(); fn(b); }); tools.appendChild(b); };
-      mk("🔄 تحديث", async b => { b.disabled = true; try { await ackFetch(n); saveData(); } catch (e) { showToast("تعذر التحديث"); } ackRenderList(); });
-      mk("📋 نسخ الرابط", () => { try { navigator.clipboard.writeText(link); showToast("تم نسخ الرابط"); } catch (e) { showToast(link); } });
-      rows.appendChild(tools);
-      names.sort((a, b) => (!!(n.acks || {})[b] - !!(n.acks || {})[a]) || a.localeCompare(b, "ar")).forEach(t => {
-        const at = (n.acks || {})[t];
-        const r = document.createElement("div"); r.className = "ack-row";
-        const nm = document.createElement("span"); nm.textContent = t;
-        const st = document.createElement("span");
-        if (at) { st.className = "ok"; const d = new Date(at); st.textContent = "✓ اطلع" + (isNaN(d) ? "" : " — " + d.toLocaleString("ar-SA", { hour: "2-digit", minute: "2-digit", day: "numeric", month: "numeric" })); }
-        else {
-          st.className = "no"; st.textContent = "✗ لم يطلع";
-          const ph = (data.teacherPhones[t] || "").trim();
-          if (ph) {
-            const rb = document.createElement("button"); rb.className = "export-btn"; rb.style.padding = "3px 8px"; rb.style.fontSize = "11.5px"; rb.textContent = "💬 تذكير";
-            rb.addEventListener("click", e => { e.stopPropagation(); openExternalLink("https://wa.me/" + nfWaPhone(ph) + "?text=" + encodeURIComponent("السلام عليكم ورحمة الله وبركاته\nنأمل الاطلاع على إشعار «" + n.title + "» وتأكيد الاطلاع برقم السجل المدني عبر الرابط:\n" + link + "\n\nوكيل الشؤون التعليمية\nموسى آل ضاحي")); });
-            st.appendChild(document.createTextNode(" ")); st.appendChild(rb);
-          }
-        }
-        r.appendChild(nm); r.appendChild(st); rows.appendChild(r);
-      });
-      box.appendChild(it);
+    if (box) {
+      const act = (data.notices || []).filter(n => !n.archived);
+      box.innerHTML = "";
+      const btn = document.createElement("button"); btn.className = "submit-btn"; btn.style.marginTop = "6px";
+      btn.textContent = "📋 فتح صفحة متابعة الاطلاع (" + act.length + ")";
+      btn.addEventListener("click", ackOpenView);
+      box.appendChild(btn);
+    }
+    if (document.getElementById("ackView") && document.getElementById("ackView").classList.contains("active")) ackRenderView();
+  }
+  function ackCard(n) {
+    const names = Object.keys(n.recipients || {});
+    const okN = names.filter(t => (n.acks || {})[t]).length;
+    const ty = ACK_TYPES.find(x => x[0] === ackTypeOf(n)) || ACK_TYPES[0];
+    const it = document.createElement("div"); it.className = "ack-card2" + (ackOpen.has(n.id) ? " open" : "");
+    const p = wpDateParts(n.date);
+    const [y, m, d] = String(n.date).split("-");
+    it.innerHTML = '<div class="hd"><span class="ic"></span><div class="tx"><b></b><div class="sub"></div></div><span class="pill"></span></div><div class="ack-rows"></div>';
+    it.querySelector(".ic").textContent = ty[1];
+    it.querySelector("b").textContent = n.title + (n.single ? " — " + names[0] : "");
+    it.querySelector(".sub").textContent = ty[2] + " • " + (p.dayName || "") + " " + p.hijri + " — " + (+d) + "/" + (+m) + "/" + y + " م";
+    const pill = it.querySelector(".pill");
+    pill.textContent = n.single ? (okN ? "✓ اطلع" : "لم يطلع") : "اطلع " + okN + " من " + names.length;
+    if (!okN || okN < names.length) pill.classList.add(okN ? "part" : "none");
+    it.querySelector(".hd").addEventListener("click", () => { if (ackOpen.has(n.id)) ackOpen.delete(n.id); else ackOpen.add(n.id); ackRenderView(); });
+    const rows = it.querySelector(".ack-rows");
+    const link = ackBaseUrl() + "?ack=" + n.id;
+    const tools = document.createElement("div"); tools.className = "export-row"; tools.style.margin = "6px 0";
+    const mk = (label, fn, cls) => { const b = document.createElement("button"); b.className = "export-btn" + (cls ? " " + cls : ""); b.style.padding = "5px 10px"; b.style.fontSize = "12px"; b.textContent = label; b.addEventListener("click", e => { e.stopPropagation(); fn(b); }); tools.appendChild(b); return b; };
+    mk("🔄 تحديث", async b => { b.disabled = true; try { await ackFetch(n); saveData(); } catch (e) { showToast("تعذر التحديث"); } ackRenderView(); });
+    mk("📋 نسخ الرابط", () => { try { navigator.clipboard.writeText(link); showToast("تم نسخ الرابط"); } catch (e) { showToast(link); } });
+    if (!n.archived) mk("📦 أرشفة", () => { n.archived = true; n.archivedAt = Date.now(); saveData(); ackOpen.delete(n.id); ackRenderView(); showToast("نُقل إلى الأرشيف"); });
+    else mk("↩️ استعادة", () => { n.archived = false; saveData(); ackRenderView(); showToast("تمت الاستعادة"); });
+    mk("🗑️ حذف", b => {
+      if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.classList.add("danger"); b.textContent = "⚠️ تأكيد الحذف"; setTimeout(() => { if (b.isConnected) { b.dataset.confirm = ""; b.classList.remove("danger"); b.textContent = "🗑️ حذف"; } }, 6000); return; }
+      data.notices = data.notices.filter(x => x !== n); saveData(); ackDeleteCloud(n); ackRenderView(); showToast("تم حذف الإشعار ورابطه نهائياً");
     });
+    rows.appendChild(tools);
+    names.sort((a, b) => (!!(n.acks || {})[b] - !!(n.acks || {})[a]) || a.localeCompare(b, "ar")).forEach(t => {
+      const at = (n.acks || {})[t];
+      const r = document.createElement("div"); r.className = "ack-row";
+      const nm = document.createElement("span"); nm.textContent = t;
+      const st = document.createElement("span");
+      if (at) {
+        st.className = "ok"; const dd = new Date(at);
+        const pad = x => String(x).padStart(2, "0");
+        st.textContent = "✓ اطلع" + (isNaN(dd) ? "" : " — " + wpDateParts(dd.getFullYear() + "-" + pad(dd.getMonth() + 1) + "-" + pad(dd.getDate())).hijri + " الساعة " + dd.toLocaleTimeString("ar-SA-u-nu-latn", { hour: "numeric", minute: "2-digit" }));
+      } else {
+        st.className = "no"; st.textContent = "✗ لم يطلع";
+        const ph = (data.teacherPhones[t] || "").trim();
+        if (ph) {
+          const rb = document.createElement("button"); rb.className = "export-btn"; rb.style.padding = "3px 8px"; rb.style.fontSize = "11.5px"; rb.textContent = "💬 تذكير";
+          rb.addEventListener("click", e => { e.stopPropagation(); openExternalLink("https://wa.me/" + nfWaPhone(ph) + "?text=" + encodeURIComponent("السلام عليكم ورحمة الله وبركاته\nنأمل الاطلاع على «" + n.title + "» وتأكيد الاطلاع برقم السجل المدني عبر الرابط:\n" + link + "\n\nوكيل الشؤون التعليمية\nموسى آل ضاحي")); });
+          st.appendChild(document.createTextNode(" ")); st.appendChild(rb);
+        }
+      }
+      r.appendChild(nm); r.appendChild(st); rows.appendChild(r);
+    });
+    return it;
+  }
+  function ackRenderView() {
+    const box = document.getElementById("ackViewList");
+    if (!box) return;
+    const all = data.notices || [];
+    const arcN = all.filter(n => n.archived).length;
+    document.getElementById("ackViewTitle").textContent = ackUi.archive ? "أرشيف متابعة الاطلاع" : "متابعة الاطلاع";
+    document.getElementById("ackArcBtn").textContent = ackUi.archive ? "⬅ العودة للقائمة" : "🗄️ الأرشيف (" + arcN + ")";
+    let list = all.filter(n => !!n.archived === ackUi.archive);
+    if (ackUi.filter) list = list.filter(n => ackTypeOf(n) === ackUi.filter);
+    list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    box.innerHTML = "";
+    if (!list.length) { box.innerHTML = '<div class="empty-state">' + (ackUi.archive ? "لا توجد عناصر في الأرشيف" : "لا توجد إشعارات بروابط تأكيد") + "</div>"; return; }
+    list.forEach(n => box.appendChild(ackCard(n)));
+  }
+  function ackOpenView() {
+    ackUi.archive = false;
+    const f = document.getElementById("ackFilter");
+    f.innerHTML = '<option value="">الكل</option>' + ACK_TYPES.map(t => '<option value="' + t[0] + '">' + t[1] + " " + t[2] + "</option>").join("");
+    f.value = ackUi.filter;
+    showView("ack");
+    ackRenderView();
   }
   async function ackRefreshAll() {
-    const list = (data.notices || []).slice(0, 10);
+    const list = (data.notices || []).filter(n => !!n.archived === ackUi.archive).slice(0, 15);
     if (!window.__fbdb) { showToast("التحديث يحتاج الاتصال بالسحابة"); return; }
     try { for (const n of list) await ackFetch(n); saveData(); showToast("تم تحديث حالات الاطلاع"); } catch (e) { console.error(e); showToast("تعذر التحديث — تأكد من قواعد Firebase"); }
-    ackRenderList();
+    ackRenderView(); ackRenderList();
   }
 
   function showView(view) {
@@ -8538,6 +8631,7 @@ ${contentEl.innerHTML}
     document.getElementById("waitTableView").classList.toggle("active", view === "waitTable");
     document.getElementById("waitDesignView").classList.toggle("active", view === "waitDesign");
     document.getElementById("waitCountView").classList.toggle("active", view === "waitCount");
+    document.getElementById("ackView").classList.toggle("active", view === "ack");
     document.getElementById("teacherSchedView").classList.toggle("active", view === "teacherSched");
     window.scrollTo(0, 0);
   }
@@ -8577,6 +8671,7 @@ ${contentEl.innerHTML}
       else if (go === "reports") document.getElementById("openReportsHub").click();
       else if (go === "monitoring") document.getElementById("openMonitoring").click();
       else if (go === "wait") document.getElementById("openCoverage").click();
+      else if (go === "ack") ackOpenView();
       window.scrollTo(0, 0);
     }));
   })();
@@ -8983,6 +9078,9 @@ ${contentEl.innerHTML}
   document.getElementById("nfAckMake").addEventListener("click", () => ackCreateNotice());
   document.getElementById("nfAckCopy").addEventListener("click", () => { try { navigator.clipboard.writeText(nfAck.link); showToast("تم نسخ الرابط"); } catch (e) { showToast(nfAck.link); } });
   document.getElementById("ackRefreshAll").addEventListener("click", ackRefreshAll);
+  document.getElementById("ackRefreshView").addEventListener("click", ackRefreshAll);
+  document.getElementById("ackArcBtn").addEventListener("click", () => { ackUi.archive = !ackUi.archive; ackOpen.clear(); ackRenderView(); });
+  document.getElementById("ackFilter").addEventListener("change", e => { ackUi.filter = e.target.value; ackRenderView(); });
   ["nfTitle", "nfBody"].forEach(id => document.getElementById(id).addEventListener("input", () => ackUpdateInfo()));
   document.querySelectorAll(".nf-style-btn").forEach(b => b.addEventListener("click", () => nfSetStyle(b.dataset.style)));
   document.getElementById("msWithWait").addEventListener("change", msRender);
