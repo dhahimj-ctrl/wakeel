@@ -992,7 +992,7 @@
       </div>
     </div>
     <input type="file" id="importTeachersFile" accept=".csv,.xlsx,.xls" style="display:none">
-    <div class="sched-hint" style="margin-bottom:10px;">استورد ملف Excel أو CSV بعمودين: الاسم ثم رقم الجوال (اختياري)</div>
+    <div class="sched-hint" style="margin-bottom:10px;">استورد ملف Excel أو CSV بثلاثة أعمدة: الاسم، ثم رقم الجوال، ثم رقم السجل المدني (الجوال والسجل اختياريان). المعلم الموجود تُحدَّث بياناته فقط.</div>
     <div class="field" style="margin-bottom:8px;">
       <input type="text" id="teacherInput" class="date-input" placeholder="اسم المعلم الجديد" maxlength="60">
     </div>
@@ -2589,23 +2589,48 @@
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, blankrows: false });
 
-        let added = 0, skippedDup = 0, skippedEmpty = 0;
+        // تحديد الأعمدة من صف العناوين إن وُجد (الاسم / الجوال / السجل المدني)، وإلا: الاسم، الجوال، السجل المدني بالترتيب
+        let cName = 0, cPhone = 1, cCivil = 2, start = 0;
+        const head = (rows[0] || []).map(x => normalizeArabicText(String(x == null ? "" : x)));
+        if (head.some(h => /اسم|name|معلم/i.test(h))) {
+          start = 1;
+          head.forEach((h, i) => {
+            if (/اسم|name|معلم/i.test(h)) cName = i;
+            else if (/جوال|هاتف|موبايل|phone|mobile|رقم الجوال/i.test(h)) cPhone = i;
+            else if (/سجل|هويه|هوية|مدني|civil|id/i.test(h)) cCivil = i;
+          });
+        }
+        if (!data.teacherCivil) data.teacherCivil = {};
+        const cell = (row, i) => (i >= 0 && row[i] !== undefined && row[i] !== null) ? String(row[i]).trim() : "";
+        const findTeacher = n => { const nn = normalizeArabicText(n).replace(/\s+/g, " "); return data.teachers.find(t => normalizeArabicText(t).replace(/\s+/g, " ") === nn); };
+        let added = 0, skippedDup = 0, skippedEmpty = 0, civilSet = 0, civilBad = 0, phoneSet = 0;
         rows.forEach((row, idx) => {
-          const name = row[0] !== undefined && row[0] !== null ? String(row[0]).trim() : "";
-          const phone = row[1] !== undefined && row[1] !== null ? String(row[1]).trim() : "";
-          if (idx === 0 && /اسم|name|معلم/i.test(name)) return; // skip header row
+          if (idx < start) return;
+          const name = cell(row, cName);
+          let phone = cell(row, cPhone);
+          let civil = ackNormCivil(cell(row, cCivil));
+          // إن تبادل العمودان: رقم يبدأ بـ 1 أو 2 من 10 أرقام = سجل مدني، و05/5 = جوال
+          const pDigits = ackNormCivil(phone);
+          if (!civil && /^[12]\d{9}$/.test(pDigits)) { civil = pDigits; phone = ""; }
           if (!name) { skippedEmpty++; return; }
-          if (data.teachers.some(t => t.toLowerCase() === name.toLowerCase())) { skippedDup++; return; }
-          data.teachers.push(name);
-          if (phone) data.teacherPhones[name] = phone;
-          added++;
+          let t = findTeacher(name);
+          if (!t) { data.teachers.push(name); t = name; added++; }
+          else skippedDup++;
+          if (phone && !data.teacherPhones[t]) { data.teacherPhones[t] = phone; phoneSet++; }
+          else if (phone && data.teacherPhones[t] !== phone) { data.teacherPhones[t] = phone; phoneSet++; }
+          if (civil) {
+            if (/^[12]\d{9}$/.test(civil)) { if (data.teacherCivil[t] !== civil) civilSet++; data.teacherCivil[t] = civil; }
+            else civilBad++;
+          }
         });
-
         saveData();
         renderList("teachers");
         renderHome();
-        let msg = `تم استيراد ${added} معلمًا`;
-        if (skippedDup) msg += `، تجاهل ${skippedDup} مكرر`;
+        let msg = `أُضيف ${added} معلم`;
+        if (skippedDup) msg += `، وحُدّثت بيانات ${skippedDup} موجود`;
+        if (civilSet) msg += ` — سجل مدني: ${civilSet}`;
+        if (phoneSet) msg += ` — جوال: ${phoneSet}`;
+        if (civilBad) msg += ` — ${civilBad} سجل غير صحيح (يجب 10 أرقام)`;
         if (skippedEmpty) msg += `، تجاهل ${skippedEmpty} صف فارغ`;
         showToast(msg);
       } catch (err) {
@@ -9218,6 +9243,23 @@ window.ackHash = async function (civil, noticeId) {
   const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: enc.encode("wakeel-ack|" + noticeId), iterations: 60000 }, key, 256);
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
+/* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
+window.APP_BUILD = "2026-10-21-3";
+(function () {
+  if (location.protocol.indexOf("http") !== 0) return;
+  window.addEventListener("load", function () {
+    setTimeout(function () {
+      fetch(location.pathname + "?nocache=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.text(); }).then(function (t) {
+        var m = t.match(/window\.APP_BUILD = "([^"]+)"/);
+        if (!m || m[1] === window.APP_BUILD) return;
+        var key = "app_reloaded_" + m[1];
+        try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, "1"); } catch (e) {}
+        var q = new URLSearchParams(location.search); q.set("v", m[1]);
+        location.replace(location.pathname + "?" + q.toString() + location.hash);
+      }).catch(function () {});
+    }, 1500);
+  });
+})();
 window.__ACK_ID = (function () { try { return new URLSearchParams(location.search).get("ack") || ""; } catch (e) { return ""; } })();
 </script>
 <div class="ack-page" id="ackPage" hidden></div>
@@ -9478,6 +9520,8 @@ const EMBED_FIREBASE_CONFIG = {
     location.reload();
   });
 
+  // رابط تأكيد الاطلاع للمعلم: تُفتح صفحة التأكيد مباشرة دون تسجيل دخول أو إعداد
+  if (window.__ACK_ID) { startApp(); return; }
   const cfg = getConfig();
   let localOnly = false;
   try { localOnly = localStorage.getItem(CFG_KEY + "_local") === "1"; } catch (e) {}
