@@ -572,6 +572,11 @@
   .ack-card2 .pill.part { background: #fff4df; color: #8a5200; }
   .ack-card2 .pill.none { background: #fdecea; color: #8c1d18; }
   .ack-card2 .ack-rows { display: none; margin-top: 8px; }
+  .io-st { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 6px; font-size: 12.5px; }
+  .io-b { padding: 2px 9px; border-radius: 99px; font-weight: 700; font-size: 11.5px; }
+  .io-b.ok { background: #e7f7ee; color: #146c3a; } .io-b.no { background: #f1ecdf; color: #6b5a3a; }
+  .io-chk { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-weight: 700; color: var(--ink); }
+  .io-chk input { width: 17px; height: 17px; accent-color: #174a59; }
   .ack-card2.open .ack-rows { display: block; }
   .ack-item { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 10px 12px; margin-bottom: 8px; }
   .ack-item .hd { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -1665,6 +1670,7 @@
           <option value="absence">مساءلة غياب</option>
           <option value="late">مساءلة تأخر</option>
           <option value="early">مساءلة انصراف مبكر</option>
+          <option value="lineup">مساءلة عدم حضور الطابور</option>
           <option value="lateClass">مساءلة تأخر عن حصة</option>
           <option value="missClass">مساءلة عدم حضور حصة</option>
           <option value="refuseWait">مساءلة رفض حصة انتظار</option>
@@ -1701,11 +1707,17 @@
         <textarea id="ioBody" rows="5" class="nf-text" placeholder="اختر نوع المساءلة لتظهر العبارة"></textarea>
       </div>
       <div class="export-row" style="margin-top:8px;">
+        <button class="export-btn" id="ioSave">💾 حفظ المساءلة</button>
         <button class="export-btn" id="ioPrint">🖨️ طباعة المساءلة</button>
         <button class="export-btn" id="ioReset">↺ إعادة العبارة الافتراضية</button>
+        <button class="export-btn" id="ioNew">➕ مساءلة جديدة</button>
       </div>
-      <div class="sched-hint" style="text-align:right; margin-top:8px;">يُطبع عنوان المساءلة أسفل الترويسة، ثم جدول: اسم المعلم وسجله المدني، ثم البيانات المختارة، ثم عبارة المساءلة.</div>
+      <div class="sched-hint" id="ioEditing" style="text-align:right; margin-top:6px; color:#8a5200; display:none;"></div>
+      <div class="sched-hint" style="text-align:right; margin-top:8px;">يُطبع عنوان المساءلة أسفل الترويسة، ثم جدول: اسم المعلم وسجله المدني، ثم البيانات المختارة، ثم عبارة المساءلة. عند الطباعة تُحفظ المساءلة تلقائيًا في مجلد المعلم.</div>
     </div>
+    <div class="detail-header" style="margin-top:18px;"><h2 style="font-size:18px;">📁 المساءلات المحفوظة</h2><span class="count-pill" id="ioSavedCount">0</span></div>
+    <div class="field" style="margin:4px 0 10px;"><input type="search" id="ioSearch" class="date-input" style="width:100%;" placeholder="بحث باسم المعلم…"></div>
+    <div id="ioSaved"></div>
   </div>
 
   <!-- إنشاء تكليف -->
@@ -2370,6 +2382,7 @@
     if (!Array.isArray(out.waitUncovered)) out.waitUncovered = [];
     if (!Array.isArray(out.dutyTemplates)) out.dutyTemplates = [];
     if (!out.teacherCivil || typeof out.teacherCivil !== "object") out.teacherCivil = {};
+    if (!Array.isArray(out.officialInq)) out.officialInq = [];
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -8707,6 +8720,7 @@ ${contentEl.innerHTML}
     absence: { title: "مساءلة غياب", cls: false },
     late: { title: "مساءلة تأخر", cls: false },
     early: { title: "مساءلة انصراف مبكر", cls: false },
+    lineup: { title: "مساءلة عدم حضور الطابور", cls: false },
     lateClass: { title: "مساءلة تأخر عن حصة", cls: true },
     missClass: { title: "مساءلة عدم حضور حصة", cls: true },
     refuseWait: { title: "مساءلة رفض حصة انتظار", cls: true }
@@ -8773,6 +8787,7 @@ ${contentEl.innerHTML}
     if (v.type === "absence") return "لوحظ غيابكم عن العمل " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     const mins = v.mins == null ? "......" : v.mins;
     if (v.type === "late") return "لوحظ تأخركم عن الحضور صباح " + when + " بمقدار (" + mins + ") دقيقة عن بداية الدوام الرسمي (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    if (v.type === "lineup") return "لوحظ عدم حضوركم الطابور الصباحي " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     if (v.type === "early") return "لوحظ انصرافكم مبكرًا " + when + " قبل نهاية الدوام الرسمي (" + x(v.ref) + ") بمقدار (" + mins + ") دقيقة، حيث كان انصرافكم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     if (v.type === "lateClass") return "لوحظ تأخركم عن الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + " بمقدار (" + mins + ") دقيقة عن بداية الحصة (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     if (v.type === "missClass") return "لوحظ عدم حضوركم الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
@@ -8811,13 +8826,49 @@ ${contentEl.innerHTML}
     if (data.classes.includes(cc)) cs.value = cc;
     ioFillDates(); ioFillAbsent();
     ioSync(!ioEl("ioBody").value.trim());
+    ioRenderSaved(); ioEditNote();
     showView("inqOfficial");
   }
-  function ioPrint() {
+  let ioCurId = "";
+  function ioCollect() {
     const v = ioVals();
+    v.body = ioEl("ioBody").value.trim(); v.dateIso = ioEl("ioDate").value; v.periodNo = ioEl("ioPeriod").value;
+    v.title = v.type ? IO_TYPES[v.type].title : "";
+    return v;
+  }
+  function ioSave(quiet) {
+    const v = ioCollect();
+    if (!v.type) { showToast("اختر نوع المساءلة أولاً"); ioEl("ioType").focus(); return false; }
+    if (!v.teacher) { if (!quiet) { showToast("اختر المعلم لتُحفظ المساءلة في مجلده"); ioEl("ioTeacher").focus(); } return false; }
+    if (!Array.isArray(data.officialInq)) data.officialInq = [];
+    const old = ioCurId && data.officialInq.find(r => r.id === ioCurId);
+    const rec = Object.assign({}, v, { id: old ? old.id : "io" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), createdAt: old ? old.createdAt : Date.now(), updatedAt: Date.now() });
+    if (old) Object.assign(old, rec); else data.officialInq.push(rec);
+    ioCurId = rec.id;
+    saveData(); ioRenderSaved(); ioEditNote();
+    showToast((old ? "حُدّثت المساءلة" : "حُفظت المساءلة") + " في مجلد " + v.teacher);
+    return true;
+  }
+  function ioPrint() {
+    const v = ioCollect();
     if (!v.type) { showToast("اختر نوع المساءلة أولاً"); ioEl("ioType").focus(); return; }
-    const T = IO_TYPES[v.type], body = ioEl("ioBody").value.trim();
-    const date = ioEl("ioDate").value || todayISODate();
+    if (v.teacher && ioSave(true)) ioMarkPrinted(ioCurId);
+    ioPrintRec(v);
+  }
+  function ioMarkPrinted(id) {
+    const r = (data.officialInq || []).find(x => x.id === id); if (!r) return;
+    r.printedAt = Date.now(); r.printCount = (r.printCount || 0) + 1;
+    saveData(); ioRenderSaved();
+  }
+  function ioStamp(ms) { const d = new Date(ms); const iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); return (wpDateParts(iso).hijri || iso) + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); }
+  function ioEditNote() {
+    const r = ioCurId && (data.officialInq || []).find(x => x.id === ioCurId);
+    ioEl("ioEditing").style.display = r ? "" : "none";
+    ioEl("ioEditing").textContent = r ? "✏️ تعدّل مساءلة محفوظة: " + r.title + " — " + r.teacher + " — " + (r.hijri || "") + " (اضغط «مساءلة جديدة» لبدء مساءلة أخرى)" : "";
+  }
+  function ioPrintRec(v) {
+    const T = IO_TYPES[v.type] || { title: v.title || "مساءلة", cls: false }, body = v.body || "";
+    const date = v.dateIso || todayISODate();
     const B = "border:1.5px solid #174a59; padding:8px 6px; text-align:center; font-size:15px;";
     const H = B + " background:#174a59; color:#fff; font-weight:700;";
     const cells = [["اليوم", v.day], ["التاريخ", v.hijri ? v.hijri + "<br><small>" + wpEsc(v.greg) + "</small>" : ""]];
@@ -8877,6 +8928,71 @@ ${contentEl.innerHTML}
   ioEl("ioReset").addEventListener("click", () => ioSync(true));
   ioEl("ioPrint").addEventListener("click", ioPrint);
   ioEl("openInqOfficial").addEventListener("click", ioOpen);
+  function ioClearForm() {
+    ioCurId = "";
+    ["ioType", "ioTeacher", "ioCivil", "ioDay", "ioPeriod", "ioClass", "ioTime", "ioAbsent", "ioBody"].forEach(id => ioEl(id).value = "");
+    ioFillDates(); ioEl("ioDate").value = ""; ioFillAbsent(); ioSync(true); ioEditNote();
+  }
+  function ioLoad(id) {
+    const r = (data.officialInq || []).find(x => x.id === id); if (!r) return;
+    ioCurId = r.id;
+    ioEl("ioType").value = r.type || "";
+    ioEl("ioTeacher").value = data.teachers.includes(r.teacher) ? r.teacher : "";
+    ioEl("ioCivil").value = r.civil || "";
+    ioEl("ioDay").value = r.day || ""; ioFillDates();
+    if (r.dateIso && ![...ioEl("ioDate").options].some(o => o.value === r.dateIso)) ioEl("ioDate").insertAdjacentHTML("beforeend", ioOpt(r.dateIso, (r.hijri || "") + "  —  " + (r.greg || "")));
+    ioEl("ioDate").value = r.dateIso || "";
+    ioEl("ioPeriod").value = r.periodNo || ""; ioEl("ioClass").value = r.cls || ""; ioEl("ioTime").value = r.time || "";
+    ioFillAbsent(); ioEl("ioAbsent").value = r.absent || "";
+    ioSync(false); ioEl("ioBody").value = r.body || "";
+    ioEditNote(); window.scrollTo(0, 0);
+  }
+  const ioOpenFolders = new Set();
+  function ioRenderSaved() {
+    const box = ioEl("ioSaved"), all = data.officialInq || [];
+    ioEl("ioSavedCount").textContent = all.length + " مساءلة";
+    const q = normalizeArabicText(ioEl("ioSearch").value || "");
+    const groups = {};
+    all.forEach(r => { (groups[r.teacher] = groups[r.teacher] || []).push(r); });
+    const names = Object.keys(groups).filter(n => !q || normalizeArabicText(n).includes(q)).sort((a, b) => a.localeCompare(b, "ar"));
+    if (!names.length) { box.innerHTML = '<div class="empty-state">' + (all.length ? "لا توجد نتائج" : "لا توجد مساءلات محفوظة بعد — تُحفظ عند الضغط على «حفظ» أو «طباعة»") + "</div>"; return; }
+    box.innerHTML = names.map(n => {
+      const list = groups[n].slice().sort((a, b) => String(b.dateIso || "").localeCompare(String(a.dateIso || "")) || b.createdAt - a.createdAt);
+      return '<div class="ack-card2' + (ioOpenFolders.has(n) ? " open" : "") + '" data-t="' + acEsc(n) + '"><div class="hd"><span class="ic">📁</span><span class="tx"><b>' + acEsc(n) + '</b><span class="sub">آخر مساءلة: ' + acEsc(list[0].hijri || "—") + '</span></span><span class="pill part">' + list.length + "</span>" + (list.some(r => !r.signed) ? '<span class="pill none">' + list.filter(r => !r.signed).length + " غير موقّعة</span>" : "") + "</div>" +
+        '<div class="ack-rows">' + list.map(r => '<div class="ack-item" data-id="' + r.id + '"><div class="hd"><b>' + acEsc(r.title) + '</b><span class="pill">' + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + "</span></div>" +
+          '<div class="sub" style="font-size:12px; color:var(--ink-soft); margin-top:4px;">' + acEsc((r.body || "").slice(0, 110)) + (r.body && r.body.length > 110 ? "…" : "") + "</div>" +
+          '<div class="io-st">' +
+            (r.printedAt ? '<span class="io-b ok">🖨️ تمت الطباعة' + (r.printCount === 2 ? " (مرتين)" : r.printCount > 2 && r.printCount <= 10 ? " (" + r.printCount + " مرات)" : r.printCount > 10 ? " (" + r.printCount + " مرة)" : "") + " — " + acEsc(ioStamp(r.printedAt)) + "</span>" : '<span class="io-b no">لم تُطبع بعد</span>') +
+            '<label class="io-chk"><input type="checkbox" data-flag="delivered"' + (r.delivered ? " checked" : "") + '> 📨 تم تسليمها للمعلم</label>' +
+            '<label class="io-chk"><input type="checkbox" data-flag="signed"' + (r.signed ? " checked" : "") + '> ✍️ تم توقيعها</label>' +
+          "</div>" +
+          '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="print">' + (r.printedAt ? "🖨️ طباعة مرة أخرى" : "🖨️ طباعة") + '</button><button class="export-btn" data-act="edit">✏️ فتح وتعديل</button><button class="export-btn" data-act="del">🗑️ حذف</button></div></div>').join("") + "</div></div>";
+    }).join("");
+  }
+  ioEl("ioSaved").addEventListener("click", e => {
+    const card = e.target.closest(".ack-card2"); if (!card) return;
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) { if (e.target.closest(".hd") && !e.target.closest(".ack-item")) { const t = card.dataset.t; card.classList.toggle("open"); if (card.classList.contains("open")) ioOpenFolders.add(t); else ioOpenFolders.delete(t); } return; }
+    const id = btn.closest(".ack-item").dataset.id, r = (data.officialInq || []).find(x => x.id === id); if (!r) return;
+    if (btn.dataset.act === "print") { ioPrintRec(r); ioMarkPrinted(id); }
+    else if (btn.dataset.act === "edit") ioLoad(id);
+    else if (btn.dataset.act === "del") {
+      if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "تأكيد الحذف"; setTimeout(() => { btn.dataset.confirm = ""; btn.textContent = "🗑️ حذف"; }, 4000); return; }
+      data.officialInq = data.officialInq.filter(x => x.id !== id);
+      if (ioCurId === id) { ioCurId = ""; ioEditNote(); }
+      saveData(); ioRenderSaved(); showToast("حُذفت المساءلة");
+    }
+  });
+  ioEl("ioSaved").addEventListener("change", e => {
+    const cb = e.target.closest("input[data-flag]"); if (!cb) return;
+    const r = (data.officialInq || []).find(x => x.id === cb.closest(".ack-item").dataset.id); if (!r) return;
+    r[cb.dataset.flag] = cb.checked; r[cb.dataset.flag + "At"] = cb.checked ? Date.now() : null;
+    saveData(); ioRenderSaved();
+  });
+  ioEl("ioSearch").addEventListener("input", ioRenderSaved);
+  ioEl("ioSave").addEventListener("click", () => ioSave(false));
+  ioEl("ioNew").addEventListener("click", ioClearForm);
+
   /* ===== إنشاء تكليف ===== */
   const TK_DEFAULT_BODY = "بناءً على الصلاحيات الممنوحة لمدير المدرسة، وعلمنا بأنكم على قدر المسئولية، لذا تم تكليفكم ";
   function tkOpen() {
@@ -9567,7 +9683,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-02-14";
+window.APP_BUILD = "2026-11-02-17";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
