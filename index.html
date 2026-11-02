@@ -1664,6 +1664,7 @@
           <option value="">اختيار</option>
           <option value="absence">مساءلة غياب</option>
           <option value="late">مساءلة تأخر</option>
+          <option value="early">مساءلة انصراف مبكر</option>
           <option value="lateClass">مساءلة تأخر عن حصة</option>
           <option value="missClass">مساءلة عدم حضور حصة</option>
           <option value="refuseWait">مساءلة رفض حصة انتظار</option>
@@ -1683,8 +1684,9 @@
         <div class="field"><label for="ioDate">التاريخ</label><select id="ioDate" class="select-styled"></select></div>
       </div>
       <div class="field" id="ioTimeBox" style="margin-bottom:10px; display:none;">
-        <label for="ioTime">وقت الحضور</label>
+        <label for="ioTime" id="ioTimeLbl">وقت الحضور</label>
         <input type="time" id="ioTime" class="date-input">
+        <div class="wc-hijri" id="ioTimeH"></div>
       </div>
       <div class="sched-grid" id="ioClassBox" style="margin-bottom:10px; display:none;">
         <div class="field"><label for="ioPeriod">الحصة</label><select id="ioPeriod" class="select-styled"></select></div>
@@ -8704,6 +8706,7 @@ ${contentEl.innerHTML}
   const IO_TYPES = {
     absence: { title: "مساءلة غياب", cls: false },
     late: { title: "مساءلة تأخر", cls: false },
+    early: { title: "مساءلة انصراف مبكر", cls: false },
     lateClass: { title: "مساءلة تأخر عن حصة", cls: true },
     missClass: { title: "مساءلة عدم حضور حصة", cls: true },
     refuseWait: { title: "مساءلة رفض حصة انتظار", cls: true }
@@ -8739,22 +8742,49 @@ ${contentEl.innerHTML}
       day: ioEl("ioDay").value || (p && p.dayName) || "",
       hijri: p ? p.hijri : "", greg: date ? ioGreg(date) : "",
       period: ioEl("ioPeriod").value ? PERIODS[Number(ioEl("ioPeriod").value) - 1] : "",
-      cls: ioEl("ioClass").value, time: ioEl("ioTime").value, absent: ioEl("ioAbsent").value
+      cls: ioEl("ioClass").value, time: ioEl("ioTime").value, absent: ioEl("ioAbsent").value,
+      ref: ioRefTime(), mins: ioMinutes()
     };
+  }
+  // الوقت الرسمي المرجعي: بداية الدوام للتأخر، نهايته للانصراف المبكر، بداية الحصة للتأخر عن حصة
+  function ioRefTime() {
+    const t = ioEl("ioType").value;
+    if (t === "late") return (data.workTimes || {}).checkIn || "";
+    if (t === "early") return (data.workTimes || {}).checkOut || "";
+    if (t === "lateClass") { const pt = (data.periodTimes || [])[Number(ioEl("ioPeriod").value) - 1]; return pt ? pt.start : ""; }
+    return "";
+  }
+  function ioMinutes() {
+    const t = ioEl("ioType").value, tm = ioEl("ioTime").value, ref = ioRefTime();
+    if (!tm || !ref) return null;
+    const m = s => { const [h, mi] = s.split(":").map(Number); return h * 60 + mi; };
+    return Math.max(0, t === "early" ? m(ref) - m(tm) : m(tm) - m(ref));
+  }
+  // تعبئة الوقت من متابعة الدوام إن سُجّل للمعلم في ذلك التاريخ
+  function ioPrefillTime() {
+    const t = ioEl("ioType").value, tch = ioEl("ioTeacher").value, d = ioEl("ioDate").value;
+    if (!tch || !d || (t !== "late" && t !== "early")) return;
+    const r = (data.workAttendance || []).find(x => x.date === d && x.teacher === tch && x.status === (t === "late" ? "late" : "early_leave") && x.time);
+    if (r) ioEl("ioTime").value = r.time;
   }
   function ioDefaultBody() {
     const v = ioVals(), x = (s, w) => s || (w || "......");
     const when = "يوم " + x(v.day) + " الموافق " + x(v.hijri, "....../....../......");
     if (v.type === "absence") return "لوحظ غيابكم عن العمل " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
-    if (v.type === "late") return "لوحظ تأخركم عن الحضور صباح " + when + "، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
-    if (v.type === "lateClass") return "لوحظ تأخركم عن الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    const mins = v.mins == null ? "......" : v.mins;
+    if (v.type === "late") return "لوحظ تأخركم عن الحضور صباح " + when + " بمقدار (" + mins + ") دقيقة عن بداية الدوام الرسمي (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    if (v.type === "early") return "لوحظ انصرافكم مبكرًا " + when + " قبل نهاية الدوام الرسمي (" + x(v.ref) + ") بمقدار (" + mins + ") دقيقة، حيث كان انصرافكم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    if (v.type === "lateClass") return "لوحظ تأخركم عن الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + " بمقدار (" + mins + ") دقيقة عن بداية الحصة (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     if (v.type === "missClass") return "لوحظ عدم حضوركم الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     if (v.type === "refuseWait") return "نظرًا لرفضكم حصة الانتظار في الحصة (" + x(v.period) + ") بالفصل (" + x(v.cls) + ") بدلًا من المعلم الغائب (" + x(v.absent) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     return "";
   }
   function ioSync(regen) {
     const t = ioEl("ioType").value, T = IO_TYPES[t];
-    ioEl("ioTimeBox").style.display = t === "late" ? "" : "none";
+    ioEl("ioTimeBox").style.display = (t === "late" || t === "early" || t === "lateClass") ? "" : "none";
+    ioEl("ioTimeLbl").textContent = t === "early" ? "وقت الانصراف" : t === "lateClass" ? "وقت دخول الحصة" : "وقت الحضور";
+    const rf = ioRefTime(), mn = ioMinutes();
+    ioEl("ioTimeH").textContent = (t === "late" ? "بداية الدوام الرسمي: " : t === "early" ? "نهاية الدوام الرسمي: " : "بداية الحصة: ") + (rf || (t === "lateClass" ? "اختر الحصة" : "—")) + (mn != null ? " — " + (t === "early" ? "الانصراف المبكر: " : "التأخير: ") + mn + " دقيقة" : "");
     ioEl("ioClassBox").style.display = T && T.cls ? "" : "none";
     ioEl("ioAbsentBox").style.display = t === "refuseWait" ? "" : "none";
     const v = ioVals();
@@ -8791,8 +8821,10 @@ ${contentEl.innerHTML}
     const B = "border:1.5px solid #174a59; padding:8px 6px; text-align:center; font-size:15px;";
     const H = B + " background:#174a59; color:#fff; font-weight:700;";
     const cells = [["اليوم", v.day], ["التاريخ", v.hijri ? v.hijri + "<br><small>" + wpEsc(v.greg) + "</small>" : ""]];
-    if (v.type === "late") cells.push(["وقت الحضور", v.time]);
     if (T.cls) cells.push(["الحصة", v.period], ["الفصل", v.cls]);
+    if (v.type === "late") cells.push(["وقت الحضور", v.time], ["دقائق التأخير", v.mins == null ? "" : String(v.mins)]);
+    if (v.type === "early") cells.push(["وقت الانصراف", v.time], ["دقائق الانصراف المبكر", v.mins == null ? "" : String(v.mins)]);
+    if (v.type === "lateClass") cells.push(["وقت الحضور", v.time], ["دقائق التأخير", v.mins == null ? "" : String(v.mins)]);
     if (v.type === "refuseWait") cells.push(["المعلم الغائب", v.absent]);
     const n = cells.length;
     const val = (x, raw) => x ? (raw ? x : wpEsc(x)) : "&nbsp;";
@@ -8821,21 +8853,21 @@ ${contentEl.innerHTML}
         <div style="font-size:15px; line-height:2;">( &nbsp; ) العذر مقبول &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) العذر غير مقبول، وتعتبر ساعات مهدرة</div>
         ${line}
         <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:15px;">
-          <div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div><div>التوقيع: ....................</div>
+          <div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
         </div>
       </div>`;
     wpOpenDoc(wpShellDoc(T.title, wpGenericPage(T.title, inner, date), { fitOnePage: true }), T.title.replace(/ /g, "_") + (v.teacher ? "_" + v.teacher : ""));
   }
-  ioEl("ioType").addEventListener("change", () => ioSync(true));
+  ioEl("ioType").addEventListener("change", () => { ioPrefillTime(); ioSync(true); });
   ioEl("ioDay").addEventListener("change", () => { ioFillDates(); ioFillAbsent(); ioAutoClass(); ioSync(true); });
   ioEl("ioDate").addEventListener("change", () => {
     const d = ioEl("ioDate").value;
     if (d && ioEl("ioDay").value !== dayNameFromDate(d)) { ioEl("ioDay").value = dayNameFromDate(d); ioFillDates(); ioEl("ioDate").value = d; }
-    ioFillAbsent(); ioAutoClass(); ioSync(true);
+    ioFillAbsent(); ioAutoClass(); ioPrefillTime(); ioSync(true);
   });
   ["ioTime", "ioClass", "ioAbsent"].forEach(id => ioEl(id).addEventListener("change", () => ioSync(true)));
   ioEl("ioPeriod").addEventListener("change", () => { ioAutoClass(); ioSync(true); });
-  ioEl("ioTeacher").addEventListener("change", () => { ioEl("ioCivil").value = (data.teacherCivil || {})[ioEl("ioTeacher").value] || ""; ioAutoClass(); ioFillAbsent(); ioSync(true); });
+  ioEl("ioTeacher").addEventListener("change", () => { ioEl("ioCivil").value = (data.teacherCivil || {})[ioEl("ioTeacher").value] || ""; ioAutoClass(); ioFillAbsent(); ioPrefillTime(); ioSync(true); });
   ioEl("ioCivil").addEventListener("change", () => {
     const t = ioEl("ioTeacher").value, c = ackNormCivil(ioEl("ioCivil").value);
     ioEl("ioCivil").value = c;
@@ -9535,7 +9567,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-02-11";
+window.APP_BUILD = "2026-11-02-14";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
