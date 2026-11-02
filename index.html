@@ -1670,13 +1670,12 @@
         <div class="wc-hijri" id="tkDateH"></div>
       </div>
       <div class="field" style="margin-bottom:10px;">
-        <label for="tkBody">نص التكليف (يُكمل العبارة)</label>
-        <div class="sched-hint" style="text-align:right; margin:0 0 6px;">يبدأ التكليف تلقائيًا بـ: «بناءً على الصلاحيات الممنوحة لمدير المدرسة، وعلمنا بأنكم على قدر المسئولية، لذا تم تكليفكم …»</div>
-        <textarea id="tkBody" rows="6" class="nf-text" placeholder="مثال: بالإشراف على قاعة الاختبار رقم (3) خلال فترة الاختبارات النهائية."></textarea>
+        <label for="tkBody">نص التكليف (قابل للتعديل)</label>
+        <textarea id="tkBody" rows="7" class="nf-text">بناءً على الصلاحيات الممنوحة لمدير المدرسة، وعلمنا بأنكم على قدر المسئولية، لذا تم تكليفكم </textarea>
       </div>
       <div class="export-row" style="margin-top:8px;">
         <button class="export-btn" id="tkPrint">🖨️ طباعة التكليف</button>
-        <button class="export-btn" id="tkClear">↺ مسح</button>
+        <button class="export-btn" id="tkClear">↺ مسح وإرجاع النص الافتراضي</button>
       </div>
       <div class="sched-hint" style="text-align:right; margin-top:8px;">يظهر الموضوع عنوانًا أعلى الورقة. إذا تُرك المعلم «اختر» يُطبع مكان الاسم فارغًا للكتابة باليد.</div>
     </div>
@@ -8645,6 +8644,7 @@ ${contentEl.innerHTML}
     list.forEach(n => box.appendChild(ackCard(n)));
   }
   /* ===== إنشاء تكليف ===== */
+  const TK_DEFAULT_BODY = "بناءً على الصلاحيات الممنوحة لمدير المدرسة، وعلمنا بأنكم على قدر المسئولية، لذا تم تكليفكم ";
   function tkOpen() {
     const sel = document.getElementById("tkTeacher"), cur = sel.value;
     sel.innerHTML = '<option value="">اختر</option>' + data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar")).map(t => '<option value="' + acEsc(t) + '">' + acEsc(t) + "</option>").join("");
@@ -8669,8 +8669,7 @@ ${contentEl.innerHTML}
     const inner = `<div class="letter" style="margin-top:10px;">
         <p class="to" style="margin-bottom:10px !important;">المكرم المعلم / ${name} &nbsp; وفقه الله</p>
         <p class="salam">السلام عليكم ورحمة الله وبركاته</p>
-        <p class="body" style="white-space:pre-line;">بناءً على الصلاحيات الممنوحة لمدير المدرسة، وعلمنا بأنكم على قدر المسئولية، لذا تم تكليفكم ${body ? wpEsc(body) : ""}</p>
-        ${body ? "" : '<div style="height:170px;border-bottom:1.5px dotted #174a59;"></div>'}
+        ${body ? '<p class="body" style="white-space:pre-line;">' + wpEsc(body) + "</p>" : '<div style="height:170px;border-bottom:1.5px dotted #174a59;"></div>'}
         <p class="body" style="text-align:center; margin-top:10px;">شاكرين لكم تعاونكم، والله يحفظكم ويرعاكم.</p>
       </div>
       <div style="margin:26px 20px 0; font-size:15px; line-height:2.2; break-inside:avoid;">
@@ -8685,7 +8684,8 @@ ${contentEl.innerHTML}
   document.getElementById("tkDate").addEventListener("change", tkDateHint);
   document.getElementById("tkPrint").addEventListener("click", tkPrint);
   document.getElementById("tkClear").addEventListener("click", () => {
-    ["tkSubject", "tkBody", "tkTeacher"].forEach(id => document.getElementById(id).value = "");
+    ["tkSubject", "tkTeacher"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("tkBody").value = TK_DEFAULT_BODY;
     document.getElementById("tkDate").value = todayISODate(); tkDateHint();
   });
   function ackOpenView() {
@@ -9331,7 +9331,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-02-6";
+window.APP_BUILD = "2026-11-02-7";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
