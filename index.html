@@ -801,6 +801,7 @@
       <button data-go="monitoring"><span class="qi" style="--c:#3E8E41">👁️</span>المتابعة</button>
       <button data-go="wait"><span class="qi" style="--c:#138D90">⏱️</span>سجل الانتظار</button>
       <button data-go="ack"><span class="qi" style="--c:#2E6FB0">📋</span>متابعة الاطلاع</button>
+      <button data-go="inq"><span class="qi" style="--c:#C0392B">⚠️</span>المسائلات</button>
       <button data-go="taklif"><span class="qi" style="--c:#B5651D">📝</span>إنشاء تكليف</button>
     </div>
   </div>
@@ -1184,7 +1185,7 @@
         <div class="count">الحضور والانصراف</div>
       </button>
 
-      <button class="tile duty-manage" id="openInquiries">
+      <button class="tile duty-manage" id="openInquiries" style="display:none;">
         <div class="tile-icon">
           <svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
         </div>
@@ -1364,7 +1365,7 @@
   <!-- Inquiries (auto-collected late / unavailable) -->
   <div class="detail" id="inquiriesView">
     <div class="back-row">
-      <button class="back-btn" data-back="monitoring"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>متابعة</button>
+      <button class="back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
     </div>
     <div class="detail-header">
       <h2>المسائلات</h2>
@@ -1375,6 +1376,7 @@
         <span class="count-pill" id="inquiriesDetailCount">0 حالة</span>
       </div>
     </div>
+    <button class="submit-btn" id="openInqOfficial" style="margin-bottom:12px;">📄 مساءلات رسمية (طباعة بالترويسة)</button>
     <div class="sched-hint" style="margin-bottom:12px;">تُجمَع هنا تلقائيًا كل حالات "متأخر" أو "غير متواجد" من الطابور ومناوبتي الفسحة ونهاية الدوام والدوام</div>
     <div class="name-list" id="inquiriesList"></div>
   </div>
@@ -1646,6 +1648,61 @@
         <h2>حصر حصص الانتظار</h2>
         <div class="count">ما حضره كل معلم</div>
       </button>
+    </div>
+  </div>
+
+  <!-- المساءلات الرسمية -->
+  <div class="detail" id="inqOfficialView">
+    <div class="back-row">
+      <button class="back-btn" data-back="inquiries"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>المسائلات</button>
+    </div>
+    <div class="detail-header"><h2>مساءلات رسمية</h2></div>
+    <div class="sched-form">
+      <div class="field" style="margin-bottom:10px;">
+        <label for="ioType">نوع المساءلة</label>
+        <select id="ioType" class="select-styled">
+          <option value="">اختيار</option>
+          <option value="absence">مساءلة غياب</option>
+          <option value="late">مساءلة تأخر</option>
+          <option value="lateClass">مساءلة تأخر عن حصة</option>
+          <option value="missClass">مساءلة عدم حضور حصة</option>
+          <option value="refuseWait">مساءلة رفض حصة انتظار</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label for="ioTeacher">المعلم</label>
+        <select id="ioTeacher" class="select-styled"></select>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label for="ioCivil">السجل المدني (يظهر تلقائيًا عند اختيار المعلم)</label>
+        <input type="text" id="ioCivil" class="date-input" inputmode="numeric" maxlength="10" style="width:100%; letter-spacing:1px;" placeholder="—">
+        <div class="wc-hijri" id="ioCivilH"></div>
+      </div>
+      <div class="sched-grid" style="margin-bottom:10px;">
+        <div class="field"><label for="ioDay">اليوم</label><select id="ioDay" class="select-styled"></select></div>
+        <div class="field"><label for="ioDate">التاريخ</label><select id="ioDate" class="select-styled"></select></div>
+      </div>
+      <div class="field" id="ioTimeBox" style="margin-bottom:10px; display:none;">
+        <label for="ioTime">وقت الحضور</label>
+        <input type="time" id="ioTime" class="date-input">
+      </div>
+      <div class="sched-grid" id="ioClassBox" style="margin-bottom:10px; display:none;">
+        <div class="field"><label for="ioPeriod">الحصة</label><select id="ioPeriod" class="select-styled"></select></div>
+        <div class="field"><label for="ioClass">الفصل</label><select id="ioClass" class="select-styled"></select></div>
+      </div>
+      <div class="field" id="ioAbsentBox" style="margin-bottom:10px; display:none;">
+        <label for="ioAbsent">المعلم الغائب</label>
+        <select id="ioAbsent" class="select-styled"></select>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label for="ioBody">عبارة المساءلة (تظهر في الصف الأخير من الجدول — قابلة للتعديل)</label>
+        <textarea id="ioBody" rows="5" class="nf-text" placeholder="اختر نوع المساءلة لتظهر العبارة"></textarea>
+      </div>
+      <div class="export-row" style="margin-top:8px;">
+        <button class="export-btn" id="ioPrint">🖨️ طباعة المساءلة</button>
+        <button class="export-btn" id="ioReset">↺ إعادة العبارة الافتراضية</button>
+      </div>
+      <div class="sched-hint" style="text-align:right; margin-top:8px;">يُطبع عنوان المساءلة أسفل الترويسة، ثم جدول: اسم المعلم وسجله المدني، ثم البيانات المختارة، ثم عبارة المساءلة.</div>
     </div>
   </div>
 
@@ -8643,6 +8700,151 @@ ${contentEl.innerHTML}
     if (!list.length) { box.innerHTML = '<div class="empty-state">' + (ackUi.archive ? "لا توجد عناصر في الأرشيف" : "لا توجد إشعارات بروابط تأكيد") + "</div>"; return; }
     list.forEach(n => box.appendChild(ackCard(n)));
   }
+  /* ===== المساءلات الرسمية ===== */
+  const IO_TYPES = {
+    absence: { title: "مساءلة غياب", cls: false },
+    late: { title: "مساءلة تأخر", cls: false },
+    lateClass: { title: "مساءلة تأخر عن حصة", cls: true },
+    missClass: { title: "مساءلة عدم حضور حصة", cls: true },
+    refuseWait: { title: "مساءلة رفض حصة انتظار", cls: true }
+  };
+  const IO_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+  const ioEl = id => document.getElementById(id);
+  const ioOpt = (v, t) => '<option value="' + acEsc(v) + '">' + acEsc(t) + "</option>";
+  const ioGreg = iso => { const [y, m, d] = iso.split("-"); return +d + "/" + +m + "/" + y + " م"; };
+  function ioDateList() {
+    const out = [], base = new Date(todayISODate() + "T12:00:00");
+    const iso = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    for (let i = -60; i <= 14; i++) { const d = new Date(base); d.setDate(d.getDate() + i); const v = iso(d); if (dayNameFromDate(v)) out.push(v); }
+    return out.reverse();
+  }
+  function ioFillDates() {
+    const sel = ioEl("ioDate"), cur = sel.value, day = ioEl("ioDay").value;
+    const list = ioDateList().filter(d => !day || dayNameFromDate(d) === day);
+    sel.innerHTML = '<option value="">اختيار</option>' + list.map(d => ioOpt(d, (wpDateParts(d).hijri || "") + "  —  " + ioGreg(d))).join("");
+    sel.value = list.includes(cur) ? cur : "";
+  }
+  function ioFillAbsent() {
+    const sel = ioEl("ioAbsent"), cur = sel.value, date = ioEl("ioDate").value;
+    const abs = date ? [...new Set((data.workAttendance || []).filter(r => r.date === date && (r.status === "absent" || r.status === "permission")).map(r => r.teacher))].filter(t => data.teachers.includes(t)) : [];
+    const rest = data.teachers.filter(t => !abs.includes(t) && t !== ioEl("ioTeacher").value).sort((a, b) => a.localeCompare(b, "ar"));
+    sel.innerHTML = '<option value="">اختيار</option>' + abs.map(t => ioOpt(t, t + "  (غائب في هذا اليوم)")).join("") + rest.map(t => ioOpt(t, t)).join("");
+    sel.value = [...sel.options].some(o => o.value === cur) ? cur : "";
+  }
+  function ioVals() {
+    const date = ioEl("ioDate").value, p = date ? wpDateParts(date) : null;
+    return {
+      type: ioEl("ioType").value, teacher: ioEl("ioTeacher").value,
+      civil: ackNormCivil(ioEl("ioCivil").value),
+      day: ioEl("ioDay").value || (p && p.dayName) || "",
+      hijri: p ? p.hijri : "", greg: date ? ioGreg(date) : "",
+      period: ioEl("ioPeriod").value ? PERIODS[Number(ioEl("ioPeriod").value) - 1] : "",
+      cls: ioEl("ioClass").value, time: ioEl("ioTime").value, absent: ioEl("ioAbsent").value
+    };
+  }
+  function ioDefaultBody() {
+    const v = ioVals(), x = (s, w) => s || (w || "......");
+    const when = "يوم " + x(v.day) + " الموافق " + x(v.hijri, "....../....../......");
+    if (v.type === "absence") return "لوحظ غيابكم عن العمل " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    if (v.type === "late") return "لوحظ تأخركم عن الحضور صباح " + when + "، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    if (v.type === "lateClass") return "لوحظ تأخركم عن الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    if (v.type === "missClass") return "لوحظ عدم حضوركم الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    if (v.type === "refuseWait") return "نظرًا لرفضكم حصة الانتظار في الحصة (" + x(v.period) + ") بالفصل (" + x(v.cls) + ") بدلًا من المعلم الغائب (" + x(v.absent) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    return "";
+  }
+  function ioSync(regen) {
+    const t = ioEl("ioType").value, T = IO_TYPES[t];
+    ioEl("ioTimeBox").style.display = t === "late" ? "" : "none";
+    ioEl("ioClassBox").style.display = T && T.cls ? "" : "none";
+    ioEl("ioAbsentBox").style.display = t === "refuseWait" ? "" : "none";
+    const v = ioVals();
+    ioEl("ioCivilH").textContent = v.teacher && !v.civil ? "لا يوجد سجل مدني محفوظ لهذا المعلم — اكتبه هنا ليُحفظ في بياناته" : "";
+    if (regen) ioEl("ioBody").value = ioDefaultBody();
+  }
+  function ioAutoClass() {
+    const tch = ioEl("ioTeacher").value, per = Number(ioEl("ioPeriod").value), day = ioEl("ioDay").value;
+    if (!tch || !per || !day || ioEl("ioType").value === "refuseWait") return;
+    const s = data.schedule.find(x => x.day === day && x.teacher === tch && Number(x.period) === per);
+    if (s && [...ioEl("ioClass").options].some(o => o.value === s.className)) ioEl("ioClass").value = s.className;
+  }
+  function ioOpen() {
+    const sel = ioEl("ioTeacher"), cur = sel.value;
+    sel.innerHTML = '<option value="">اختيار</option>' + data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar")).map(t => ioOpt(t, t)).join("");
+    if (data.teachers.includes(cur)) sel.value = cur; else sel.value = "";
+    ioEl("ioCivil").value = sel.value ? ((data.teacherCivil || {})[sel.value] || ioEl("ioCivil").value) : "";
+    const ds = ioEl("ioDay"), dc = ds.value;
+    ds.innerHTML = '<option value="">اختيار</option>' + IO_DAYS.map(d => ioOpt(d, d)).join(""); ds.value = dc;
+    const ps = ioEl("ioPeriod"), pc = ps.value;
+    ps.innerHTML = '<option value="">اختيار</option>' + PERIODS.map((n, i) => ioOpt(i + 1, n)).join(""); ps.value = pc;
+    const cs = ioEl("ioClass"), cc = cs.value;
+    cs.innerHTML = '<option value="">اختيار</option>' + data.classes.map(c => ioOpt(c, c)).join("");
+    if (data.classes.includes(cc)) cs.value = cc;
+    ioFillDates(); ioFillAbsent();
+    ioSync(!ioEl("ioBody").value.trim());
+    showView("inqOfficial");
+  }
+  function ioPrint() {
+    const v = ioVals();
+    if (!v.type) { showToast("اختر نوع المساءلة أولاً"); ioEl("ioType").focus(); return; }
+    const T = IO_TYPES[v.type], body = ioEl("ioBody").value.trim();
+    const date = ioEl("ioDate").value || todayISODate();
+    const B = "border:1.5px solid #174a59; padding:8px 6px; text-align:center; font-size:15px;";
+    const H = B + " background:#174a59; color:#fff; font-weight:700;";
+    const cells = [["اليوم", v.day], ["التاريخ", v.hijri ? v.hijri + "<br><small>" + wpEsc(v.greg) + "</small>" : ""]];
+    if (v.type === "late") cells.push(["وقت الحضور", v.time]);
+    if (T.cls) cells.push(["الحصة", v.period], ["الفصل", v.cls]);
+    if (v.type === "refuseWait") cells.push(["المعلم الغائب", v.absent]);
+    const n = cells.length;
+    const val = (x, raw) => x ? (raw ? x : wpEsc(x)) : "&nbsp;";
+    const half = Math.floor(n / 2), rest = n - half;
+    const table = `<table style="width:100%; border-collapse:collapse; margin:10px 0 14px; table-layout:fixed;">
+        <tr><td colspan="${half}" style="${H}">اسم المعلم</td><td colspan="${rest}" style="${H}">السجل المدني</td></tr>
+        <tr><td colspan="${half}" style="${B} font-weight:700; height:34px;">${val(v.teacher)}</td><td colspan="${rest}" style="${B} font-weight:700; letter-spacing:1px;">${val(v.civil)}</td></tr>
+        <tr>${cells.map(c => '<td style="' + H + '">' + c[0] + "</td>").join("")}</tr>
+        <tr>${cells.map((c, i) => '<td style="' + B + ' height:34px;">' + val(c[1], i === 1) + "</td>").join("")}</tr>
+        <tr><td colspan="${n}" style="${B} text-align:right; line-height:2; font-size:16px; white-space:pre-line; padding:10px 12px;">${body ? wpEsc(body) : "<br><br>"}</td></tr>
+      </table>`;
+    const line = '<div style="border-bottom:1.5px dotted #174a59; height:30px;"></div>';
+    const inner = `${table}
+      <div style="display:flex; justify-content:space-between; margin:0 20px; font-size:15px;">
+        <div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
+      </div>
+      <div style="margin:16px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:10px 14px; break-inside:avoid;">
+        <div style="font-weight:700; color:#174a59; margin-bottom:4px;">إفادة المعلم:</div>
+        ${line}${line}${line}
+        <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:15px;">
+          <div>الاسم: ${v.teacher ? wpEsc(v.teacher) : "...................................."}</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
+        </div>
+      </div>
+      <div style="margin:14px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:10px 14px; break-inside:avoid;">
+        <div style="font-weight:700; color:#174a59; margin-bottom:8px;">رأي مدير المدرسة:</div>
+        <div style="font-size:15px; line-height:2;">( &nbsp; ) العذر مقبول &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) العذر غير مقبول، وتعتبر ساعات مهدرة</div>
+        ${line}
+        <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:15px;">
+          <div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div><div>التوقيع: ....................</div>
+        </div>
+      </div>`;
+    wpOpenDoc(wpShellDoc(T.title, wpGenericPage(T.title, inner, date), { fitOnePage: true }), T.title.replace(/ /g, "_") + (v.teacher ? "_" + v.teacher : ""));
+  }
+  ioEl("ioType").addEventListener("change", () => ioSync(true));
+  ioEl("ioDay").addEventListener("change", () => { ioFillDates(); ioFillAbsent(); ioAutoClass(); ioSync(true); });
+  ioEl("ioDate").addEventListener("change", () => {
+    const d = ioEl("ioDate").value;
+    if (d && ioEl("ioDay").value !== dayNameFromDate(d)) { ioEl("ioDay").value = dayNameFromDate(d); ioFillDates(); ioEl("ioDate").value = d; }
+    ioFillAbsent(); ioAutoClass(); ioSync(true);
+  });
+  ["ioTime", "ioClass", "ioAbsent"].forEach(id => ioEl(id).addEventListener("change", () => ioSync(true)));
+  ioEl("ioPeriod").addEventListener("change", () => { ioAutoClass(); ioSync(true); });
+  ioEl("ioTeacher").addEventListener("change", () => { ioEl("ioCivil").value = (data.teacherCivil || {})[ioEl("ioTeacher").value] || ""; ioAutoClass(); ioFillAbsent(); ioSync(true); });
+  ioEl("ioCivil").addEventListener("change", () => {
+    const t = ioEl("ioTeacher").value, c = ackNormCivil(ioEl("ioCivil").value);
+    ioEl("ioCivil").value = c;
+    if (t && /^[12]\d{9}$/.test(c) && (data.teacherCivil || {})[t] !== c) { if (!data.teacherCivil) data.teacherCivil = {}; data.teacherCivil[t] = c; saveData(); showToast("حُفظ السجل المدني في بيانات المعلم"); }
+    ioSync(false);
+  });
+  ioEl("ioReset").addEventListener("click", () => ioSync(true));
+  ioEl("ioPrint").addEventListener("click", ioPrint);
+  ioEl("openInqOfficial").addEventListener("click", ioOpen);
   /* ===== إنشاء تكليف ===== */
   const TK_DEFAULT_BODY = "بناءً على الصلاحيات الممنوحة لمدير المدرسة، وعلمنا بأنكم على قدر المسئولية، لذا تم تكليفكم ";
   function tkOpen() {
@@ -8737,6 +8939,7 @@ ${contentEl.innerHTML}
     document.getElementById("waitCountView").classList.toggle("active", view === "waitCount");
     document.getElementById("ackView").classList.toggle("active", view === "ack");
     document.getElementById("taklifView").classList.toggle("active", view === "taklif");
+    document.getElementById("inqOfficialView").classList.toggle("active", view === "inqOfficial");
     document.getElementById("teacherSchedView").classList.toggle("active", view === "teacherSched");
     window.scrollTo(0, 0);
   }
@@ -8778,6 +8981,7 @@ ${contentEl.innerHTML}
       else if (go === "wait") document.getElementById("openCoverage").click();
       else if (go === "ack") ackOpenView();
       else if (go === "taklif") tkOpen();
+      else if (go === "inq") document.getElementById("openInquiries").click();
       window.scrollTo(0, 0);
     }));
   })();
@@ -9331,7 +9535,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-02-7";
+window.APP_BUILD = "2026-11-02-11";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
