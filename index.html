@@ -572,6 +572,7 @@
   .ack-card2 .pill.part { background: #fff4df; color: #8a5200; }
   .ack-card2 .pill.none { background: #fdecea; color: #8c1d18; }
   .ack-card2 .ack-rows { display: none; margin-top: 8px; }
+  #ioSavedHead, #alSavedHead { scroll-margin-top: 64px; }
   .io-st { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 6px; font-size: 12.5px; }
   .io-b { padding: 2px 9px; border-radius: 99px; font-weight: 700; font-size: 11.5px; }
   .io-b.ok { background: #e7f7ee; color: #146c3a; } .io-b.no { background: #f1ecdf; color: #6b5a3a; }
@@ -807,6 +808,7 @@
       <button data-go="wait"><span class="qi" style="--c:#138D90">⏱️</span>سجل الانتظار</button>
       <button data-go="ack"><span class="qi" style="--c:#2E6FB0">📋</span>متابعة الاطلاع</button>
       <button data-go="inq"><span class="qi" style="--c:#C0392B">⚠️</span>المسائلات</button>
+      <button data-go="alert"><span class="qi" style="--c:#D35400">🔔</span>التنبيهات</button>
       <button data-go="taklif"><span class="qi" style="--c:#B5651D">📝</span>إنشاء تكليف</button>
     </div>
   </div>
@@ -1381,7 +1383,18 @@
         <span class="count-pill" id="inquiriesDetailCount">0 حالة</span>
       </div>
     </div>
-    <button class="submit-btn" id="openInqOfficial" style="margin-bottom:12px;">📄 مساءلات رسمية (طباعة بالترويسة)</button>
+    <div class="grid" style="grid-template-columns:repeat(2,1fr); margin-bottom:12px;">
+      <button class="tile duty-manage" id="openInqOfficial">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></div>
+        <h2>مساءلة رسمية</h2>
+        <div class="count">إنشاء وطباعة بالترويسة</div>
+      </button>
+      <button class="tile schedule" id="openInqSaved">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <h2>المساءلات المحفوظة</h2>
+        <div class="count" id="inqSavedTileCount">0 مساءلة</div>
+      </button>
+    </div>
     <div class="sched-hint" style="margin-bottom:12px;">تُجمَع هنا تلقائيًا كل حالات "متأخر" أو "غير متواجد" من الطابور ومناوبتي الفسحة ونهاية الدوام والدوام</div>
     <div class="name-list" id="inquiriesList"></div>
   </div>
@@ -1661,7 +1674,7 @@
     <div class="back-row">
       <button class="back-btn" data-back="inquiries"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>المسائلات</button>
     </div>
-    <div class="detail-header"><h2>مساءلات رسمية</h2></div>
+    <div class="detail-header"><h2>مساءلات رسمية</h2><button class="export-btn" id="ioGoSaved" style="padding:6px 12px;">📁 المحفوظة</button></div>
     <div class="sched-form">
       <div class="field" style="margin-bottom:10px;">
         <label for="ioType">نوع المساءلة</label>
@@ -1715,9 +1728,62 @@
       <div class="sched-hint" id="ioEditing" style="text-align:right; margin-top:6px; color:#8a5200; display:none;"></div>
       <div class="sched-hint" style="text-align:right; margin-top:8px;">يُطبع عنوان المساءلة أسفل الترويسة، ثم جدول: اسم المعلم وسجله المدني، ثم البيانات المختارة، ثم عبارة المساءلة. عند الطباعة تُحفظ المساءلة تلقائيًا في مجلد المعلم.</div>
     </div>
-    <div class="detail-header" style="margin-top:18px;"><h2 style="font-size:18px;">📁 المساءلات المحفوظة</h2><span class="count-pill" id="ioSavedCount">0</span></div>
+    <div class="detail-header" id="ioSavedHead" style="margin-top:18px;"><h2 style="font-size:18px;">📁 المساءلات المحفوظة</h2><span class="count-pill" id="ioSavedCount">0</span></div>
     <div class="field" style="margin:4px 0 10px;"><input type="search" id="ioSearch" class="date-input" style="width:100%;" placeholder="بحث باسم المعلم…"></div>
     <div id="ioSaved"></div>
+  </div>
+
+  <!-- التنبيهات -->
+  <div class="detail" id="alertView">
+    <div class="back-row">
+      <button class="back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
+    </div>
+    <div class="detail-header"><h2>التنبيهات</h2><button class="export-btn" id="alGoSaved" style="padding:6px 12px;">📁 المحفوظة</button></div>
+    <div class="sched-form">
+      <div class="field" style="margin-bottom:10px;">
+        <label for="alType">نوع المخالفة</label>
+        <select id="alType" class="select-styled">
+          <option value="">اختيار</option>
+          <option value="absence">الغياب</option>
+          <option value="late">التأخر عن الحضور</option>
+          <option value="early">الانصراف المبكر</option>
+          <option value="lineup">عدم حضور الطابور</option>
+          <option value="lateClass">التأخر عن الحصص</option>
+          <option value="missClass">عدم حضور الحصص</option>
+          <option value="refuseWait">رفض حصص الانتظار</option>
+          <option value="other">أخرى</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label for="alTeacher">المعلم</label>
+        <select id="alTeacher" class="select-styled"></select>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label for="alCivil">السجل المدني (يظهر تلقائيًا عند اختيار المعلم)</label>
+        <input type="text" id="alCivil" class="date-input" inputmode="numeric" maxlength="10" style="width:100%; letter-spacing:1px;" placeholder="—">
+        <div class="wc-hijri" id="alInfo"></div>
+      </div>
+      <div class="sched-grid" style="margin-bottom:10px;">
+        <div class="field"><label for="alDay">اليوم</label><select id="alDay" class="select-styled"></select></div>
+        <div class="field"><label for="alDate">التاريخ</label><select id="alDate" class="select-styled"></select></div>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label for="alBody">نص التنبيه (قابل للتعديل)</label>
+        <textarea id="alBody" rows="6" class="nf-text" placeholder="اختر نوع المخالفة ليظهر النص"></textarea>
+      </div>
+      <div class="export-row" style="margin-top:8px;">
+        <button class="export-btn" id="alSave">💾 حفظ التنبيه</button>
+        <button class="export-btn" id="alPrint">🖨️ طباعة خطاب رسمي</button>
+        <button class="export-btn" id="alWa">📱 إرسال واتساب</button>
+        <button class="export-btn" id="alReset">↺ إعادة النص الافتراضي</button>
+        <button class="export-btn" id="alNew">➕ تنبيه جديد</button>
+      </div>
+      <div class="sched-hint" id="alEditing" style="text-align:right; margin-top:6px; color:#8a5200; display:none;"></div>
+      <div class="sched-hint" style="text-align:right; margin-top:8px;">الخطاب الرسمي يُطبع بالترويسة، ورسالة الواتساب تُرسل لجوال المعلم مع رابط تأكيد الاطلاع. عند الطباعة أو الإرسال يُحفظ التنبيه تلقائيًا في مجلد المعلم.</div>
+    </div>
+    <div class="detail-header" id="alSavedHead" style="margin-top:18px;"><h2 style="font-size:18px;">📁 التنبيهات المحفوظة</h2><span class="count-pill" id="alSavedCount">0</span></div>
+    <div class="field" style="margin:4px 0 10px;"><input type="search" id="alSearch" class="date-input" style="width:100%;" placeholder="بحث باسم المعلم…"></div>
+    <div id="alSaved"></div>
   </div>
 
   <!-- إنشاء تكليف -->
@@ -2383,6 +2449,7 @@
     if (!Array.isArray(out.dutyTemplates)) out.dutyTemplates = [];
     if (!out.teacherCivil || typeof out.teacherCivil !== "object") out.teacherCivil = {};
     if (!Array.isArray(out.officialInq)) out.officialInq = [];
+    if (!Array.isArray(out.officialAlerts)) out.officialAlerts = [];
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -8928,6 +8995,9 @@ ${contentEl.innerHTML}
   ioEl("ioReset").addEventListener("click", () => ioSync(true));
   ioEl("ioPrint").addEventListener("click", ioPrint);
   ioEl("openInqOfficial").addEventListener("click", ioOpen);
+  const goSaved = id => setTimeout(() => document.getElementById(id).scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+  ioEl("openInqSaved").addEventListener("click", () => { ioOpen(); goSaved("ioSavedHead"); });
+  ioEl("ioGoSaved").addEventListener("click", () => goSaved("ioSavedHead"));
   function ioClearForm() {
     ioCurId = "";
     ["ioType", "ioTeacher", "ioCivil", "ioDay", "ioPeriod", "ioClass", "ioTime", "ioAbsent", "ioBody"].forEach(id => ioEl(id).value = "");
@@ -8993,6 +9063,196 @@ ${contentEl.innerHTML}
   ioEl("ioSave").addEventListener("click", () => ioSave(false));
   ioEl("ioNew").addEventListener("click", ioClearForm);
 
+  /* ===== التنبيهات (خطاب رسمي + واتساب) ===== */
+  const AL_TYPES = {
+    absence: ["الغياب", "غيابكم عن العمل"], late: ["التأخر عن الحضور", "تأخركم عن الحضور صباحًا"],
+    early: ["الانصراف المبكر", "انصرافكم مبكرًا قبل نهاية الدوام الرسمي"], lineup: ["عدم حضور الطابور", "عدم حضوركم الطابور الصباحي"],
+    lateClass: ["التأخر عن الحصص", "تأخركم عن الدخول للحصص"], missClass: ["عدم حضور الحصص", "عدم حضوركم الحصص"],
+    refuseWait: ["رفض حصص الانتظار", "رفضكم تنفيذ حصص الانتظار"], other: ["أخرى", ""]
+  };
+  const alEl = id => document.getElementById(id);
+  let alCurId = "";
+  function alFillDates() {
+    const sel = alEl("alDate"), cur = sel.value, day = alEl("alDay").value;
+    const list = ioDateList().filter(d => !day || dayNameFromDate(d) === day);
+    sel.innerHTML = '<option value="">اختيار</option>' + list.map(d => ioOpt(d, (wpDateParts(d).hijri || "") + "  —  " + ioGreg(d))).join("");
+    sel.value = list.includes(cur) ? cur : "";
+  }
+  function alPrevCount() {
+    const t = alEl("alType").value, tch = alEl("alTeacher").value;
+    if (!t || !tch || t === "other") return 0;
+    return (data.officialInq || []).filter(r => r.teacher === tch && (r.type === t || (t === "lateClass" && r.type === "lateClass") || (t === "missClass" && r.type === "missClass"))).length;
+  }
+  function alVals() {
+    const d = alEl("alDate").value, p = d ? wpDateParts(d) : null, t = alEl("alType").value;
+    return { type: t, typeName: t ? AL_TYPES[t][0] : "", teacher: alEl("alTeacher").value, civil: ackNormCivil(alEl("alCivil").value),
+      day: alEl("alDay").value || (p && p.dayName) || "", dateIso: d, hijri: p ? p.hijri : "", greg: d ? ioGreg(d) : "",
+      body: alEl("alBody").value.trim(), prev: alPrevCount() };
+  }
+  function alDefaultBody() {
+    const v = alVals(); if (!v.type) return "";
+    const when = v.hijri ? " يوم " + v.day + " الموافق " + v.hijri : "";
+    const rep = v.prev > 0 ? "، وتكرار ذلك منكم رغم مساءلتكم عنه (" + (v.prev === 1 ? "مرة واحدة" : v.prev === 2 ? "مرتين" : v.prev <= 10 ? v.prev + " مرات" : v.prev + " مرة") + ")" : "";
+    const what = v.type === "other" ? "ما لوحظ عليكم من مخالفة" : "ما لوحظ من " + AL_TYPES[v.type][1];
+    return "نظرًا ل" + what + when + rep + "، فإننا ننبّهكم إلى ضرورة الالتزام بالأنظمة والتعليمات المنظمة للعمل، وفي حال تكرار ذلك سيتم اتخاذ الإجراء النظامي حيال ذلك.";
+  }
+  function alSync(regen) {
+    const v = alVals();
+    alEl("alInfo").textContent = !v.teacher ? "" : (v.civil ? "" : "لا يوجد سجل مدني محفوظ لهذا المعلم — اكتبه هنا ليُحفظ في بياناته. ") + (v.prev ? "عدد المساءلات المحفوظة له من هذا النوع: " + v.prev : "");
+    if (regen) alEl("alBody").value = alDefaultBody();
+  }
+  function alOpen() {
+    const sel = alEl("alTeacher"), cur = sel.value;
+    sel.innerHTML = '<option value="">اختيار</option>' + data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar")).map(t => ioOpt(t, t)).join("");
+    sel.value = data.teachers.includes(cur) ? cur : "";
+    const ds = alEl("alDay"), dc = ds.value;
+    ds.innerHTML = '<option value="">اختيار</option>' + IO_DAYS.map(d => ioOpt(d, d)).join(""); ds.value = dc;
+    alFillDates(); alSync(!alEl("alBody").value.trim()); alRenderSaved(); alEditNote();
+    showView("alert");
+  }
+  function alSave(quiet) {
+    const v = alVals();
+    if (!v.type) { showToast("اختر نوع المخالفة أولاً"); alEl("alType").focus(); return false; }
+    if (!v.teacher) { if (!quiet) { showToast("اختر المعلم ليُحفظ التنبيه في مجلده"); alEl("alTeacher").focus(); } return false; }
+    if (!Array.isArray(data.officialAlerts)) data.officialAlerts = [];
+    const old = alCurId && data.officialAlerts.find(r => r.id === alCurId);
+    const rec = Object.assign({}, v, { title: "تنبيه — " + v.typeName, id: old ? old.id : "al" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), createdAt: old ? old.createdAt : Date.now(), updatedAt: Date.now() });
+    if (old) Object.assign(old, rec); else data.officialAlerts.push(rec);
+    alCurId = rec.id; saveData(); alRenderSaved(); alEditNote();
+    if (!quiet) showToast((old ? "حُدّث التنبيه" : "حُفظ التنبيه") + " في مجلد " + v.teacher);
+    return true;
+  }
+  function alMark(id, key) {
+    const r = (data.officialAlerts || []).find(x => x.id === id); if (!r) return;
+    r[key + "At"] = Date.now(); r[key + "Count"] = (r[key + "Count"] || 0) + 1; saveData(); alRenderSaved();
+  }
+  function alPrintRec(v) {
+    const title = "خطاب تنبيه";
+    const B = "border:1.5px solid #174a59; padding:8px 6px; text-align:center; font-size:15px;";
+    const H = B + " background:#174a59; color:#fff; font-weight:700;";
+    const val = (x, raw) => x ? (raw ? x : wpEsc(x)) : "&nbsp;";
+    const table = `<table style="width:100%; border-collapse:collapse; margin:10px 0 14px; table-layout:fixed;">
+        <tr><td colspan="2" style="${H}">اسم المعلم</td><td style="${H}">السجل المدني</td></tr>
+        <tr><td colspan="2" style="${B} font-weight:700; height:34px;">${val(v.teacher)}</td><td style="${B} font-weight:700; letter-spacing:1px;">${val(v.civil)}</td></tr>
+        <tr><td style="${H}">نوع المخالفة</td><td style="${H}">اليوم</td><td style="${H}">التاريخ</td></tr>
+        <tr><td style="${B} height:34px; font-weight:700;">${val(v.typeName)}</td><td style="${B}">${val(v.day)}</td><td style="${B}">${v.hijri ? wpEsc(v.hijri) + "<br><small>" + wpEsc(v.greg) + "</small>" : "&nbsp;"}</td></tr>
+        <tr><td colspan="3" style="${B} text-align:right; line-height:2; font-size:16px; white-space:pre-line; padding:10px 12px;">${v.body ? wpEsc(v.body) : "<br><br><br>"}</td></tr>
+      </table>`;
+    const inner = `<div class="letter" style="margin:6px 0 4px;"><p class="to">المكرم المعلم / ${v.teacher ? "<b>" + wpEsc(v.teacher) + "</b>" : '<span style="display:inline-block;min-width:50%;border-bottom:1.5px dotted #174a59;">&nbsp;</span>'} &nbsp; وفقه الله</p>
+        <p class="salam" style="margin-top:6px !important;">السلام عليكم ورحمة الله وبركاته</p></div>
+      ${table}
+      <div style="margin:18px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:10px 14px; break-inside:avoid;">
+        <div style="font-weight:700; color:#174a59; margin-bottom:8px;">اطلعت على التنبيه:</div>
+        <div style="display:flex; justify-content:space-between; font-size:15px;">
+          <div>الاسم: ${v.teacher ? wpEsc(v.teacher) : "...................................."}</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin:30px 20px 0; font-size:15px;">
+        <div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
+      </div>`;
+    wpOpenDoc(wpShellDoc(title, wpGenericPage(title, inner, v.dateIso || todayISODate()), { fitOnePage: true }), "تنبيه" + (v.teacher ? "_" + v.teacher : ""));
+  }
+  function alWaText(v) {
+    return "السلام عليكم ورحمة الله وبركاته\nالمكرم المعلم / " + v.teacher + " وفقه الله\n\n🔔 تنبيه: " + v.typeName + "\n" +
+      (v.hijri ? "التاريخ: " + v.day + " " + v.hijri + "\n" : "") + "\n" + v.body + "\n\nإدارة مدرسة عطاء بن أبي رباح المتوسطة";
+  }
+  function alSendWa(v, id) {
+    if (!v.teacher) { showToast("اختر المعلم أولاً"); return; }
+    const phone = (data.teacherPhones[v.teacher] || "").trim();
+    if (!phone) { showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين"); return; }
+    if (!v.body) { showToast("اكتب نص التنبيه أولاً"); return; }
+    waSendWithAck(v.teacher, phone, "تنبيه — " + v.typeName, alWaText(v));
+    if (id) alMark(id, "sent");
+  }
+  function alEditNote() {
+    const r = alCurId && (data.officialAlerts || []).find(x => x.id === alCurId);
+    alEl("alEditing").style.display = r ? "" : "none";
+    alEl("alEditing").textContent = r ? "✏️ تعدّل تنبيهًا محفوظًا: " + r.typeName + " — " + r.teacher + " (اضغط «تنبيه جديد» لبدء تنبيه آخر)" : "";
+  }
+  function alClear() {
+    alCurId = "";
+    ["alType", "alTeacher", "alCivil", "alDay", "alBody"].forEach(id => alEl(id).value = "");
+    alFillDates(); alEl("alDate").value = ""; alSync(true); alEditNote();
+  }
+  function alLoad(id) {
+    const r = (data.officialAlerts || []).find(x => x.id === id); if (!r) return;
+    alCurId = r.id; alEl("alType").value = r.type || ""; alEl("alTeacher").value = data.teachers.includes(r.teacher) ? r.teacher : "";
+    alEl("alCivil").value = r.civil || ""; alEl("alDay").value = r.day || ""; alFillDates();
+    if (r.dateIso && ![...alEl("alDate").options].some(o => o.value === r.dateIso)) alEl("alDate").insertAdjacentHTML("beforeend", ioOpt(r.dateIso, (r.hijri || "") + "  —  " + (r.greg || "")));
+    alEl("alDate").value = r.dateIso || ""; alSync(false); alEl("alBody").value = r.body || ""; alEditNote(); window.scrollTo(0, 0);
+  }
+  const alOpenFolders = new Set();
+  const alTimes = n => n === 2 ? " (مرتين)" : n > 2 && n <= 10 ? " (" + n + " مرات)" : n > 10 ? " (" + n + " مرة)" : "";
+  function alRenderSaved() {
+    const box = alEl("alSaved"), all = data.officialAlerts || [];
+    alEl("alSavedCount").textContent = all.length + " تنبيه";
+    const q = normalizeArabicText(alEl("alSearch").value || ""), groups = {};
+    all.forEach(r => { (groups[r.teacher] = groups[r.teacher] || []).push(r); });
+    const names = Object.keys(groups).filter(n => !q || normalizeArabicText(n).includes(q)).sort((a, b) => a.localeCompare(b, "ar"));
+    if (!names.length) { box.innerHTML = '<div class="empty-state">' + (all.length ? "لا توجد نتائج" : "لا توجد تنبيهات محفوظة بعد") + "</div>"; return; }
+    box.innerHTML = names.map(n => {
+      const list = groups[n].slice().sort((a, b) => String(b.dateIso || "").localeCompare(String(a.dateIso || "")) || b.createdAt - a.createdAt);
+      return '<div class="ack-card2' + (alOpenFolders.has(n) ? " open" : "") + '" data-t="' + acEsc(n) + '"><div class="hd"><span class="ic">📁</span><span class="tx"><b>' + acEsc(n) + '</b><span class="sub">آخر تنبيه: ' + acEsc(list[0].hijri || "—") + '</span></span><span class="pill part">' + list.length + "</span></div>" +
+        '<div class="ack-rows">' + list.map(r => '<div class="ack-item" data-id="' + r.id + '"><div class="hd"><b>🔔 تنبيه — ' + acEsc(r.typeName) + '</b><span class="pill">' + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + "</span></div>" +
+          '<div class="sub" style="font-size:12px; color:var(--ink-soft); margin-top:4px;">' + acEsc((r.body || "").slice(0, 110)) + (r.body && r.body.length > 110 ? "…" : "") + "</div>" +
+          '<div class="io-st">' +
+            (r.printedAt ? '<span class="io-b ok">🖨️ طُبع' + alTimes(r.printedCount) + " — " + acEsc(ioStamp(r.printedAt)) + "</span>" : '<span class="io-b no">لم يُطبع</span>') +
+            (r.sentAt ? '<span class="io-b ok">📱 أُرسل واتساب' + alTimes(r.sentCount) + " — " + acEsc(ioStamp(r.sentAt)) + "</span>" : '<span class="io-b no">لم يُرسل</span>') +
+            '<label class="io-chk"><input type="checkbox" data-flag="delivered"' + (r.delivered ? " checked" : "") + '> 📨 تم تسليمه للمعلم</label>' +
+            '<label class="io-chk"><input type="checkbox" data-flag="signed"' + (r.signed ? " checked" : "") + '> ✍️ تم توقيعه</label>' +
+          "</div>" +
+          '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="print">' + (r.printedAt ? "🖨️ طباعة مرة أخرى" : "🖨️ طباعة") + '</button><button class="export-btn" data-act="wa">' + (r.sentAt ? "📱 إرسال مرة أخرى" : "📱 واتساب") + '</button><button class="export-btn" data-act="edit">✏️ فتح وتعديل</button><button class="export-btn" data-act="del">🗑️ حذف</button></div></div>').join("") + "</div></div>";
+    }).join("");
+  }
+  alEl("alSaved").addEventListener("click", e => {
+    const card = e.target.closest(".ack-card2"); if (!card) return;
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) { if (e.target.closest(".hd") && !e.target.closest(".ack-item")) { const t = card.dataset.t; card.classList.toggle("open"); if (card.classList.contains("open")) alOpenFolders.add(t); else alOpenFolders.delete(t); } return; }
+    const id = btn.closest(".ack-item").dataset.id, r = (data.officialAlerts || []).find(x => x.id === id); if (!r) return;
+    if (btn.dataset.act === "print") { alPrintRec(r); alMark(id, "printed"); }
+    else if (btn.dataset.act === "wa") { if (r.sentAt && btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "سبق الإرسال — اضغط للتأكيد"; setTimeout(() => { btn.dataset.confirm = ""; btn.textContent = "📱 إرسال مرة أخرى"; }, 5000); return; } alSendWa(r, id); }
+    else if (btn.dataset.act === "edit") alLoad(id);
+    else if (btn.dataset.act === "del") {
+      if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "تأكيد الحذف"; setTimeout(() => { btn.dataset.confirm = ""; btn.textContent = "🗑️ حذف"; }, 4000); return; }
+      data.officialAlerts = data.officialAlerts.filter(x => x.id !== id);
+      if (alCurId === id) { alCurId = ""; alEditNote(); }
+      saveData(); alRenderSaved(); showToast("حُذف التنبيه");
+    }
+  });
+  alEl("alSaved").addEventListener("change", e => {
+    const cb = e.target.closest("input[data-flag]"); if (!cb) return;
+    const r = (data.officialAlerts || []).find(x => x.id === cb.closest(".ack-item").dataset.id); if (!r) return;
+    r[cb.dataset.flag] = cb.checked; r[cb.dataset.flag + "At"] = cb.checked ? Date.now() : null; saveData(); alRenderSaved();
+  });
+  alEl("alSearch").addEventListener("input", alRenderSaved);
+  alEl("alGoSaved").addEventListener("click", () => setTimeout(() => alEl("alSavedHead").scrollIntoView({ behavior: "smooth", block: "start" }), 60));
+  alEl("alType").addEventListener("change", () => alSync(true));
+  alEl("alTeacher").addEventListener("change", () => { alEl("alCivil").value = (data.teacherCivil || {})[alEl("alTeacher").value] || ""; alSync(true); });
+  alEl("alCivil").addEventListener("change", () => {
+    const t = alEl("alTeacher").value, c = ackNormCivil(alEl("alCivil").value); alEl("alCivil").value = c;
+    if (t && /^[12]\d{9}$/.test(c) && (data.teacherCivil || {})[t] !== c) { if (!data.teacherCivil) data.teacherCivil = {}; data.teacherCivil[t] = c; saveData(); showToast("حُفظ السجل المدني في بيانات المعلم"); }
+    alSync(false);
+  });
+  alEl("alDay").addEventListener("change", () => { alFillDates(); alSync(true); });
+  alEl("alDate").addEventListener("change", () => {
+    const d = alEl("alDate").value;
+    if (d && alEl("alDay").value !== dayNameFromDate(d)) { alEl("alDay").value = dayNameFromDate(d); alFillDates(); alEl("alDate").value = d; }
+    alSync(true);
+  });
+  alEl("alReset").addEventListener("click", () => alSync(true));
+  alEl("alNew").addEventListener("click", alClear);
+  alEl("alSave").addEventListener("click", () => alSave(false));
+  alEl("alPrint").addEventListener("click", () => {
+    const v = alVals(); if (!v.type) { showToast("اختر نوع المخالفة أولاً"); return; }
+    if (v.teacher && alSave(true)) alMark(alCurId, "printed");
+    alPrintRec(v);
+  });
+  alEl("alWa").addEventListener("click", () => {
+    const v = alVals(); if (!v.type) { showToast("اختر نوع المخالفة أولاً"); return; }
+    if (!v.teacher) { showToast("اختر المعلم أولاً"); return; }
+    if (!(data.teacherPhones[v.teacher] || "").trim()) { showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين"); return; }
+    alSave(true); alSendWa(v, alCurId);
+  });
   /* ===== إنشاء تكليف ===== */
   const TK_DEFAULT_BODY = "بناءً على الصلاحيات الممنوحة لمدير المدرسة، وعلمنا بأنكم على قدر المسئولية، لذا تم تكليفكم ";
   function tkOpen() {
@@ -9088,6 +9348,7 @@ ${contentEl.innerHTML}
     document.getElementById("ackView").classList.toggle("active", view === "ack");
     document.getElementById("taklifView").classList.toggle("active", view === "taklif");
     document.getElementById("inqOfficialView").classList.toggle("active", view === "inqOfficial");
+    document.getElementById("alertView").classList.toggle("active", view === "alert");
     document.getElementById("teacherSchedView").classList.toggle("active", view === "teacherSched");
     window.scrollTo(0, 0);
   }
@@ -9130,6 +9391,7 @@ ${contentEl.innerHTML}
       else if (go === "ack") ackOpenView();
       else if (go === "taklif") tkOpen();
       else if (go === "inq") document.getElementById("openInquiries").click();
+      else if (go === "alert") alOpen();
       window.scrollTo(0, 0);
     }));
   })();
@@ -9138,6 +9400,7 @@ ${contentEl.innerHTML}
     showView("monitoring");
   });
   document.getElementById("openInquiries").addEventListener("click", () => {
+    document.getElementById("inqSavedTileCount").textContent = (data.officialInq || []).length + " مساءلة";
     renderInquiriesList();
     showView("inquiries");
   });
@@ -9683,7 +9946,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-02-17";
+window.APP_BUILD = "2026-11-02-19";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
