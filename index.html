@@ -1687,7 +1687,7 @@
           <option value="lateClass">مساءلة تأخر عن حصة</option>
           <option value="missClass">مساءلة عدم حضور حصة</option>
           <option value="refuseWait">مساءلة رفض حصة انتظار</option>
-          <option value="lowGrades">مساءلة تدني درجات طلاب مادة</option>
+          <option value="lowGrades">إفادة معلم عن تدني مستويات طلاب في مادة</option>
         </select>
       </div>
       <div class="field" style="margin-bottom:10px;">
@@ -8802,7 +8802,7 @@ ${contentEl.innerHTML}
     lateClass: { title: "مساءلة تأخر عن حصة", cls: true },
     missClass: { title: "مساءلة عدم حضور حصة", cls: true },
     refuseWait: { title: "مساءلة رفض حصة انتظار", cls: true },
-    lowGrades: { title: "مساءلة تدني درجات طلاب مادة", cls: false }
+    lowGrades: { title: "إفادة معلم عن تدني مستويات طلاب في مادة", cls: false }
   };
   const IO_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
   const ioEl = id => document.getElementById(id);
@@ -9052,7 +9052,7 @@ ${contentEl.innerHTML}
     box.innerHTML = names.map(n => {
       const list = groups[n].slice().sort((a, b) => String(b.dateIso || "").localeCompare(String(a.dateIso || "")) || b.createdAt - a.createdAt);
       return '<div class="ack-card2' + (ioOpenFolders.has(n) ? " open" : "") + '" data-t="' + acEsc(n) + '"><div class="hd"><span class="ic">📁</span><span class="tx"><b>' + acEsc(n) + '</b><span class="sub">آخر مساءلة: ' + acEsc(list[0].hijri || "—") + '</span></span><span class="pill part">' + list.length + "</span>" + (list.some(r => !r.signed) ? '<span class="pill none">' + list.filter(r => !r.signed).length + " غير موقّعة</span>" : "") + "</div>" +
-        '<div class="ack-rows">' + list.map(r => '<div class="ack-item" data-id="' + r.id + '"><div class="hd"><b>' + acEsc(r.title) + '</b><span class="pill">' + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + "</span></div>" +
+        '<div class="ack-rows">' + list.map(r => '<div class="ack-item" data-id="' + r.id + '"><div class="hd"><b>' + acEsc((IO_TYPES[r.type] || {}).title || r.title) + '</b><span class="pill">' + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + "</span></div>" +
           '<div class="sub" style="font-size:12px; color:var(--ink-soft); margin-top:4px;">' + acEsc((r.body || "").slice(0, 110)) + (r.body && r.body.length > 110 ? "…" : "") + "</div>" +
           '<div class="io-st">' +
             (r.printedAt ? '<span class="io-b ok">🖨️ تمت الطباعة' + (r.printCount === 2 ? " (مرتين)" : r.printCount > 2 && r.printCount <= 10 ? " (" + r.printCount + " مرات)" : r.printCount > 10 ? " (" + r.printCount + " مرة)" : "") + " — " + acEsc(ioStamp(r.printedAt)) + "</span>" : '<span class="io-b no">لم تُطبع بعد</span>') +
@@ -9969,7 +9969,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-03-4";
+window.APP_BUILD = "2026-11-03-5";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
