@@ -8992,6 +8992,7 @@ ${contentEl.innerHTML}
     ioSync(!ioEl("ioBody").value.trim());
     ioRenderSaved(); ioEditNote();
     showView("inqOfficial");
+    linkSyncAll(true);
   }
   let ioCurId = "";
   function ioCollect() {
@@ -9210,6 +9211,7 @@ ${contentEl.innerHTML}
     ds.innerHTML = '<option value="">اختيار</option>' + IO_DAYS.map(d => ioOpt(d, d)).join(""); ds.value = dc;
     alFillDates(); alSync(!alEl("alBody").value.trim()); alRenderSaved(); alEditNote();
     showView("alert");
+    linkSyncAll(true);
   }
   function alSave(quiet) {
     const v = alVals();
@@ -9534,7 +9536,7 @@ ${contentEl.innerHTML}
     const go = url => { if (w && !w.closed) w.location.href = url; else openExternalLink(url); };
     const wa = link => "https://wa.me/" + nfWaPhone(phone) + "?text=" + encodeURIComponent(msg(link));
     const done = (id, link) => {
-      r.ackId = id; r.linkSentAt = Date.now(); r.linkSentCount = (r.linkSentCount || 0) + 1;
+      r.ackId = id; r.ackIds = [...new Set([...(r.ackIds || []), id])]; r.linkSentAt = Date.now(); r.linkSentCount = (r.linkSentCount || 0) + 1;
       if (files && files.length) r.attachNames = files.map(a => a.name);
       saveData(); try { ioRenderSaved(); alRenderSaved(); laRender(); } catch (e) {}
       go(wa(link));
@@ -9554,9 +9556,33 @@ ${contentEl.innerHTML}
       done(id, ackBaseUrl() + "?ack=" + id);
     })().catch(e => { console.error(e); try { if (w && !w.closed) w.close(); } catch (x) {} showToast(/permission/i.test((e && (e.code || e.message)) || "") ? "رفضت السحابة إنشاء الرابط — تحقق من قواعد Firebase" : "تعذر إنشاء الرابط — تحقق من الاتصال"); });
   }
+  function linkIds(r) { return [...new Set([...(r.ackIds || []), r.ackId].filter(Boolean))]; }
+  // تحديث حالات التأكيد من السحابة لكل روابط المساءلات والتنبيهات (يُظهر سبب الخطأ إن فشل)
+  let linkSyncBusy = false;
+  async function linkSyncAll(quiet) {
+    if (linkSyncBusy) return;
+    if (!window.__fbdb) { if (!quiet) showToast("التحديث يحتاج الاتصال بالسحابة"); return; }
+    const ids = new Set();
+    [...(data.officialInq || []), ...(data.officialAlerts || [])].forEach(r => linkIds(r).forEach(i => ids.add(i)));
+    if (!ids.size) return;
+    linkSyncBusy = true;
+    let fail = null;
+    try {
+      for (const id of ids) {
+        let n = (data.notices || []).find(x => x.id === id);
+        if (!n) continue;
+        try { await ackFetch(n); } catch (e) { fail = e; console.error("ackFetch", id, e); }
+      }
+      saveData();
+    } finally { linkSyncBusy = false; }
+    try { laRender(); ioRenderSaved(); alRenderSaved(); } catch (e) {}
+    if (fail) showToast("تعذر قراءة حالات التأكيد من السحابة (" + ((fail && (fail.code || fail.message)) || "خطأ") + ") — تأكد من تسجيل الدخول بحساب المدرسة وقواعد Firebase");
+    else if (!quiet) showToast("تم تحديث حالات الاطلاع");
+  }
   function linkState(r) {
-    const n = r.ackId && (data.notices || []).find(x => x.id === r.ackId);
-    const conf = n && n.acks && n.acks[r.teacher];
+    const ids = linkIds(r);
+    let conf = "";
+    (data.notices || []).forEach(n => { if (ids.includes(n.id) && n.acks) { const a = n.acks[r.teacher] || Object.values(n.acks)[0]; if (a && (!conf || a < conf)) conf = a; } });
     return { sent: !!r.ackId, conf: conf || "", appr: !!r.approved };
   }
   // ===== صفحة الاطلاع =====
@@ -9567,16 +9593,9 @@ ${contentEl.innerHTML}
     document.getElementById("laTitle").textContent = kind === "alert" ? "الاطلاع على التنبيهات" : "الاطلاع على المساءلات";
     document.getElementById("laBackTx").textContent = kind === "alert" ? "التنبيهات" : "المسائلات";
     laRender(); showView("linkAck");
-    if (window.__fbdb && laRecords().some(r => !linkState(r).conf)) laRefresh(true);
+    if (window.__fbdb) laRefresh(true);
   }
-  async function laRefresh(quiet) {
-    if (!window.__fbdb) { if (!quiet) showToast("التحديث يحتاج الاتصال بالسحابة"); return; }
-    const ids = new Set(laRecords().map(r => r.ackId));
-    const list = (data.notices || []).filter(n => ids.has(n.id));
-    try { for (const n of list) await ackFetch(n); saveData(); if (!quiet) showToast("تم تحديث حالات الاطلاع"); }
-    catch (e) { console.error(e); if (!quiet) showToast("تعذر التحديث — تأكد من الاتصال وقواعد Firebase"); }
-    laRender(); try { ioRenderSaved(); alRenderSaved(); } catch (e) {}
-  }
+  async function laRefresh(quiet) { await linkSyncAll(quiet); }
   function laFmt(iso) { if (!iso || iso === "?") return "تم"; try { return ioStamp(new Date(iso).getTime()); } catch (e) { return "تم"; } }
   function laRender() {
     const box = document.getElementById("laList"); if (!box) return;
@@ -9781,7 +9800,8 @@ ${contentEl.innerHTML}
   });
   document.getElementById("openInquiries").addEventListener("click", () => {
     document.getElementById("inqSavedTileCount").textContent = (data.officialInq || []).length + " مساءلة";
-    { const sent = (data.officialInq || []).filter(r => r.ackId); const w = sent.filter(r => !linkState(r).conf).length; document.getElementById("inqAckTileCount").textContent = sent.length ? sent.length + " مُرسلة" + (w ? " — " + w + " بانتظار التأكيد" : "") : "الاطلاع والتأكيد والاعتماد"; }
+    const inqTile = () => { const sent = (data.officialInq || []).filter(r => r.ackId); const w = sent.filter(r => !linkState(r).conf).length; document.getElementById("inqAckTileCount").textContent = sent.length ? sent.length + " مُرسلة" + (w ? " — " + w + " بانتظار التأكيد" : "") : "الاطلاع والتأكيد والاعتماد"; };
+    inqTile(); linkSyncAll(true).then(inqTile);
     renderInquiriesList();
     showView("inquiries");
   });
@@ -10327,7 +10347,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-03-9";
+window.APP_BUILD = "2026-11-03-10";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
