@@ -1687,6 +1687,7 @@
           <option value="lateClass">مساءلة تأخر عن حصة</option>
           <option value="missClass">مساءلة عدم حضور حصة</option>
           <option value="refuseWait">مساءلة رفض حصة انتظار</option>
+          <option value="lowGrades">مساءلة تدني درجات طلاب مادة</option>
         </select>
       </div>
       <div class="field" style="margin-bottom:10px;">
@@ -1710,6 +1711,16 @@
       <div class="sched-grid" id="ioClassBox" style="margin-bottom:10px; display:none;">
         <div class="field"><label for="ioPeriod">الحصة</label><select id="ioPeriod" class="select-styled"></select></div>
         <div class="field"><label for="ioClass">الفصل</label><select id="ioClass" class="select-styled"></select></div>
+      </div>
+      <div id="ioGradesBox" style="display:none;">
+        <div class="sched-grid" style="margin-bottom:10px;">
+          <div class="field"><label for="ioSubject">المادة</label><input type="text" id="ioSubject" class="date-input" list="ioSubjectList" placeholder="مثال: الرياضيات"><datalist id="ioSubjectList"></datalist></div>
+          <div class="field"><label for="ioGClass">الفصل</label><select id="ioGClass" class="select-styled"></select></div>
+        </div>
+        <div class="sched-grid" style="margin-bottom:10px;">
+          <div class="field" style="grid-column:1/-1;"><label for="ioExam">الاختبار / الفترة (اختياري)</label><input type="text" id="ioExam" class="date-input" placeholder="مثال: اختبار الفترة الأولى"></div>
+        </div>
+        <input type="hidden" id="ioCount">
       </div>
       <div class="field" id="ioAbsentBox" style="margin-bottom:10px; display:none;">
         <label for="ioAbsent">المعلم الغائب</label>
@@ -8790,7 +8801,8 @@ ${contentEl.innerHTML}
     lineup: { title: "مساءلة عدم حضور الطابور", cls: false },
     lateClass: { title: "مساءلة تأخر عن حصة", cls: true },
     missClass: { title: "مساءلة عدم حضور حصة", cls: true },
-    refuseWait: { title: "مساءلة رفض حصة انتظار", cls: true }
+    refuseWait: { title: "مساءلة رفض حصة انتظار", cls: true },
+    lowGrades: { title: "مساءلة تدني درجات طلاب مادة", cls: false }
   };
   const IO_DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
   const ioEl = id => document.getElementById(id);
@@ -8824,7 +8836,8 @@ ${contentEl.innerHTML}
       hijri: p ? p.hijri : "", greg: date ? ioGreg(date) : "",
       period: ioEl("ioPeriod").value ? PERIODS[Number(ioEl("ioPeriod").value) - 1] : "",
       cls: ioEl("ioClass").value, time: ioEl("ioTime").value, absent: ioEl("ioAbsent").value,
-      ref: ioRefTime(), mins: ioMinutes()
+      ref: ioRefTime(), mins: ioMinutes(),
+      subject: ioEl("ioSubject").value.trim(), gcls: ioEl("ioGClass").value, exam: ioEl("ioExam").value.trim(), count: ioEl("ioCount").value
     };
   }
   // الوقت الرسمي المرجعي: بداية الدوام للتأخر، نهايته للانصراف المبكر، بداية الحصة للتأخر عن حصة
@@ -8854,6 +8867,9 @@ ${contentEl.innerHTML}
     if (v.type === "absence") return "لوحظ غيابكم عن العمل " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     const mins = v.mins == null ? "......" : v.mins;
     if (v.type === "late") return "لوحظ تأخركم عن الحضور صباح " + when + " بمقدار (" + mins + ") دقيقة عن بداية الدوام الرسمي (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    if (v.type === "lowGrades") {
+      return "لوحظ تدني درجات طلاب الفصل (" + x(v.gcls) + ") في مادة (" + x(v.subject) + ")" + (v.exam ? " في " + v.exam : "") + "، آمل الإفادة عن أسباب ذلك، وإيضاح الإجراءات العلاجية المتخذة لرفع مستوى الطلاب، مع إرفاق ما يلي:\n١- خطة توزيع المنهج.\n٢- الخطط الأسبوعية.\n٣- خطط التحسين مع الشواهد.\n٤- شواهد إبلاغ أولياء الأمور بمستويات أبنائهم والخطط المتاحة لتحسين مستوياتهم.\n٥- الفرص التي أُتيحت للطلاب لتحسين درجاتهم مع الشواهد.";
+    }
     if (v.type === "lineup") return "لوحظ عدم حضوركم الطابور الصباحي " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     if (v.type === "early") return "لوحظ انصرافكم مبكرًا " + when + " قبل نهاية الدوام الرسمي (" + x(v.ref) + ") بمقدار (" + mins + ") دقيقة، حيث كان انصرافكم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     if (v.type === "lateClass") return "لوحظ تأخركم عن الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + " بمقدار (" + mins + ") دقيقة عن بداية الحصة (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
@@ -8869,6 +8885,7 @@ ${contentEl.innerHTML}
     ioEl("ioTimeH").textContent = (t === "late" ? "بداية الدوام الرسمي: " : t === "early" ? "نهاية الدوام الرسمي: " : "بداية الحصة: ") + (rf || (t === "lateClass" ? "اختر الحصة" : "—")) + (mn != null ? " — " + (t === "early" ? "الانصراف المبكر: " : "التأخير: ") + mn + " دقيقة" : "");
     ioEl("ioClassBox").style.display = T && T.cls ? "" : "none";
     ioEl("ioAbsentBox").style.display = t === "refuseWait" ? "" : "none";
+    ioEl("ioGradesBox").style.display = t === "lowGrades" ? "" : "none";
     const v = ioVals();
     ioEl("ioCivilH").textContent = v.teacher && !v.civil ? "لا يوجد سجل مدني محفوظ لهذا المعلم — اكتبه هنا ليُحفظ في بياناته" : "";
     if (regen) ioEl("ioBody").value = ioDefaultBody();
@@ -8891,6 +8908,10 @@ ${contentEl.innerHTML}
     const cs = ioEl("ioClass"), cc = cs.value;
     cs.innerHTML = '<option value="">اختيار</option>' + data.classes.map(c => ioOpt(c, c)).join("");
     if (data.classes.includes(cc)) cs.value = cc;
+    const gs = ioEl("ioGClass"), gc = gs.value;
+    gs.innerHTML = '<option value="">اختيار</option>' + data.classes.map(c => ioOpt(c, c)).join("");
+    if (data.classes.includes(gc)) gs.value = gc;
+    ioEl("ioSubjectList").innerHTML = [...new Set((data.officialInq || []).map(r => r.subject).filter(Boolean))].map(x => ioOpt(x, x)).join("");
     ioFillDates(); ioFillAbsent();
     ioSync(!ioEl("ioBody").value.trim());
     ioRenderSaved(); ioEditNote();
@@ -8944,6 +8965,7 @@ ${contentEl.innerHTML}
     if (v.type === "early") cells.push(["وقت الانصراف", v.time], ["دقائق الانصراف المبكر", v.mins == null ? "" : String(v.mins)]);
     if (v.type === "lateClass") cells.push(["وقت الحضور", v.time], ["دقائق التأخير", v.mins == null ? "" : String(v.mins)]);
     if (v.type === "refuseWait") cells.push(["المعلم الغائب", v.absent]);
+    if (v.type === "lowGrades") cells.push(["المادة", v.subject], ["الفصل", v.gcls]);
     const n = cells.length;
     const val = (x, raw) => x ? (raw ? x : wpEsc(x)) : "&nbsp;";
     const half = Math.floor(n / 2), rest = n - half;
@@ -8968,8 +8990,8 @@ ${contentEl.innerHTML}
       </div>
       <div style="margin:14px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:10px 14px; break-inside:avoid;">
         <div style="font-weight:700; color:#174a59; margin-bottom:8px;">رأي مدير المدرسة:</div>
-        <div style="font-size:15px; line-height:2;">( &nbsp; ) العذر مقبول &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) العذر غير مقبول، وتعتبر ساعات مهدرة</div>
-        ${line}
+        <div style="font-size:15px; line-height:2;">${v.type === "lowGrades" ? "( &nbsp; ) الإفادة مقبولة &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) الإفادة غير مقبولة، ويرجى عمل الآتي:" : "( &nbsp; ) العذر مقبول &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) العذر غير مقبول، وتعتبر ساعات مهدرة"}</div>
+        ${v.type === "lowGrades" ? line + line : ""}${line}
         <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:15px;">
           <div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
         </div>
@@ -8983,7 +9005,7 @@ ${contentEl.innerHTML}
     if (d && ioEl("ioDay").value !== dayNameFromDate(d)) { ioEl("ioDay").value = dayNameFromDate(d); ioFillDates(); ioEl("ioDate").value = d; }
     ioFillAbsent(); ioAutoClass(); ioPrefillTime(); ioSync(true);
   });
-  ["ioTime", "ioClass", "ioAbsent"].forEach(id => ioEl(id).addEventListener("change", () => ioSync(true)));
+  ["ioTime", "ioClass", "ioAbsent", "ioGClass", "ioSubject", "ioExam", "ioCount"].forEach(id => ioEl(id).addEventListener("change", () => ioSync(true)));
   ioEl("ioPeriod").addEventListener("change", () => { ioAutoClass(); ioSync(true); });
   ioEl("ioTeacher").addEventListener("change", () => { ioEl("ioCivil").value = (data.teacherCivil || {})[ioEl("ioTeacher").value] || ""; ioAutoClass(); ioFillAbsent(); ioPrefillTime(); ioSync(true); });
   ioEl("ioCivil").addEventListener("change", () => {
@@ -9000,7 +9022,7 @@ ${contentEl.innerHTML}
   ioEl("ioGoSaved").addEventListener("click", () => goSaved("ioSavedHead"));
   function ioClearForm() {
     ioCurId = "";
-    ["ioType", "ioTeacher", "ioCivil", "ioDay", "ioPeriod", "ioClass", "ioTime", "ioAbsent", "ioBody"].forEach(id => ioEl(id).value = "");
+    ["ioType", "ioTeacher", "ioCivil", "ioDay", "ioPeriod", "ioClass", "ioTime", "ioAbsent", "ioBody", "ioSubject", "ioGClass", "ioExam", "ioCount"].forEach(id => ioEl(id).value = "");
     ioFillDates(); ioEl("ioDate").value = ""; ioFillAbsent(); ioSync(true); ioEditNote();
   }
   function ioLoad(id) {
@@ -9013,6 +9035,7 @@ ${contentEl.innerHTML}
     if (r.dateIso && ![...ioEl("ioDate").options].some(o => o.value === r.dateIso)) ioEl("ioDate").insertAdjacentHTML("beforeend", ioOpt(r.dateIso, (r.hijri || "") + "  —  " + (r.greg || "")));
     ioEl("ioDate").value = r.dateIso || "";
     ioEl("ioPeriod").value = r.periodNo || ""; ioEl("ioClass").value = r.cls || ""; ioEl("ioTime").value = r.time || "";
+    ioEl("ioSubject").value = r.subject || ""; ioEl("ioGClass").value = r.gcls || ""; ioEl("ioExam").value = r.exam || ""; ioEl("ioCount").value = r.count || "";
     ioFillAbsent(); ioEl("ioAbsent").value = r.absent || "";
     ioSync(false); ioEl("ioBody").value = r.body || "";
     ioEditNote(); window.scrollTo(0, 0);
@@ -9946,7 +9969,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-02-21";
+window.APP_BUILD = "2026-11-03-4";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
