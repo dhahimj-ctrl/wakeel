@@ -552,6 +552,12 @@
   .ack-school { color: #174a59; font-weight: 800; text-align: center; margin-bottom: 10px; }
   .ack-card h1 { font-size: 21px; text-align: center; margin: 6px 0; color: var(--ink); }
   .ack-date { text-align: center; color: var(--ink-soft); font-size: 13px; margin-bottom: 12px; }
+  .ack-atts { margin: -4px 0 16px; }
+  .ack-atts-h { font-weight: 800; color: #174a59; margin-bottom: 8px; }
+  .ack-atts figure { margin: 0 0 10px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .ack-atts img { display: block; width: 100%; height: auto; }
+  .ack-atts figcaption { font-size: 12px; padding: 6px 10px; color: var(--ink-soft); }
+  .ack-file { display: block; width: 100%; text-align: right; font: inherit; font-weight: 700; padding: 12px; margin-bottom: 8px; border-radius: 12px; border: 1.5px solid #174a59; background: #e9f4f2; color: #174a59; cursor: pointer; }
   .ack-body { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px; line-height: 1.9; font-size: 15.5px; margin-bottom: 16px; }
   .ack-form label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 14px; }
   .ack-form input { width: 100%; font: inherit; font-size: 18px; letter-spacing: 2px; text-align: center; padding: 12px; border-radius: 10px; border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); direction: ltr; }
@@ -573,6 +579,14 @@
   .ack-card2 .pill.none { background: #fdecea; color: #8c1d18; }
   .ack-card2 .ack-rows { display: none; margin-top: 8px; }
   #ioSavedHead, #alSavedHead { scroll-margin-top: 64px; }
+  .la-sum { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+  .la-sum span { font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 99px; background: var(--paper-2); border: 1px solid var(--line); }
+  .la-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+  .la-step { border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; text-align: center; font-size: 12px; background: var(--paper-2); }
+  .la-step b { display: block; font-size: 12.5px; margin-bottom: 2px; }
+  .la-step.ok { background: #e7f7ee; border-color: #9fd6b5; color: #146c3a; }
+  .la-step.wait { background: #fff4df; border-color: #ecc98a; color: #8a5200; }
+  .la-step label { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; font-weight: 800; }
   .io-st { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 6px; font-size: 12.5px; }
   .io-b { padding: 2px 9px; border-radius: 99px; font-weight: 700; font-size: 11.5px; }
   .io-b.ok { background: #e7f7ee; color: #146c3a; } .io-b.no { background: #f1ecdf; color: #6b5a3a; }
@@ -1383,7 +1397,7 @@
         <span class="count-pill" id="inquiriesDetailCount">0 حالة</span>
       </div>
     </div>
-    <div class="grid" style="grid-template-columns:repeat(2,1fr); margin-bottom:12px;">
+    <div class="grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:12px;">
       <button class="tile duty-manage" id="openInqOfficial">
         <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg></div>
         <h2>مساءلة رسمية</h2>
@@ -1393,6 +1407,11 @@
         <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
         <h2>المساءلات المحفوظة</h2>
         <div class="count" id="inqSavedTileCount">0 مساءلة</div>
+      </button>
+      <button class="tile reports" id="openInqAck">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <h2>الاطلاع</h2>
+        <div class="count" id="inqAckTileCount">الاطلاع والتأكيد والاعتماد</div>
       </button>
     </div>
     <div class="sched-hint" style="margin-bottom:12px;">تُجمَع هنا تلقائيًا كل حالات "متأخر" أو "غير متواجد" من الطابور ومناوبتي الفسحة ونهاية الدوام والدوام</div>
@@ -1736,8 +1755,15 @@
         <label for="ioBody">عبارة المساءلة (تظهر في الصف الأخير من الجدول — قابلة للتعديل)</label>
         <textarea id="ioBody" rows="5" class="nf-text" placeholder="اختر نوع المساءلة لتظهر العبارة"></textarea>
       </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label for="ioFiles">مرفقات تظهر للمعلم في الرابط (صور أو PDF — اختياري)</label>
+        <label class="avail-toggle" style="margin:4px 0 6px;"><input type="checkbox" id="ioAttachDoc" checked> إرفاق ورقة المساءلة نفسها (صورة) في الرابط</label>
+        <input type="file" id="ioFiles" multiple accept="image/*,application/pdf" class="date-input" style="width:100%;">
+        <div class="sched-hint" id="ioFilesInfo" style="text-align:right;"></div>
+      </div>
       <div class="export-row" style="margin-top:8px;">
         <button class="export-btn" id="ioSave">💾 حفظ المساءلة</button>
+        <button class="export-btn" id="ioSendLink">🔗 إرسال رابط للمعلم</button>
         <button class="export-btn" id="ioPrint">🖨️ طباعة المساءلة</button>
         <button class="export-btn" id="ioReset">↺ إعادة العبارة الافتراضية</button>
         <button class="export-btn" id="ioNew">➕ مساءلة جديدة</button>
@@ -1750,12 +1776,26 @@
     <div id="ioSaved"></div>
   </div>
 
+  <!-- الاطلاع على المساءلات والتنبيهات -->
+  <div class="detail" id="linkAckView">
+    <div class="back-row">
+      <button class="back-btn" id="laBack"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg><span id="laBackTx">رجوع</span></button>
+    </div>
+    <div class="detail-header"><h2 id="laTitle">الاطلاع</h2><button class="export-btn" id="laRefresh" style="padding:6px 12px;">🔄 تحديث</button></div>
+    <div class="la-sum" id="laSum"></div>
+    <div class="field" style="margin:6px 0 10px;"><select id="laFilter" class="select-styled">
+      <option value="">الكل</option><option value="wait">بانتظار تأكيد المعلم</option><option value="conf">مؤكد — بانتظار الاعتماد</option><option value="appr">معتمد</option>
+    </select></div>
+    <div class="sched-hint" style="text-align:right;">تظهر هنا كل مساءلة/تنبيه أُرسل رابطه للمعلم: <b>الإرسال</b> (تلقائي)، ثم <b>الاطلاع والتأكيد</b> عندما يفتح المعلم الرابط ويؤكد برقم سجله المدني، ثم <b>الاعتماد</b> تؤشّره أنت بعد المراجعة.</div>
+    <div id="laList"></div>
+  </div>
+
   <!-- التنبيهات -->
   <div class="detail" id="alertView">
     <div class="back-row">
       <button class="back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
     </div>
-    <div class="detail-header"><h2>التنبيهات</h2><button class="export-btn" id="alGoSaved" style="padding:6px 12px;">📁 المحفوظة</button></div>
+    <div class="detail-header"><h2>التنبيهات</h2><div style="display:flex; gap:6px;"><button class="export-btn" id="alGoAck" style="padding:6px 12px;">👁️ الاطلاع</button><button class="export-btn" id="alGoSaved" style="padding:6px 12px;">📁 المحفوظة</button></div></div>
     <div class="sched-form">
       <div class="field" style="margin-bottom:10px;">
         <label for="alType">نوع المخالفة</label>
@@ -1788,10 +1828,16 @@
         <label for="alBody">نص التنبيه (قابل للتعديل)</label>
         <textarea id="alBody" rows="6" class="nf-text" placeholder="اختر نوع المخالفة ليظهر النص"></textarea>
       </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label for="alFiles">مرفقات تظهر للمعلم في الرابط (صور أو PDF — اختياري)</label>
+        <label class="avail-toggle" style="margin:4px 0 6px;"><input type="checkbox" id="alAttachDoc" checked> إرفاق خطاب التنبيه نفسه (صورة) في الرابط</label>
+        <input type="file" id="alFiles" multiple accept="image/*,application/pdf" class="date-input" style="width:100%;">
+        <div class="sched-hint" id="alFilesInfo" style="text-align:right;"></div>
+      </div>
       <div class="export-row" style="margin-top:8px;">
         <button class="export-btn" id="alSave">💾 حفظ التنبيه</button>
         <button class="export-btn" id="alPrint">🖨️ طباعة خطاب رسمي</button>
-        <button class="export-btn" id="alWa">📱 إرسال واتساب</button>
+        <button class="export-btn" id="alWa">🔗 إرسال رابط للمعلم (واتساب)</button>
         <button class="export-btn" id="alReset">↺ إعادة النص الافتراضي</button>
         <button class="export-btn" id="alNew">➕ تنبيه جديد</button>
       </div>
@@ -2270,14 +2316,27 @@
     const body = (f.body || {}).stringValue || "";
     const date = (f.dateText || {}).stringValue || "";
     const hashes = ((f.hashes || {}).mapValue || {}).fields || {};
+    const atts = (((f.attachments || {}).arrayValue || {}).values || []).map(v => { const m = (v.mapValue || {}).fields || {}; return { name: (m.name || {}).stringValue || "مرفق", type: (m.type || {}).stringValue || "", data: (m.data || {}).stringValue || "" }; }).filter(a => a.data);
+    const attHtml = atts.length ? '<div class="ack-atts"><div class="ack-atts-h">📎 المرفقات (' + atts.length + ')</div>' + atts.map((a, i) => /^image\//.test(a.type)
+      ? '<figure><img src="data:' + esc(a.type) + ';base64,' + a.data + '" alt="' + esc(a.name) + '"><figcaption>' + esc(a.name) + '</figcaption></figure>'
+      : '<button class="ack-file" data-i="' + i + '">📄 فتح الملف: ' + esc(a.name) + '</button>').join("") + '</div>' : "";
     page.innerHTML = '<div class="ack-card">' +
       '<div class="ack-school">مدرسة عطاء بن أبي رباح المتوسطة</div>' +
       '<h1>' + esc(title) + '</h1>' + (date ? '<div class="ack-date">' + esc(date) + '</div>' : '') +
-      '<div class="ack-body">' + esc(body).replace(/\n/g, "<br>") + '</div>' +
+      '<div class="ack-body">' + esc(body).replace(/\n/g, "<br>") + '</div>' + attHtml +
       '<div class="ack-form"><label for="ackCivil">أدخل رقم السجل المدني لتأكيد اطلاعك على الإشعار</label>' +
       '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
       '<button id="ackBtn">✅ أؤكد اطلاعي على الإشعار</button><div class="ack-msg" id="ackMsg"></div></div>' +
       '<div class="ack-note">لا يُحفظ رقم السجل المدني في هذه الصفحة، ويُستخدم فقط للتحقق.</div></div>';
+    page.querySelectorAll(".ack-file").forEach(b => b.addEventListener("click", () => {
+      const a = atts[Number(b.dataset.i)]; if (!a) return;
+      try {
+        const bin = atob(a.data), u8 = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) u8[k] = bin.charCodeAt(k);
+        const url = URL.createObjectURL(new Blob([u8], { type: a.type || "application/pdf" }));
+        const w = window.open(url, "_blank");
+        if (!w) { const l = document.createElement("a"); l.href = url; l.download = a.name || "مرفق.pdf"; document.body.appendChild(l); l.click(); l.remove(); }
+      } catch (e) { alert("تعذر فتح الملف"); }
+    }));
     const msg = (t, ok) => { const m = document.getElementById("ackMsg"); m.textContent = t; m.className = "ack-msg " + (ok ? "ok" : "err"); };
     document.getElementById("ackBtn").addEventListener("click", async () => {
       const civil = ackNormCivil(document.getElementById("ackCivil").value);
@@ -9039,6 +9098,7 @@ ${contentEl.innerHTML}
   ioEl("ioGoSaved").addEventListener("click", () => goSaved("ioSavedHead"));
   function ioClearForm() {
     ioCurId = "";
+    linkFiles.inq = []; ioEl("ioFiles").value = ""; ioEl("ioFilesInfo").textContent = "";
     ["ioType", "ioTeacher", "ioCivil", "ioDay", "ioPeriod", "ioClass", "ioTime", "ioAbsent", "ioBody", "ioSubject", "ioGClass", "ioExam", "ioCount", "ioPurpose"].forEach(id => ioEl(id).value = "");
     ioFillDates(); ioEl("ioDate").value = ""; ioFillAbsent(); ioSync(true); ioEditNote();
   }
@@ -9073,6 +9133,7 @@ ${contentEl.innerHTML}
           '<div class="sub" style="font-size:12px; color:var(--ink-soft); margin-top:4px;">' + acEsc((r.body || "").slice(0, 110)) + (r.body && r.body.length > 110 ? "…" : "") + "</div>" +
           '<div class="io-st">' +
             (r.printedAt ? '<span class="io-b ok">🖨️ تمت الطباعة' + (r.printCount === 2 ? " (مرتين)" : r.printCount > 2 && r.printCount <= 10 ? " (" + r.printCount + " مرات)" : r.printCount > 10 ? " (" + r.printCount + " مرة)" : "") + " — " + acEsc(ioStamp(r.printedAt)) + "</span>" : '<span class="io-b no">لم تُطبع بعد</span>') +
+            (r.ackId ? (linkState(r).conf ? '<span class="io-b ok">✅ اطّلع وأكّد</span>' : '<span class="io-b no">🔗 أُرسل الرابط — بانتظار التأكيد</span>') : "") +
             '<label class="io-chk"><input type="checkbox" data-flag="delivered"' + (r.delivered ? " checked" : "") + '> 📨 تم تسليمها للمعلم</label>' +
             '<label class="io-chk"><input type="checkbox" data-flag="signed"' + (r.signed ? " checked" : "") + '> ✍️ تم توقيعها</label>' +
           "</div>" +
@@ -9196,13 +9257,13 @@ ${contentEl.innerHTML}
     return "السلام عليكم ورحمة الله وبركاته\nالمكرم المعلم / " + v.teacher + " وفقه الله\n\n🔔 تنبيه: " + v.typeName + "\n" +
       (v.hijri ? "التاريخ: " + v.day + " " + v.hijri + "\n" : "") + "\n" + v.body + "\n\nإدارة مدرسة عطاء بن أبي رباح المتوسطة";
   }
-  function alSendWa(v, id) {
+  function alSendWa(v, id, files) {
     if (!v.teacher) { showToast("اختر المعلم أولاً"); return; }
-    const phone = (data.teacherPhones[v.teacher] || "").trim();
-    if (!phone) { showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين"); return; }
     if (!v.body) { showToast("اكتب نص التنبيه أولاً"); return; }
-    waSendWithAck(v.teacher, phone, "تنبيه — " + v.typeName, alWaText(v));
-    if (id) alMark(id, "sent");
+    const r = (data.officialAlerts || []).find(x => x.id === id); if (!r) return;
+    const before = r.linkSentAt;
+    linkSend("alert", r, files);
+    setTimeout(() => { if (r.linkSentAt !== before) alMark(id, "sent"); }, 2500);
   }
   function alEditNote() {
     const r = alCurId && (data.officialAlerts || []).find(x => x.id === alCurId);
@@ -9211,6 +9272,7 @@ ${contentEl.innerHTML}
   }
   function alClear() {
     alCurId = "";
+    linkFiles.alert = []; alEl("alFiles").value = ""; alEl("alFilesInfo").textContent = "";
     ["alType", "alTeacher", "alCivil", "alDay", "alBody"].forEach(id => alEl(id).value = "");
     alFillDates(); alEl("alDate").value = ""; alSync(true); alEditNote();
   }
@@ -9238,6 +9300,7 @@ ${contentEl.innerHTML}
           '<div class="io-st">' +
             (r.printedAt ? '<span class="io-b ok">🖨️ طُبع' + alTimes(r.printedCount) + " — " + acEsc(ioStamp(r.printedAt)) + "</span>" : '<span class="io-b no">لم يُطبع</span>') +
             (r.sentAt ? '<span class="io-b ok">📱 أُرسل واتساب' + alTimes(r.sentCount) + " — " + acEsc(ioStamp(r.sentAt)) + "</span>" : '<span class="io-b no">لم يُرسل</span>') +
+            (r.ackId ? (linkState(r).conf ? '<span class="io-b ok">✅ اطّلع وأكّد</span>' : '<span class="io-b no">⏳ بانتظار تأكيد الاطلاع</span>') : "") +
             '<label class="io-chk"><input type="checkbox" data-flag="delivered"' + (r.delivered ? " checked" : "") + '> 📨 تم تسليمه للمعلم</label>' +
             '<label class="io-chk"><input type="checkbox" data-flag="signed"' + (r.signed ? " checked" : "") + '> ✍️ تم توقيعه</label>' +
           "</div>" +
@@ -9291,7 +9354,283 @@ ${contentEl.innerHTML}
     const v = alVals(); if (!v.type) { showToast("اختر نوع المخالفة أولاً"); return; }
     if (!v.teacher) { showToast("اختر المعلم أولاً"); return; }
     if (!(data.teacherPhones[v.teacher] || "").trim()) { showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين"); return; }
-    alSave(true); alSendWa(v, alCurId);
+    if (!alSave(true)) return;
+    const files = linkFiles.alert.slice();
+    if (alEl("alAttachDoc").checked) { const r = (data.officialAlerts || []).find(x => x.id === alCurId); const d = r && docAttachment("alert", r); if (d) files.unshift(d); }
+    alSendWa(v, alCurId, files);
+  });
+  /* ===== رسم ورقة المساءلة/التنبيه صورةً لإرفاقها في الرابط ===== */
+  function docCanvas(spec) {
+    const W = 1240, F = "Tajawal, Tahoma, Arial, sans-serif", M = 90, IW = W - 2 * M;
+    const cv = document.createElement("canvas");
+    const run = (ctx, draw) => {
+      let y = 0;
+      // الترويسة
+      if (draw) {
+        const bandH = 220, r = 44;
+        const g = ctx.createLinearGradient(0, 0, 0, bandH); g.addColorStop(0, "#1d5566"); g.addColorStop(1, "#174a59");
+        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(W, 0); ctx.lineTo(W, bandH - r); ctx.quadraticCurveTo(W, bandH, W - r, bandH); ctx.lineTo(r, bandH); ctx.quadraticCurveTo(0, bandH, 0, bandH - r); ctx.closePath(); ctx.fill();
+        let lw = 0;
+        if (nfLogo.complete && nfLogo.naturalWidth) { const lh = 130; lw = nfLogo.naturalWidth * lh / nfLogo.naturalHeight; ctx.drawImage(nfLogo, W / 2 - lw / 2, 30, lw, lh); }
+        else { ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.font = "800 40px " + F; ctx.fillText("وزارة التعليم", W / 2, 110); lw = 240; }
+        const sepX = W / 2 - lw / 2 - 26;
+        ctx.fillStyle = "#44b7a6"; ctx.fillRect(sepX, 34, 3, 124);
+        ctx.textAlign = "right"; ctx.fillStyle = "#fff"; ctx.font = "500 27px " + F; ctx.fillText("المملكة العربية السعودية", sepX - 26, 70);
+        ctx.font = "800 36px " + F; ctx.fillText("وزارة التعليم", sepX - 26, 118);
+        ctx.fillStyle = "#8fe3d6"; ctx.font = "700 28px " + F; ctx.fillText("الإدارة العامة للتعليم بالمنطقة الشرقية", sepX - 26, 160);
+        const bx = W / 4, bw = W / 2, by = bandH - 6, bh = 66;
+        ctx.fillStyle = "#f2f8f7"; ctx.strokeStyle = "#174a59"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx, by + bh - 14); ctx.quadraticCurveTo(bx, by + bh, bx + 14, by + bh); ctx.lineTo(bx + bw - 14, by + bh); ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw, by + bh - 14); ctx.lineTo(bx + bw, by); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = "#174a59"; ctx.textAlign = "center"; ctx.font = "800 31px " + F; ctx.fillText("مدرسة عطاء بن أبي رباح المتوسطة", W / 2, by + 44);
+        const dp = wpDateParts(spec.dateIso || todayISODate());
+        ctx.textAlign = "right"; ctx.fillStyle = "#111"; ctx.font = "700 29px " + F;
+        ctx.fillText("اليوم: " + (dp.dayName || "") + "      التاريخ: " + (dp.hijri || ""), W - M, 368);
+        ctx.textAlign = "center"; ctx.fillStyle = "#174a59"; ctx.font = "800 42px " + F; ctx.fillText(spec.title, W / 2, 440);
+      }
+      y = 480;
+      const dotted = (x1, x2, yy) => { if (!draw) return; ctx.save(); ctx.strokeStyle = "#174a59"; ctx.lineWidth = 2; ctx.setLineDash([3, 6]); ctx.beginPath(); ctx.moveTo(x1, yy); ctx.lineTo(x2, yy); ctx.stroke(); ctx.restore(); };
+      const rowText = (items, yy, font, ins) => { if (!draw) return; ins = ins || 0; ctx.font = font || "500 28px " + F; ctx.fillStyle = "#111"; const L = M + ins, R = W - M - ins, n = items.length, cw = (R - L) / n; items.forEach((t, i) => { ctx.textAlign = i === 0 ? "right" : i === n - 1 ? "left" : "center"; const x = i === 0 ? R : i === n - 1 ? L : R - cw * i - cw / 2; ctx.fillText(t, x, yy); }); };
+      spec.blocks.forEach(b => {
+        if (b.t === "text") {
+          ctx.font = (b.font || "600 30px ") + F; const lines = nfWrap(ctx, b.text, IW);
+          if (draw) { ctx.fillStyle = b.color || "#111"; ctx.textAlign = b.align || "right"; lines.forEach((ln, i) => ctx.fillText(ln, b.align === "center" ? W / 2 : W - M, y + 34 + i * 48)); }
+          y += lines.length * 48 + (b.gap || 14);
+        } else if (b.t === "table") {
+          b.groups.forEach(gr => {
+            const n = gr.length, cw = IW / n;
+            ctx.font = "500 27px " + F;
+            const vals = gr.map(c => nfWrap(ctx, String(c[1] || " "), cw - 20));
+            const vh = Math.max(60, Math.max(...vals.map(v => v.length)) * 40 + 22);
+            if (draw) {
+              gr.forEach((c, i) => {
+                const x = W - M - cw * (i + 1);
+                ctx.fillStyle = "#174a59"; ctx.fillRect(x, y, cw, 54); ctx.strokeStyle = "#174a59"; ctx.lineWidth = 2; ctx.strokeRect(x, y, cw, 54); ctx.strokeRect(x, y + 54, cw, vh);
+                ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.font = "700 26px " + F; ctx.fillText(c[0], x + cw / 2, y + 36);
+                ctx.fillStyle = "#111"; ctx.font = (c[2] ? "800 " : "500 ") + "27px " + F;
+                const ls = vals[i], top = y + 54 + (vh - ls.length * 40) / 2 + 28; ls.forEach((ln, k) => ctx.fillText(ln, x + cw / 2, top + k * 40));
+              });
+            }
+            y += 54 + vh;
+          });
+          ctx.font = "500 29px " + F; const bl = nfWrap(ctx, b.body || " ", IW - 40); const bh = bl.length * 48 + 30;
+          if (draw) { ctx.strokeStyle = "#174a59"; ctx.lineWidth = 2; ctx.strokeRect(M, y, IW, bh); ctx.fillStyle = "#111"; ctx.textAlign = "right"; bl.forEach((ln, i) => ctx.fillText(ln, W - M - 20, y + 46 + i * 48)); }
+          y += bh + 24;
+        } else if (b.t === "sig") {
+          rowText(b.items, y + 34, "500 28px " + F); y += 60;
+        } else if (b.t === "box") {
+          const top = y; y += 16;
+          if (draw) { ctx.fillStyle = "#174a59"; ctx.textAlign = "right"; ctx.font = "800 28px " + F; ctx.fillText(b.title, W - M - 20, y + 30); }
+          y += 44;
+          if (b.text) { if (draw) { ctx.fillStyle = "#111"; ctx.font = "500 27px " + F; ctx.textAlign = "right"; ctx.fillText(b.text, W - M - 20, y + 30); } y += 46; }
+          for (let i = 0; i < (b.lines || 0); i++) { y += 44; dotted(M + 20, W - M - 20, y); }
+          if (b.foot) { y += 14; rowText(b.foot, y + 34, null, 22); y += 50; }
+          y += 12;
+          if (draw) { ctx.strokeStyle = "#174a59"; ctx.lineWidth = 2; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(M, top, IW, y - top, 14); else ctx.rect(M, top, IW, y - top); ctx.stroke(); }
+          y += 22;
+        }
+      });
+      return y;
+    };
+    const H = Math.max(1754, run(cv.getContext("2d"), false) + 80);
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext("2d"); ctx.direction = "rtl";
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
+    run(ctx, true);
+    ctx.fillStyle = "#174a59"; ctx.fillRect(0, H - 26, W, 26); ctx.fillStyle = "#44b7a6"; ctx.fillRect(0, H - 32, W, 6);
+    return cv;
+  }
+  function ioDocSpec(v) {
+    const T = Object.assign({}, IO_TYPES[v.type] || { cls: false });
+    const cells = [["اليوم", v.day], ["التاريخ", v.hijri ? v.hijri + "\n" + (v.greg || "") : ""]];
+    if (T.cls) cells.push(["الحصة", v.period], ["الفصل", v.cls]);
+    if (v.type === "late" || v.type === "lateClass") cells.push(["وقت الحضور", v.time], ["دقائق التأخير", v.mins == null ? "" : String(v.mins)]);
+    if (v.type === "early") cells.push(["وقت الانصراف", v.time], ["دقائق الانصراف", v.mins == null ? "" : String(v.mins)]);
+    if (v.type === "refuseWait") cells.push(["المعلم الغائب", v.absent]);
+    if (v.type === "lowGrades") cells.push(["المادة", v.subject], ["الفصل", v.gcls]);
+    const groups = [[["اسم المعلم", v.teacher, 1], ["السجل المدني", v.civil, 1]]];
+    for (let i = 0; i < cells.length; i += 4) groups.push(cells.slice(i, i + 4));
+    const dots = "...................";
+    return { title: ioTitleOf(v), dateIso: v.dateIso, blocks: [
+      { t: "table", groups, body: v.body || "" },
+      { t: "sig", items: ["مدير المدرسة: موسى آل عبيد", "التوقيع: " + dots, "التاريخ: ....../....../......"] },
+      { t: "box", title: "إفادة المعلم:", lines: 3, foot: ["الاسم: " + (v.teacher || dots), "التوقيع: " + dots, "التاريخ: ....../....../......"] },
+      { t: "box", title: "رأي مدير المدرسة:", text: T.ifada ? "(   ) الإفادة مقبولة      (   ) الإفادة غير مقبولة، ويرجى عمل الآتي:" : "(   ) العذر مقبول      (   ) العذر غير مقبول، وتعتبر ساعات مهدرة", lines: T.ifada ? 3 : 1, foot: ["مدير المدرسة: موسى آل عبيد", "التوقيع: " + dots, "التاريخ: ....../....../......"] }
+    ] };
+  }
+  function alDocSpec(v) {
+    const dots = "...................";
+    return { title: "خطاب تنبيه", dateIso: v.dateIso, blocks: [
+      { t: "text", text: "المكرم المعلم / " + (v.teacher || dots) + "   وفقه الله", font: "800 30px " },
+      { t: "text", text: "السلام عليكم ورحمة الله وبركاته", font: "800 30px ", align: "center", color: "#174a59" },
+      { t: "table", groups: [[["اسم المعلم", v.teacher, 1], ["السجل المدني", v.civil, 1]], [["نوع المخالفة", v.typeName, 1], ["اليوم", v.day], ["التاريخ", v.hijri ? v.hijri + "\n" + (v.greg || "") : ""]]], body: v.body || "" },
+      { t: "box", title: "اطلعت على التنبيه:", foot: ["الاسم: " + (v.teacher || dots), "التوقيع: " + dots, "التاريخ: ....../....../......"] },
+      { t: "sig", items: ["مدير المدرسة: موسى آل عبيد", "التوقيع: " + dots, "التاريخ: ....../....../......"] }
+    ] };
+  }
+  function docAttachment(kind, r) {
+    try {
+      const cv = docCanvas(kind === "alert" ? alDocSpec(r) : ioDocSpec(r));
+      const name = (kind === "alert" ? "خطاب تنبيه" : ioTitleOf(r)) + ".jpg";
+      return { name, type: "image/jpeg", data: cv.toDataURL("image/jpeg", 0.8).split(",")[1] };
+    } catch (e) { console.error(e); return null; }
+  }
+  /* ===== روابط الاطلاع للمساءلات والتنبيهات (مع مرفقات) ===== */
+  const linkFiles = { inq: [], alert: [] };
+  const LINK_MAX = 900000; // حد حجم المرفقات داخل مستند السحابة
+  function linkReadFile(f) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      if (/^image\//.test(f.type)) {
+        r.onload = () => { const img = new Image(); img.onload = () => {
+          const k = Math.min(1, 1400 / Math.max(img.width, img.height)); const c = document.createElement("canvas");
+          c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+          res({ name: f.name, type: "image/jpeg", data: c.toDataURL("image/jpeg", 0.72).split(",")[1] });
+        }; img.onerror = rej; img.src = r.result; };
+      } else r.onload = () => res({ name: f.name, type: f.type || "application/pdf", data: String(r.result).split(",")[1] });
+      r.onerror = rej; r.readAsDataURL(f);
+    });
+  }
+  async function linkSetFiles(kind, input, info) {
+    const files = [...(input.files || [])];
+    if (!files.length) { linkFiles[kind] = []; info.textContent = ""; return; }
+    info.textContent = "⏳ جاري تجهيز المرفقات…";
+    try {
+      const out = []; for (const f of files) out.push(await linkReadFile(f));
+      const size = out.reduce((n, a) => n + a.data.length, 0);
+      if (size > LINK_MAX) { linkFiles[kind] = []; input.value = ""; info.textContent = "⚠️ المرفقات كبيرة (" + Math.round(size / 1024) + " ك.ب) — الحد الأقصى نحو 850 ك.ب. الصور تُضغط تلقائيًا، أما ملفات PDF الكبيرة فصغّرها أو أرسلها صورًا."; return; }
+      linkFiles[kind] = out;
+      info.textContent = "📎 " + out.length + " مرفق جاهز (" + Math.round(size / 1024) + " ك.ب): " + out.map(a => a.name).join("، ");
+    } catch (e) { console.error(e); linkFiles[kind] = []; input.value = ""; info.textContent = "تعذر قراءة الملفات"; }
+  }
+  function linkBody(kind, r) {
+    const lines = [];
+    if (kind === "alert") {
+      lines.push("نوع المخالفة: " + (r.typeName || ""));
+    } else {
+      if (r.period) lines.push("الحصة: " + r.period);
+      if (r.cls) lines.push("الفصل: " + r.cls);
+      if (r.subject) lines.push("المادة: " + r.subject);
+      if (r.gcls) lines.push("الفصل: " + r.gcls);
+      if (r.absent) lines.push("المعلم الغائب: " + r.absent);
+      if (r.time) lines.push("الوقت: " + r.time + (r.mins != null && r.mins !== "" ? " (" + r.mins + " دقيقة)" : ""));
+    }
+    if (r.hijri) lines.unshift("التاريخ: " + (r.day ? r.day + " " : "") + r.hijri + (r.greg ? " — " + r.greg : ""));
+    return "المكرم المعلم / " + r.teacher + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\n" + (lines.length ? lines.join("\n") + "\n\n" : "") + (r.body || "") +
+      (kind === "inq" ? "\n\nنأمل الاطلاع، وتسليم الإفادة لإدارة المدرسة." : "") + "\n\nمدير المدرسة: موسى آل عبيد";
+  }
+  function linkTitle(kind, r) { return kind === "alert" ? "تنبيه — " + (r.typeName || "") : (r.title || ioTitleOf(r)); }
+  // ينشئ رابط الاطلاع (أو يعيد استخدام السابق) ثم يفتح واتساب المعلم
+  function linkSend(kind, r, files) {
+    const phone = (data.teacherPhones[r.teacher] || "").trim();
+    if (!phone) { showToast("لا يوجد رقم جوال مسجل لهذا المعلم — أضفه من إدارة المعلمين"); return; }
+    if (!/^\d{10}$/.test((data.teacherCivil || {})[r.teacher] || "")) { showToast("لا يوجد سجل مدني محفوظ لهذا المعلم — لا يمكن تأكيد الاطلاع بدونه"); return; }
+    if (!(window.__fbdb && window.__fbauth && window.__fbauth.currentUser)) { showToast("إرسال الرابط يحتاج الاتصال بالسحابة وتسجيل الدخول"); return; }
+    if (files && files.reduce((n, a) => n + a.data.length, 0) > LINK_MAX) { showToast("حجم المرفقات مع الورقة كبير — أزل بعض المرفقات أو ألغِ إرفاق الورقة"); return; }
+    const title = linkTitle(kind, r);
+    const msg = link => "السلام عليكم ورحمة الله وبركاته\nالمكرم المعلم / " + r.teacher + " وفقه الله\n\nنفيدكم بصدور (" + title + ")" + (r.hijri ? " بتاريخ " + r.hijri : "") +
+      "، نأمل الاطلاع عليها وتأكيد الاستلام برقم السجل المدني عبر الرابط:\n" + link + "\n\nإدارة مدرسة عطاء بن أبي رباح المتوسطة";
+    let w = null; try { w = window.open("", "_blank"); } catch (e) {}
+    const go = url => { if (w && !w.closed) w.location.href = url; else openExternalLink(url); };
+    const wa = link => "https://wa.me/" + nfWaPhone(phone) + "?text=" + encodeURIComponent(msg(link));
+    const done = (id, link) => {
+      r.ackId = id; r.linkSentAt = Date.now(); r.linkSentCount = (r.linkSentCount || 0) + 1;
+      if (files && files.length) r.attachNames = files.map(a => a.name);
+      saveData(); try { ioRenderSaved(); alRenderSaved(); laRender(); } catch (e) {}
+      go(wa(link));
+    };
+    const n = r.ackId && (data.notices || []).find(x => x.id === r.ackId);
+    if (n && !(files && files.length)) { done(n.id, ackBaseUrl() + "?ack=" + n.id); return; }
+    (async () => {
+      const id = Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-6);
+      const h = await ackHash(data.teacherCivil[r.teacher], id);
+      const dp = wpDateParts(todayISODate());
+      const doc = { title, body: linkBody(kind, r), dateText: (dp.dayName || "") + " " + dp.hijri + " — " + dp.greg, hashes: { [h]: r.teacher }, createdAt: new Date().toISOString() };
+      if (files && files.length) doc.attachments = files.map(a => ({ name: a.name, type: a.type, data: a.data }));
+      await window.__fbdb.collection("notices").doc(id).set(doc);
+      if (!Array.isArray(data.notices)) data.notices = [];
+      data.notices.unshift({ id, title, date: todayISODate(), createdAt: Date.now(), recipients: { [r.teacher]: h }, acks: {}, single: true, src: kind, srcId: r.id });
+      try { ackRenderList(); } catch (e) {}
+      done(id, ackBaseUrl() + "?ack=" + id);
+    })().catch(e => { console.error(e); try { if (w && !w.closed) w.close(); } catch (x) {} showToast(/permission/i.test((e && (e.code || e.message)) || "") ? "رفضت السحابة إنشاء الرابط — تحقق من قواعد Firebase" : "تعذر إنشاء الرابط — تحقق من الاتصال"); });
+  }
+  function linkState(r) {
+    const n = r.ackId && (data.notices || []).find(x => x.id === r.ackId);
+    const conf = n && n.acks && n.acks[r.teacher];
+    return { sent: !!r.ackId, conf: conf || "", appr: !!r.approved };
+  }
+  // ===== صفحة الاطلاع =====
+  const la = { kind: "inq" };
+  function laRecords() { return (la.kind === "alert" ? data.officialAlerts : data.officialInq || []).filter(r => r.ackId); }
+  function laOpen(kind) {
+    la.kind = kind;
+    document.getElementById("laTitle").textContent = kind === "alert" ? "الاطلاع على التنبيهات" : "الاطلاع على المساءلات";
+    document.getElementById("laBackTx").textContent = kind === "alert" ? "التنبيهات" : "المسائلات";
+    laRender(); showView("linkAck");
+    if (window.__fbdb && laRecords().some(r => !linkState(r).conf)) laRefresh(true);
+  }
+  async function laRefresh(quiet) {
+    if (!window.__fbdb) { if (!quiet) showToast("التحديث يحتاج الاتصال بالسحابة"); return; }
+    const ids = new Set(laRecords().map(r => r.ackId));
+    const list = (data.notices || []).filter(n => ids.has(n.id));
+    try { for (const n of list) await ackFetch(n); saveData(); if (!quiet) showToast("تم تحديث حالات الاطلاع"); }
+    catch (e) { console.error(e); if (!quiet) showToast("تعذر التحديث — تأكد من الاتصال وقواعد Firebase"); }
+    laRender(); try { ioRenderSaved(); alRenderSaved(); } catch (e) {}
+  }
+  function laFmt(iso) { if (!iso || iso === "?") return "تم"; try { return ioStamp(new Date(iso).getTime()); } catch (e) { return "تم"; } }
+  function laRender() {
+    const box = document.getElementById("laList"); if (!box) return;
+    const all = laRecords(), f = document.getElementById("laFilter").value;
+    const st = all.map(r => [r, linkState(r)]);
+    const c = { wait: st.filter(([, s]) => !s.conf).length, conf: st.filter(([, s]) => s.conf && !s.appr).length, appr: st.filter(([, s]) => s.appr).length };
+    document.getElementById("laSum").innerHTML = '<span>📤 مُرسل: ' + all.length + '</span><span style="color:#8a5200">⏳ بانتظار التأكيد: ' + c.wait + '</span><span style="color:#146c3a">✅ مؤكد: ' + (c.conf + c.appr) + '</span><span style="color:#174a59">🏁 معتمد: ' + c.appr + "</span>";
+    const rows = st.filter(([, s]) => !f || (f === "wait" ? !s.conf : f === "conf" ? s.conf && !s.appr : s.appr))
+      .sort((a, b) => (b[0].linkSentAt || 0) - (a[0].linkSentAt || 0));
+    if (!rows.length) { box.innerHTML = '<div class="empty-state">' + (all.length ? "لا توجد عناصر بهذا التصنيف" : "لم يُرسل رابط لأي " + (la.kind === "alert" ? "تنبيه" : "مساءلة") + " بعد — استخدم زر «إرسال رابط للمعلم»") + "</div>"; return; }
+    box.innerHTML = rows.map(([r, s]) => '<div class="ack-item" data-id="' + r.id + '"><div class="hd"><b>' + acEsc(linkTitle(la.kind, r)) + '</b><span class="pill">' + acEsc(r.teacher) + "</span></div>" +
+      '<div class="sub" style="font-size:12px; color:var(--ink-soft); margin-top:3px;">' + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + (r.attachNames && r.attachNames.length ? " — 📎 " + r.attachNames.length + " مرفق" : "") + "</div>" +
+      '<div class="la-steps">' +
+        '<div class="la-step ok"><b>📤 الإرسال</b>' + acEsc(ioStamp(r.linkSentAt)) + (r.linkSentCount > 1 ? "<br>(" + r.linkSentCount + " مرات)" : "") + "</div>" +
+        '<div class="la-step ' + (s.conf ? "ok" : "wait") + '"><b>👁️ الاطلاع والتأكيد</b>' + (s.conf ? acEsc(laFmt(s.conf)) : "بانتظار المعلم") + "</div>" +
+        '<div class="la-step ' + (s.appr ? "ok" : "") + '"><b>🏁 الاعتماد</b><label><input type="checkbox" data-appr' + (s.appr ? " checked" : "") + (s.conf ? "" : " disabled") + "> " + (s.appr ? "معتمد" : "اعتماد") + "</label>" + (s.appr && r.approvedAt ? "<br>" + acEsc(ioStamp(r.approvedAt)) : "") + "</div>" +
+      "</div>" +
+      '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="resend">📱 إعادة إرسال الرابط</button><button class="export-btn" data-act="print">🖨️ طباعة</button></div></div>').join("");
+  }
+  document.getElementById("laList").addEventListener("change", e => {
+    const cb = e.target.closest("input[data-appr]"); if (!cb) return;
+    const r = laRecords().find(x => x.id === cb.closest(".ack-item").dataset.id); if (!r) return;
+    r.approved = cb.checked; r.approvedAt = cb.checked ? Date.now() : null; saveData(); laRender();
+  });
+  document.getElementById("laList").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-act]"); if (!btn) return;
+    const r = laRecords().find(x => x.id === btn.closest(".ack-item").dataset.id); if (!r) return;
+    if (btn.dataset.act === "print") { if (la.kind === "alert") { alPrintRec(r); alMark(r.id, "printed"); } else { ioPrintRec(r); ioMarkPrinted(r.id); } }
+    else if (btn.dataset.act === "resend") {
+      if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "سبق الإرسال — اضغط للتأكيد"; setTimeout(() => { btn.dataset.confirm = ""; btn.textContent = "📱 إعادة إرسال الرابط"; }, 5000); return; }
+      linkSend(la.kind, r, null);
+    }
+  });
+  document.getElementById("laFilter").addEventListener("change", laRender);
+  document.getElementById("laRefresh").addEventListener("click", () => laRefresh(false));
+  document.getElementById("laBack").addEventListener("click", () => { if (la.kind === "alert") alOpen(); else document.getElementById("openInquiries").click(); });
+  document.getElementById("openInqAck").addEventListener("click", () => laOpen("inq"));
+  document.getElementById("alGoAck").addEventListener("click", () => laOpen("alert"));
+  document.getElementById("ioFiles").addEventListener("change", e => linkSetFiles("inq", e.target, document.getElementById("ioFilesInfo")));
+  document.getElementById("alFiles").addEventListener("change", e => linkSetFiles("alert", e.target, document.getElementById("alFilesInfo")));
+  document.getElementById("ioSendLink").addEventListener("click", () => {
+    const v = ioCollect();
+    if (!v.type) { showToast("اختر نوع المساءلة أولاً"); return; }
+    if (!v.teacher) { showToast("اختر المعلم أولاً"); return; }
+    if (!ioSave(true)) return;
+    const r = data.officialInq.find(x => x.id === ioCurId);
+    if (r.ackId) {
+      const b = document.getElementById("ioSendLink");
+      if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "سبق إرسال الرابط — اضغط للإرسال مرة أخرى"; setTimeout(() => { b.dataset.confirm = ""; b.textContent = "🔗 إرسال رابط للمعلم"; }, 5000); return; }
+      b.dataset.confirm = ""; b.textContent = "🔗 إرسال رابط للمعلم";
+    }
+    const files = linkFiles.inq.slice();
+    if (ioEl("ioAttachDoc").checked) { const d = docAttachment("inq", r); if (d) files.unshift(d); }
+    linkSend("inq", r, files);
   });
   /* ===== إنشاء تكليف ===== */
   const TK_DEFAULT_BODY = "بناءً على الصلاحيات الممنوحة لمدير المدرسة، وعلمنا بأنكم على قدر المسئولية، لذا تم تكليفكم ";
@@ -9389,6 +9728,7 @@ ${contentEl.innerHTML}
     document.getElementById("taklifView").classList.toggle("active", view === "taklif");
     document.getElementById("inqOfficialView").classList.toggle("active", view === "inqOfficial");
     document.getElementById("alertView").classList.toggle("active", view === "alert");
+    document.getElementById("linkAckView").classList.toggle("active", view === "linkAck");
     document.getElementById("teacherSchedView").classList.toggle("active", view === "teacherSched");
     window.scrollTo(0, 0);
   }
@@ -9441,6 +9781,7 @@ ${contentEl.innerHTML}
   });
   document.getElementById("openInquiries").addEventListener("click", () => {
     document.getElementById("inqSavedTileCount").textContent = (data.officialInq || []).length + " مساءلة";
+    { const sent = (data.officialInq || []).filter(r => r.ackId); const w = sent.filter(r => !linkState(r).conf).length; document.getElementById("inqAckTileCount").textContent = sent.length ? sent.length + " مُرسلة" + (w ? " — " + w + " بانتظار التأكيد" : "") : "الاطلاع والتأكيد والاعتماد"; }
     renderInquiriesList();
     showView("inquiries");
   });
@@ -9986,7 +10327,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-03-6";
+window.APP_BUILD = "2026-11-03-9";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
