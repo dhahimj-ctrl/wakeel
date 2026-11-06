@@ -552,6 +552,13 @@
   .ack-school { color: #174a59; font-weight: 800; text-align: center; margin-bottom: 10px; }
   .ack-card h1 { font-size: 21px; text-align: center; margin: 6px 0; color: var(--ink); }
   .ack-date { text-align: center; color: var(--ink-soft); font-size: 13px; margin-bottom: 12px; }
+  .ack-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .ack-form .ack-choice button { width: auto; margin: 0; border: 2px solid; padding: 14px 8px; }
+  .ack-choice button { font: inherit; font-weight: 800; padding: 14px 8px; border-radius: 12px; border: 2px solid; cursor: pointer; background: #fff; }
+  .ack-choice button small { display: block; font-weight: 700; font-size: 12px; margin-top: 2px; }
+  .ack-form .ack-choice .yes { background: #fff; border-color: #2e7d4f; color: #1f6b40; } .ack-form .ack-choice .yes.on { background: #2e7d4f; color: #fff; }
+  .ack-form .ack-choice .no { background: #fff; border-color: #b23b2e; color: #9a2f23; } .ack-form .ack-choice .no.on { background: #b23b2e; color: #fff; }
+  .ack-choice .chk { font-size: 18px; }
   .ack-atts { margin: -4px 0 16px; }
   .ack-atts-h { font-weight: 800; color: #174a59; margin-bottom: 8px; }
   .ack-atts figure { margin: 0 0 10px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
@@ -606,6 +613,15 @@
   .wt-slot-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-weight: 800; color: #174a59; margin-bottom: 8px; }
   .wt-slot-head .cls { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; font-weight: 700; color: var(--ink); }
   .wt-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .wa-pills { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .wa-table th, .wa-table td { white-space: normal !important; font-size: 12.5px; padding: 6px 4px !important; }
+  #waList .mr-table-wrap { overflow-x: visible; }
+  #waList .wa-table { min-width: 0 !important; width: 100%; table-layout: fixed; }
+  #waList .wa-table th:nth-child(1), #waList .wa-table th:nth-child(2) { width: 17%; } #waList .wa-table th:nth-child(3) { width: 26%; }
+  #waList .tx .sub { display: block; }
+  .wa-table td.ws-signed { color: #146c3a; font-weight: 800; } .wa-table td.ws-refused { color: #9a2f23; font-weight: 800; } .wa-table td.ws-wait { color: #8a5200; font-weight: 700; }
+  .ws-st { margin-top: 6px; font-size: 12.5px; font-weight: 800; padding: 6px 10px; border-radius: 10px; }
+  .ws-st.wait { background: #fff4df; color: #8a5200; } .ws-st.signed { background: #e7f7ee; color: #146c3a; } .ws-st.refused { background: #fdecea; color: #9a2f23; }
   .wt-row select { flex: 1 1 180px; min-width: 0; }
   .wt-row select:disabled { opacity: 1; background: #f4f8f7; color: var(--ink); font-weight: 700; }
   .wt-row button { font: inherit; font-size: 13px; padding: 7px 10px; border-radius: 9px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; white-space: nowrap; }
@@ -1942,12 +1958,22 @@
     <div id="waitDesignBody"></div>
   </div>
 
+  <!-- الاطلاع على جداول الانتظار -->
+  <div class="detail" id="waitAckView">
+    <div class="back-row">
+      <button class="back-btn" data-back="waitTable"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>جدول الانتظار</button>
+    </div>
+    <div class="detail-header"><h2>الاطلاع على جداول الانتظار</h2><button class="export-btn" id="waRefresh" style="padding:6px 12px;">🔄 تحديث</button></div>
+    <div class="sched-hint" style="text-align:right;">تظهر هنا جداول الانتظار التي أُرسلت روابط موافقتها للمنتظرين. اضغط على الجدول لعرض ردود المعلمين، ثم «اعتماد» — بعد الاعتماد لا يستطيع المعلم تغيير رده.</div>
+    <div id="waList"></div>
+  </div>
+
   <!-- جدول الانتظار -->
   <div class="detail" id="waitTableView">
     <div class="back-row">
       <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
     </div>
-    <div class="detail-header"><h2>جدول الانتظار</h2></div>
+    <div class="detail-header"><h2>جدول الانتظار</h2><button class="export-btn" id="wtGoAck" style="padding:6px 12px;">👁️ الاطلاع</button></div>
     <div class="sched-form">
       <div class="sched-grid">
         <div class="field">
@@ -2316,6 +2342,8 @@
     const body = (f.body || {}).stringValue || "";
     const date = (f.dateText || {}).stringValue || "";
     const hashes = ((f.hashes || {}).mapValue || {}).fields || {};
+    const mode = (f.mode || {}).stringValue || "";
+    const locked = (f.locked || {}).booleanValue === true, lockedSt = (f.lockedStatus || {}).stringValue || "";
     const atts = (((f.attachments || {}).arrayValue || {}).values || []).map(v => { const m = (v.mapValue || {}).fields || {}; return { name: (m.name || {}).stringValue || "مرفق", type: (m.type || {}).stringValue || "", data: (m.data || {}).stringValue || "" }; }).filter(a => a.data);
     const attHtml = atts.length ? '<div class="ack-atts"><div class="ack-atts-h">📎 المرفقات (' + atts.length + ')</div>' + atts.map((a, i) => /^image\//.test(a.type)
       ? '<figure><img src="data:' + esc(a.type) + ';base64,' + a.data + '" alt="' + esc(a.name) + '"><figcaption>' + esc(a.name) + '</figcaption></figure>'
@@ -2324,9 +2352,15 @@
       '<div class="ack-school">مدرسة عطاء بن أبي رباح المتوسطة</div>' +
       '<h1>' + esc(title) + '</h1>' + (date ? '<div class="ack-date">' + esc(date) + '</div>' : '') +
       '<div class="ack-body">' + esc(body).replace(/\n/g, "<br>") + '</div>' + attHtml +
-      '<div class="ack-form"><label for="ackCivil">أدخل رقم السجل المدني لتأكيد اطلاعك على الإشعار</label>' +
-      '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
-      '<button id="ackBtn">✅ أؤكد اطلاعي على الإشعار</button><div class="ack-msg" id="ackMsg"></div></div>' +
+      (mode === "wait"
+        ? '<div class="ack-form"><label for="ackCivil">أدخل رقم السجل المدني ثم اختر موافقتك على حصة الانتظار</label>' +
+          '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
+          '<div class="ack-choice"><button id="ackYes" class="yes"><span class="chk">☐</span> ✅ موافق <small>(موقّع)</small></button>' +
+          '<button id="ackNo" class="no"><span class="chk">☐</span> ❌ غير موافق <small>(أرفض التوقيع)</small></button></div>' +
+          '<div class="ack-msg" id="ackMsg"></div><button id="ackBtn" hidden></button></div>'
+        : '<div class="ack-form"><label for="ackCivil">أدخل رقم السجل المدني لتأكيد اطلاعك على الإشعار</label>' +
+          '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
+          '<button id="ackBtn">✅ أؤكد اطلاعي على الإشعار</button><div class="ack-msg" id="ackMsg"></div></div>') +
       '<div class="ack-note">لا يُحفظ رقم السجل المدني في هذه الصفحة، ويُستخدم فقط للتحقق.</div></div>';
     page.querySelectorAll(".ack-file").forEach(b => b.addEventListener("click", () => {
       const a = atts[Number(b.dataset.i)]; if (!a) return;
@@ -2338,6 +2372,41 @@
       } catch (e) { alert("تعذر فتح الملف"); }
     }));
     const msg = (t, ok) => { const m = document.getElementById("ackMsg"); m.textContent = t; m.className = "ack-msg " + (ok ? "ok" : "err"); };
+    if (mode === "wait" && locked) {
+      const bY = document.getElementById("ackYes"), bN = document.getElementById("ackNo");
+      bY.disabled = bN.disabled = true; document.getElementById("ackCivil").disabled = true;
+      if (lockedSt === "signed") { bY.classList.add("on"); bY.querySelector(".chk").textContent = "☑"; }
+      if (lockedSt === "refused") { bN.classList.add("on"); bN.querySelector(".chk").textContent = "☑"; }
+      msg("🔒 اعتمدت إدارة المدرسة هذا الجدول — " + (lockedSt === "signed" ? "ردّك: موافق (موقّع)" : lockedSt === "refused" ? "ردّك: غير موافق (أرفض التوقيع)" : "لم يُسجَّل رد") + "، ولا يمكن تغييره.", lockedSt !== "refused");
+      return;
+    }
+    if (mode === "wait") {
+      const decide = async yes => {
+        const civil = ackNormCivil(document.getElementById("ackCivil").value);
+        if (!/^\d{10}$/.test(civil)) { msg("أدخل رقم السجل المدني كاملاً (10 أرقام)"); return; }
+        const bY = document.getElementById("ackYes"), bN = document.getElementById("ackNo");
+        bY.disabled = bN.disabled = true; msg("جاري التسجيل…", true);
+        try {
+          const h = await ackHash(civil, yes ? id : id + "|r");
+          if (!hashes[h]) { msg("رقم السجل المدني غير مسجل لهذا التكليف — تأكد من الرقم أو راجع إدارة المدرسة"); bY.disabled = bN.disabled = false; return; }
+          const name = hashes[h].stringValue || "";
+          const res = await fetch(base + "acks?documentId=" + encodeURIComponent(id + "_" + h) + "&key=" + cfg.apiKey, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fields: { noticeId: { stringValue: id }, h: { stringValue: h }, at: { timestampValue: new Date().toISOString() } } })
+          });
+          if (res.ok || res.status === 409) {
+            bY.classList.toggle("on", yes); bN.classList.toggle("on", !yes);
+            bY.querySelector(".chk").textContent = yes ? "☑" : "☐"; bN.querySelector(".chk").textContent = yes ? "☐" : "☑";
+            msg((res.status === 409 ? "سبق تسجيل اختيارك: " : "شكراً " + name + " — تم تسجيل: ") + (yes ? "موافق ✓ (موقّع)" : "غير موافق ✗ (أرفض التوقيع)"), yes);
+          } else if (res.status === 403) msg("🔒 تم اعتماد الجدول من إدارة المدرسة ولا يمكن تغيير الرد");
+          else msg("تعذر التسجيل (" + res.status + ") — حاول لاحقاً");
+        } catch (e) { msg("تعذر الاتصال — تحقق من الإنترنت وحاول مرة أخرى"); }
+        bY.disabled = bN.disabled = false;
+      };
+      document.getElementById("ackYes").addEventListener("click", () => decide(true));
+      document.getElementById("ackNo").addEventListener("click", () => decide(false));
+      return;
+    }
     document.getElementById("ackBtn").addEventListener("click", async () => {
       const civil = ackNormCivil(document.getElementById("ackCivil").value);
       if (!/^\d{10}$/.test(civil)) { msg("أدخل رقم السجل المدني كاملاً (10 أرقام)"); return; }
@@ -2526,6 +2595,8 @@
     if (!out.teacherCivil || typeof out.teacherCivil !== "object") out.teacherCivil = {};
     if (!Array.isArray(out.officialInq)) out.officialInq = [];
     if (!Array.isArray(out.officialAlerts)) out.officialAlerts = [];
+    if (!out.waitSigns || typeof out.waitSigns !== "object" || Array.isArray(out.waitSigns)) out.waitSigns = {};
+    if (!out.waitApprovals || typeof out.waitApprovals !== "object" || Array.isArray(out.waitApprovals)) out.waitApprovals = {};
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -5964,7 +6035,7 @@ ${pages}
       '<th>الحصة</th><th>الفصل</th><th>المعلم المنتظر</th><th>التوقيع</th><th>ما تم في حصة الانتظار</th><th>الملاحظات</th>' +
       '</tr></thead><tbody>';
     records.forEach(r => {
-      html += `<tr><td>${PERIODS[r.period - 1]}</td><td>${r.className}</td><td>${r.subTeacher || "-"}</td><td></td><td></td><td></td></tr>`;
+      html += `<tr><td>${PERIODS[r.period - 1]}</td><td>${r.className}</td><td>${r.subTeacher || "-"}</td><td>${r.date ? wsLabel(r.date, r) : ""}</td><td></td><td></td></tr>`;
     });
     html += '</tbody></table></div>';
     html += '</div>';
@@ -6221,7 +6292,7 @@ ${auto ? '<script>window.addEventListener("load", function () { var go = functio
         <td class="c-p">${wpEsc(PERIODS[r.period - 1] || r.period)}</td>
         <td class="c-cls">${wpEsc(r.className)}</td>
         <td class="c-name">${g.blank ? "" : wpEsc(r.subTeacher || "-")}</td>
-        <td class="c-sign"></td>
+        <td class="c-sign">${g.blank ? "" : wpEsc(wsLabel(date, r))}</td>
         <td class="c-done"></td>
         <td class="c-note"></td>
       </tr>`).join("");
@@ -6925,7 +6996,7 @@ window.addEventListener("load",function(){var go=function(){setTimeout(function(
       '<th>الحصة</th><th>الفصل</th><th>المعلم المنتظر</th><th>التوقيع</th><th>ما تم في حصة الانتظار</th><th>الملاحظات</th>' +
       '</tr></thead><tbody>';
     records.forEach(r => {
-      html += `<tr><td>${PERIODS[r.period - 1]}</td><td>${r.className}</td><td>${r.subTeacher || "-"}</td><td></td><td></td><td></td></tr>`;
+      html += `<tr><td>${PERIODS[r.period - 1]}</td><td>${r.className}</td><td>${r.subTeacher || "-"}</td><td>${r.date ? wsLabel(r.date, r) : ""}</td><td></td><td></td></tr>`;
     });
     html += '</tbody></table></div>';
     html += '</div>';
@@ -8379,7 +8450,140 @@ ${contentEl.innerHTML}
       wt.choices[k] = first ? first.t : "";
     });
   }
+  /* ===== رابط موافقة المعلم المنتظر على حصة الانتظار (موقّع / أرفض التوقيع) ===== */
+  const wsKey = (date, period, cls, sub) => date + "|" + period + "|" + cls + "|" + sub;
+  function wsGet(date, period, cls, sub) { return (data.waitSigns || {})[wsKey(date, period, cls, sub)] || null; }
+  function wsLabel(date, r) {
+    const w = r && r.subTeacher && wsGet(date, r.period, r.className, r.subTeacher);
+    return !w ? "" : w.status === "signed" ? "موقّع ✓" : w.status === "refused" ? "أرفض التوقيع" : "";
+  }
+  function wsSend(sl, sub, btn) {
+    if (!sub) { showToast("اختر المعلم المنتظر لهذه الحصة أولاً"); return; }
+    const phone = (data.teacherPhones[sub] || "").trim();
+    if (!phone) { showToast("لا يوجد رقم جوال للمعلم " + sub + " — أضفه من إدارة المعلمين"); return; }
+    const civil = (data.teacherCivil || {})[sub] || "";
+    if (!/^\d{10}$/.test(civil)) { showToast("لا يوجد سجل مدني محفوظ للمعلم " + sub + " — أضفه من بيانات المعلم"); return; }
+    if (!(window.__fbdb && window.__fbauth && window.__fbauth.currentUser)) { showToast("إرسال الرابط يحتاج الاتصال بالسحابة وتسجيل الدخول"); return; }
+    if ((data.waitApprovals || {})[wt.date + "|" + wt.absent]) { showToast("🔒 تم اعتماد هذا الجدول من «الاطلاع» — لا يمكن إرسال روابط جديدة له"); return; }
+    const key = wsKey(wt.date, sl.period, sl.className, sub), old = (data.waitSigns || {})[key];
+    if (old && btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "سبق الإرسال — اضغط للتأكيد"; setTimeout(() => { btn.dataset.confirm = ""; btn.textContent = "📨 إرسال للمعلم"; }, 5000); return; }
+    const p = wpDateParts(wt.date), per = PERIODS[sl.period - 1] || sl.period;
+    const kindTx = wt.kind === "permission" ? "المعلم المستأذن" : "المعلم الغائب";
+    const details = "الحصة: " + per + "\nالفصل: " + sl.className + "\n" + kindTx + ": " + wt.absent + "\nاليوم: " + (p.dayName || "") + "\nالتاريخ الهجري: " + p.hijri + "\nالتاريخ الميلادي: " + p.greg;
+    let w = null; try { w = window.open("", "_blank"); } catch (e) {}
+    const go = url => { if (w && !w.closed) w.location.href = url; else openExternalLink(url); };
+    const finish = id => {
+      const link = ackBaseUrl() + "?ack=" + id;
+      const text = "السلام عليكم ورحمة الله وبركاته\nالمكرم الأستاذ / " + sub + " وفقه الله\n\nتم تكليفكم بحصة انتظار:\n" + details +
+        "\n\nنأمل الاطلاع وتسجيل موافقتكم (موقّع) أو عدمها عبر الرابط التالي برقم السجل المدني:\n" + link + "\n\nإدارة مدرسة عطاء بن أبي رباح المتوسطة";
+      go("https://wa.me/" + nfWaPhone(phone) + "?text=" + encodeURIComponent(text));
+    };
+    if (old && old.id && !old.status) { old.sentAt = Date.now(); old.sentCount = (old.sentCount || 1) + 1; saveData(); finish(old.id); wtRenderSlots(); return; }
+    (async () => {
+      const id = "w" + Math.random().toString(36).slice(2, 7) + Date.now().toString(36).slice(-6);
+      const hA = await ackHash(civil, id), hR = await ackHash(civil, id + "|r");
+      const dp = wpDateParts(todayISODate());
+      await window.__fbdb.collection("notices").doc(id).set({
+        title: "تكليف بحصة انتظار", mode: "wait",
+        body: "المكرم الأستاذ / " + sub + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\nنظرًا " + (wt.kind === "permission" ? "لاستئذان" : "لغياب") + " زميلنا الأستاذ (" + wt.absent + ") فقد تم تكليفكم بسد حصة الانتظار التالية:\n\n" + details + "\n\nنأمل اختيار «موافق» للتوقيع بالاستلام، أو «غير موافق».",
+        dateText: (dp.dayName || "") + " " + dp.hijri + " — " + dp.greg, hashes: { [hA]: sub, [hR]: sub }, createdAt: new Date().toISOString()
+      });
+      if (!data.waitSigns || typeof data.waitSigns !== "object") data.waitSigns = {};
+      data.waitSigns[key] = { id, hA, hR, sub, date: wt.date, period: sl.period, className: sl.className, absent: wt.absent, sentAt: Date.now(), sentCount: 1, status: "", at: "" };
+      saveData(); finish(id); wtRenderSlots();
+    })().catch(e => { console.error(e); try { if (w && !w.closed) w.close(); } catch (x) {} showToast(/permission/i.test((e && (e.code || e.message)) || "") ? "رفضت السحابة إنشاء الرابط — تحقق من قواعد Firebase" : "تعذر إنشاء الرابط — تحقق من الاتصال"); });
+  }
+  let wsBusy = false, wsLast = 0;
+  async function wsRefresh(loud) {
+    if (wsBusy || !window.__fbdb) return;
+    if (!loud && Date.now() - wsLast < 15000) return;
+    wsLast = Date.now();
+    const list = Object.values(data.waitSigns || {}).filter(x => x.id && !x.locked && (!x.date || x.date >= wsCutoff()));
+    if (!list.length) return;
+    wsBusy = true; let changed = false, fail = null;
+    try {
+      for (const x of list) {
+        try {
+          const snap = await window.__fbdb.collection("acks").where("noticeId", "==", x.id).get();
+          let best = null;
+          snap.forEach(d => { const a = d.data(); const at = toIsoAny(a.at); if (a.h === x.hA || a.h === x.hR) { if (!best || at > best.at) best = { at, st: a.h === x.hA ? "signed" : "refused" }; } });
+          if (best && (best.st !== x.status || best.at !== x.at)) { x.status = best.st; x.at = best.at; changed = true; }
+        } catch (e) { fail = e; }
+      }
+    } finally { wsBusy = false; }
+    if (changed) { saveData(); if (document.getElementById("waitTableView") && document.getElementById("waitTableView").classList.contains("active")) wtRenderSlots(); }
+    try { waRender(); } catch (e) {}
+    if (fail && loud) showToast("تعذر قراءة ردود المعلمين من السحابة (" + (fail.code || fail.message || "") + ")");
+  }
+  function wsCutoff() { const d = new Date(); d.setDate(d.getDate() - 30); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function toIsoAny(v) { try { if (!v) return ""; if (typeof v === "string") return v; if (v.toDate) return v.toDate().toISOString(); if (v.seconds) return new Date(v.seconds * 1000).toISOString(); } catch (e) {} return ""; }
+  /* ===== الاطلاع على جداول الانتظار والاعتماد ===== */
+  const waOpen = new Set();
+  function waGroups() {
+    const g = {};
+    Object.values(data.waitSigns || {}).forEach(x => { if (!x.id) return; const k = x.date + "|" + x.absent; (g[k] = g[k] || { date: x.date, absent: x.absent, signs: [] }).signs.push(x); });
+    return Object.entries(g).map(([k, v]) => Object.assign(v, { key: k })).sort((a, b) => b.date.localeCompare(a.date) || a.absent.localeCompare(b.absent, "ar"));
+  }
+  function waRows(gr) {
+    const rows = [];
+    (data.coverageRecords || []).filter(r => r.date === gr.date && r.absentTeacher === gr.absent).forEach(r => rows.push({ period: r.period, className: r.className, subTeacher: r.subTeacher || "", date: r.date, kind: r.kind }));
+    (data.waitUncovered || []).filter(u => u.date === gr.date && u.absentTeacher === gr.absent).forEach(u => rows.push({ period: u.period, className: u.className, subTeacher: "", date: u.date, kind: u.kind }));
+    gr.signs.forEach(x => { if (!rows.some(r => r.period === x.period && r.className === x.className)) rows.push({ period: x.period, className: x.className, subTeacher: x.sub, date: x.date }); });
+    return rows.sort((a, b) => a.period - b.period);
+  }
+  function waStatus(r) {
+    const w = r.subTeacher && wsGet(r.date, r.period, r.className, r.subTeacher);
+    if (!r.subTeacher) return { cls: "", tx: "—" };
+    if (!w) return { cls: "", tx: "لم يُرسل" };
+    const t = w.at ? " (" + ioStamp(new Date(w.at).getTime()) + ")" : "";
+    return w.status === "signed" ? { cls: "signed", tx: "✅ موافق — موقّع" + t } : w.status === "refused" ? { cls: "refused", tx: "❌ أرفض التوقيع" + t } : { cls: "wait", tx: "⏳ بانتظار الرد" };
+  }
+  function waRender() {
+    const box = document.getElementById("waList"); if (!box) return;
+    const gs = waGroups();
+    if (!gs.length) { box.innerHTML = '<div class="empty-state">لا توجد جداول انتظار أُرسلت روابط موافقتها بعد — استخدم زر «📨 إرسال للمعلم» في جدول الانتظار</div>'; return; }
+    const appr = data.waitApprovals || {};
+    box.innerHTML = gs.map(gr => {
+      const p = wpDateParts(gr.date), rows = waRows(gr), a = appr[gr.key];
+      const cnt = { s: 0, r: 0, w: 0 }; gr.signs.forEach(x => x.status === "signed" ? cnt.s++ : x.status === "refused" ? cnt.r++ : cnt.w++);
+      return '<div class="ack-card2' + (waOpen.has(gr.key) ? " open" : "") + '" data-k="' + acEsc(gr.key) + '"><div class="hd"><span class="ic">📋</span><span class="tx"><b>' + acEsc(p.dayName || "") + '</b><span class="sub">' + acEsc(p.greg + " — " + p.hijri) + '</span><span class="sub">المعلم الغائب: ' + acEsc(gr.absent) + '</span><span class="wa-pills">' +
+        (a ? '<span class="pill all">🔒 معتمد</span>' : "") + '<span class="pill all">' + cnt.s + " موقّع</span>" + (cnt.r ? '<span class="pill none">' + cnt.r + " رفض</span>" : "") + (cnt.w ? '<span class="pill part">' + cnt.w + " بانتظار</span>" : "") + "</span></span></div>" +
+        '<div class="ack-rows"><div class="mr-table-wrap"><table class="mr-table wa-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المنتظر</th><th>الاطلاع / التوقيع</th></tr></thead><tbody>' +
+        rows.map(r => { const st = waStatus(r); return "<tr><td>" + acEsc(PERIODS[r.period - 1] || r.period) + "</td><td>" + acEsc(r.className) + "</td><td>" + acEsc(r.subTeacher || "-") + '</td><td class="ws-' + st.cls + '">' + acEsc(st.tx) + "</td></tr>"; }).join("") +
+        "</tbody></table></div>" +
+        (a ? '<div class="ws-st signed" style="margin-top:8px;">🔒 تم الاعتماد في ' + acEsc(ioStamp(a.at)) + " — لا يستطيع المعلمون تغيير ردودهم</div>" : "") +
+        '<div class="export-row" style="margin-top:8px;">' + (a ? "" : '<button class="export-btn" data-act="approve">🏁 اعتماد</button>') + '<button class="export-btn" data-act="print">🖨️ طباعة الجدول</button></div></div></div>';
+    }).join("");
+  }
+  async function waApprove(gr, btn) {
+    if (!(window.__fbdb && window.__fbauth && window.__fbauth.currentUser)) { showToast("الاعتماد يحتاج الاتصال بالسحابة وتسجيل الدخول"); return; }
+    btn.disabled = true; btn.textContent = "⏳ جاري الاعتماد…";
+    wsLast = 0; await wsRefresh(true);
+    const pending = gr.signs.filter(x => !x.status).length;
+    if (pending && btn.dataset.confirm !== "1") { btn.disabled = false; btn.dataset.confirm = "1"; btn.textContent = "يوجد " + pending + " بلا رد — اضغط لتأكيد الاعتماد"; setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.textContent = "🏁 اعتماد"; } }, 6000); return; }
+    try {
+      for (const x of gr.signs) {
+        const keep = x.status === "signed" ? { [x.hA]: x.sub } : x.status === "refused" ? { [x.hR]: x.sub } : {};
+        await window.__fbdb.collection("notices").doc(x.id).update({ hashes: keep, locked: true, lockedStatus: x.status || "" });
+        x.locked = true;
+      }
+      if (!data.waitApprovals || typeof data.waitApprovals !== "object") data.waitApprovals = {};
+      data.waitApprovals[gr.key] = { at: Date.now() };
+      saveData(); waRender(); showToast("تم اعتماد الجدول — لا يمكن للمعلمين تغيير ردودهم الآن");
+    } catch (e) { console.error(e); btn.disabled = false; btn.textContent = "🏁 اعتماد"; showToast("تعذر الاعتماد (" + ((e && (e.code || e.message)) || "") + ")"); }
+  }
+  document.getElementById("waList").addEventListener("click", e => {
+    const card = e.target.closest(".ack-card2"); if (!card) return;
+    const gr = waGroups().find(g => g.key === card.dataset.k); if (!gr) return;
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) { if (e.target.closest(".hd")) { card.classList.toggle("open"); if (card.classList.contains("open")) waOpen.add(gr.key); else waOpen.delete(gr.key); } return; }
+    if (btn.dataset.act === "approve") waApprove(gr, btn);
+    else if (btn.dataset.act === "print") { const rows = waRows(gr); wpPrint("حصص الانتظار", gr.date, [{ absentTeacher: gr.absent, records: rows, kind: rows[0] && rows[0].kind }], "انتظار_" + gr.absent); }
+  });
+  document.getElementById("wtGoAck").addEventListener("click", () => { waRender(); showView("waitAck"); wsLast = 0; wsRefresh(true); });
+  document.getElementById("waRefresh").addEventListener("click", async () => { wsLast = 0; await wsRefresh(true); waRender(); showToast("تم تحديث ردود المعلمين"); });
   function wtRenderSlots() {
+    setTimeout(() => wsRefresh(false), 50);
     const box = document.getElementById("wtSlots"), act = document.getElementById("wtActions");
     box.innerHTML = "";
     if (!wt.absent) { act.hidden = true; return; }
@@ -8423,8 +8627,18 @@ ${contentEl.innerHTML}
       });
       if (wt.modes[k] === "des" && wt._editing && wt._editing.has(k)) card.dataset.edit = "1";
       sel.addEventListener("focus", () => { (wt._editing = wt._editing || new Set()).add(k); });
-      row.appendChild(sel); row.appendChild(bEdit); row.appendChild(bFree);
+      const bSign = document.createElement("button"); bSign.type = "button"; bSign.textContent = "📨 إرسال للمعلم";
+      bSign.title = "إرسال رابط موافقة على حصة الانتظار للمعلم المنتظر";
+      bSign.addEventListener("click", () => wsSend(sl, wt.choices[k] || "", bSign));
+      row.appendChild(sel); row.appendChild(bEdit); row.appendChild(bFree); row.appendChild(bSign);
       card.appendChild(row); card.appendChild(note);
+      { const sub = wt.choices[k] || "", ws = sub && wsGet(wt.date, sl.period, sl.className, sub);
+        if (ws) { const st = document.createElement("div"); st.className = "ws-st " + (ws.status || "wait");
+          st.textContent = ws.status === "signed" ? "✅ " + sub + ": موافق — موقّع" + (ws.at ? " (" + ioStamp(new Date(ws.at).getTime()) + ")" : "")
+            : ws.status === "refused" ? "❌ " + sub + ": غير موافق — أرفض التوقيع" + (ws.at ? " (" + ioStamp(new Date(ws.at).getTime()) + ")" : "")
+            : "⏳ أُرسل رابط الموافقة إلى " + sub + " — بانتظار رده";
+          if (ws.locked) st.textContent += " 🔒 معتمد";
+          card.appendChild(st); } }
       // أزرار إرسال التكليف للمنتظر (بعد الحفظ)
       const savedRec = data.coverageRecords.find(r => r.date === wt.date && r.period === sl.period && r.className === sl.className && r.subTeacher);
       if (savedRec && savedRec.subTeacher === (wt.choices[k] || "")) {
@@ -9741,6 +9955,7 @@ ${contentEl.innerHTML}
     document.getElementById("notifyView").classList.toggle("active", view === "notify");
     document.getElementById("waitHubView").classList.toggle("active", view === "waitHub");
     document.getElementById("waitTableView").classList.toggle("active", view === "waitTable");
+    document.getElementById("waitAckView").classList.toggle("active", view === "waitAck");
     document.getElementById("waitDesignView").classList.toggle("active", view === "waitDesign");
     document.getElementById("waitCountView").classList.toggle("active", view === "waitCount");
     document.getElementById("ackView").classList.toggle("active", view === "ack");
@@ -10347,7 +10562,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-03-10";
+window.APP_BUILD = "2026-11-07-3";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
