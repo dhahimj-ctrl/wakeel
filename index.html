@@ -1963,7 +1963,12 @@
     <div class="back-row">
       <button class="back-btn" data-back="waitTable"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>جدول الانتظار</button>
     </div>
-    <div class="detail-header"><h2>الاطلاع على جداول الانتظار</h2><button class="export-btn" id="waRefresh" style="padding:6px 12px;">🔄 تحديث</button></div>
+    <div class="detail-header"><h2 id="waTitle">الاطلاع على جداول الانتظار</h2></div>
+    <div class="export-row" style="margin:-4px 0 8px;">
+      <button class="export-btn" id="waRefresh">🔄 تحديث</button>
+      <button class="export-btn" id="waTrashBtn">🗑️ المحذوفة <span id="waTrashN"></span></button>
+      <button class="export-btn" id="waArchBtn">🗄️ الأرشيف <span id="waArchN"></span></button>
+    </div>
     <div class="sched-hint" style="text-align:right;">تظهر هنا جداول الانتظار التي أُرسلت روابط موافقتها للمنتظرين. اضغط على الجدول لعرض ردود المعلمين، ثم «اعتماد» — بعد الاعتماد لا يستطيع المعلم تغيير رده.</div>
     <div id="waList"></div>
   </div>
@@ -2597,6 +2602,7 @@
     if (!Array.isArray(out.officialAlerts)) out.officialAlerts = [];
     if (!out.waitSigns || typeof out.waitSigns !== "object" || Array.isArray(out.waitSigns)) out.waitSigns = {};
     if (!out.waitApprovals || typeof out.waitApprovals !== "object" || Array.isArray(out.waitApprovals)) out.waitApprovals = {};
+    if (!out.waitAckState || typeof out.waitAckState !== "object" || Array.isArray(out.waitAckState)) out.waitAckState = {};
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -8519,6 +8525,16 @@ ${contentEl.innerHTML}
   function toIsoAny(v) { try { if (!v) return ""; if (typeof v === "string") return v; if (v.toDate) return v.toDate().toISOString(); if (v.seconds) return new Date(v.seconds * 1000).toISOString(); } catch (e) {} return ""; }
   /* ===== الاطلاع على جداول الانتظار والاعتماد ===== */
   const waOpen = new Set();
+  let waMode = ""; // "" الحالية | "archived" | "deleted"
+  const waState = k => ((data.waitAckState || {})[k] || "");
+  function waSetState(k, st) { if (!data.waitAckState || typeof data.waitAckState !== "object") data.waitAckState = {}; if (st) data.waitAckState[k] = st; else delete data.waitAckState[k]; saveData(); waRender(); }
+  async function waPurge(gr) {
+    for (const x of gr.signs) { try { if (window.__fbdb) await window.__fbdb.collection("notices").doc(x.id).delete(); } catch (e) {} }
+    Object.keys(data.waitSigns || {}).forEach(k => { const x = data.waitSigns[k]; if (x && x.date === gr.date && x.absent === gr.absent) delete data.waitSigns[k]; });
+    if (data.waitApprovals) delete data.waitApprovals[gr.key];
+    if (data.waitAckState) delete data.waitAckState[gr.key];
+    saveData(); waRender(); showToast("حُذف الجدول نهائيًا من الاطلاع");
+  }
   function waGroups() {
     const g = {};
     Object.values(data.waitSigns || {}).forEach(x => { if (!x.id) return; const k = x.date + "|" + x.absent; (g[k] = g[k] || { date: x.date, absent: x.absent, signs: [] }).signs.push(x); });
@@ -8540,8 +8556,13 @@ ${contentEl.innerHTML}
   }
   function waRender() {
     const box = document.getElementById("waList"); if (!box) return;
-    const gs = waGroups();
-    if (!gs.length) { box.innerHTML = '<div class="empty-state">لا توجد جداول انتظار أُرسلت روابط موافقتها بعد — استخدم زر «📨 إرسال للمعلم» في جدول الانتظار</div>'; return; }
+    const all = waGroups();
+    const nA = all.filter(g => waState(g.key) === "archived").length, nD = all.filter(g => waState(g.key) === "deleted").length;
+    document.getElementById("waArchN").textContent = nA ? "(" + nA + ")" : ""; document.getElementById("waTrashN").textContent = nD ? "(" + nD + ")" : "";
+    document.getElementById("waArchBtn").classList.toggle("on", waMode === "archived"); document.getElementById("waTrashBtn").classList.toggle("on", waMode === "deleted");
+    document.getElementById("waTitle").textContent = waMode === "archived" ? "🗄️ أرشيف جداول الانتظار" : waMode === "deleted" ? "🗑️ الجداول المحذوفة" : "الاطلاع على جداول الانتظار";
+    const gs = all.filter(g => waState(g.key) === waMode);
+    if (!gs.length) { box.innerHTML = '<div class="empty-state">' + (waMode === "archived" ? "الأرشيف فارغ" : waMode === "deleted" ? "لا توجد جداول محذوفة" : "لا توجد جداول انتظار أُرسلت روابط موافقتها بعد — استخدم زر «📨 إرسال للمعلم» في جدول الانتظار") + '</div>' + (waMode ? '<div class="export-row" style="margin-top:8px;"><button class="export-btn" id="waBackMain">↩️ العودة للجداول الحالية</button></div>' : ""); return; }
     const appr = data.waitApprovals || {};
     box.innerHTML = gs.map(gr => {
       const p = wpDateParts(gr.date), rows = waRows(gr), a = appr[gr.key];
@@ -8552,7 +8573,11 @@ ${contentEl.innerHTML}
         rows.map(r => { const st = waStatus(r); return "<tr><td>" + acEsc(PERIODS[r.period - 1] || r.period) + "</td><td>" + acEsc(r.className) + "</td><td>" + acEsc(r.subTeacher || "-") + '</td><td class="ws-' + st.cls + '">' + acEsc(st.tx) + "</td></tr>"; }).join("") +
         "</tbody></table></div>" +
         (a ? '<div class="ws-st signed" style="margin-top:8px;">🔒 تم الاعتماد في ' + acEsc(ioStamp(a.at)) + " — لا يستطيع المعلمون تغيير ردودهم</div>" : "") +
-        '<div class="export-row" style="margin-top:8px;">' + (a ? "" : '<button class="export-btn" data-act="approve">🏁 اعتماد</button>') + '<button class="export-btn" data-act="print">🖨️ طباعة الجدول</button></div></div></div>';
+        '<div class="export-row" style="margin-top:8px;">' + (a || waMode ? "" : '<button class="export-btn" data-act="approve">🏁 اعتماد</button>') + '<button class="export-btn" data-act="print">🖨️ طباعة الجدول</button>' +
+          (waMode === "" ? '<button class="export-btn" data-act="archive">🗄️ نقل للأرشيف</button><button class="export-btn" data-act="trash">🗑️ حذف</button>'
+            : waMode === "archived" ? '<button class="export-btn" data-act="restore">↩️ استعادة</button><button class="export-btn" data-act="trash">🗑️ حذف</button>'
+            : '<button class="export-btn" data-act="restore">↩️ استعادة</button><button class="export-btn" data-act="purge">❌ حذف نهائي</button>') +
+        "</div></div></div>";
     }).join("");
   }
   async function waApprove(gr, btn) {
@@ -8573,14 +8598,24 @@ ${contentEl.innerHTML}
     } catch (e) { console.error(e); btn.disabled = false; btn.textContent = "🏁 اعتماد"; showToast("تعذر الاعتماد (" + ((e && (e.code || e.message)) || "") + ")"); }
   }
   document.getElementById("waList").addEventListener("click", e => {
+    if (e.target.closest("#waBackMain")) { waMode = ""; waRender(); return; }
     const card = e.target.closest(".ack-card2"); if (!card) return;
     const gr = waGroups().find(g => g.key === card.dataset.k); if (!gr) return;
     const btn = e.target.closest("button[data-act]");
     if (!btn) { if (e.target.closest(".hd")) { card.classList.toggle("open"); if (card.classList.contains("open")) waOpen.add(gr.key); else waOpen.delete(gr.key); } return; }
     if (btn.dataset.act === "approve") waApprove(gr, btn);
+    else if (btn.dataset.act === "archive") { waSetState(gr.key, "archived"); showToast("نُقل الجدول إلى الأرشيف"); }
+    else if (btn.dataset.act === "trash") { waSetState(gr.key, "deleted"); showToast("نُقل الجدول إلى المحذوفة"); }
+    else if (btn.dataset.act === "restore") { waSetState(gr.key, ""); showToast("استُعيد الجدول"); }
+    else if (btn.dataset.act === "purge") {
+      if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "تأكيد الحذف النهائي"; setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.textContent = "❌ حذف نهائي"; } }, 4000); return; }
+      waPurge(gr);
+    }
     else if (btn.dataset.act === "print") { const rows = waRows(gr); wpPrint("حصص الانتظار", gr.date, [{ absentTeacher: gr.absent, records: rows, kind: rows[0] && rows[0].kind }], "انتظار_" + gr.absent); }
   });
-  document.getElementById("wtGoAck").addEventListener("click", () => { waRender(); showView("waitAck"); wsLast = 0; wsRefresh(true); });
+  document.getElementById("waArchBtn").addEventListener("click", () => { waMode = waMode === "archived" ? "" : "archived"; waRender(); });
+  document.getElementById("waTrashBtn").addEventListener("click", () => { waMode = waMode === "deleted" ? "" : "deleted"; waRender(); });
+  document.getElementById("wtGoAck").addEventListener("click", () => { waMode = ""; waRender(); showView("waitAck"); wsLast = 0; wsRefresh(true); });
   document.getElementById("waRefresh").addEventListener("click", async () => { wsLast = 0; await wsRefresh(true); waRender(); showToast("تم تحديث ردود المعلمين"); });
   function wtRenderSlots() {
     setTimeout(() => wsRefresh(false), 50);
@@ -10562,7 +10597,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-07-3";
+window.APP_BUILD = "2026-11-07-4";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
