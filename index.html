@@ -617,8 +617,9 @@
   .wa-table th, .wa-table td { white-space: normal !important; font-size: 12.5px; padding: 6px 4px !important; }
   #waList .mr-table-wrap { overflow-x: visible; }
   #waList .wa-table { min-width: 0 !important; width: 100%; table-layout: fixed; }
-  #waList .wa-table th:nth-child(1), #waList .wa-table th:nth-child(2) { width: 17%; } #waList .wa-table th:nth-child(3) { width: 26%; }
+  #waList .wa-table th:nth-child(1) { width: 15%; } #waList .wa-table th:nth-child(2) { width: 13%; } #waList .wa-table th:nth-child(3) { width: 22%; }
   #waList .tx .sub { display: block; }
+  .ws-man { width: 100%; font: inherit; font-size: 11.5px; font-weight: 700; padding: 4px; border-radius: 8px; border: 1px solid var(--line); background: #fff; margin-top: 2px; }
   .wa-table td.ws-signed { color: #146c3a; font-weight: 800; } .wa-table td.ws-refused { color: #9a2f23; font-weight: 800; } .wa-table td.ws-wait { color: #8a5200; font-weight: 700; }
   .ws-st { margin-top: 6px; font-size: 12.5px; font-weight: 800; padding: 6px 10px; border-radius: 10px; }
   .ws-st.wait { background: #fff4df; color: #8a5200; } .ws-st.signed { background: #e7f7ee; color: #146c3a; } .ws-st.refused { background: #fdecea; color: #9a2f23; }
@@ -8457,11 +8458,12 @@ ${contentEl.innerHTML}
     });
   }
   /* ===== رابط موافقة المعلم المنتظر على حصة الانتظار (موقّع / أرفض التوقيع) ===== */
+  const WS_MANUAL = { notSeen: "لم يطّلع المعلم على الرابط", refusedSign: "رفض المعلم التوقيع" };
   const wsKey = (date, period, cls, sub) => date + "|" + period + "|" + cls + "|" + sub;
   function wsGet(date, period, cls, sub) { return (data.waitSigns || {})[wsKey(date, period, cls, sub)] || null; }
   function wsLabel(date, r) {
     const w = r && r.subTeacher && wsGet(date, r.period, r.className, r.subTeacher);
-    return !w ? "" : w.status === "signed" ? "موقّع ✓" : w.status === "refused" ? "أرفض التوقيع" : "";
+    return !w ? "" : w.status === "signed" ? "موقّع ✓" : w.status === "refused" ? "أرفض التوقيع" : (WS_MANUAL[w.manual] || "");
   }
   function wsSend(sl, sub, btn) {
     if (!sub) { showToast("اختر المعلم المنتظر لهذه الحصة أولاً"); return; }
@@ -8552,7 +8554,7 @@ ${contentEl.innerHTML}
     if (!r.subTeacher) return { cls: "", tx: "—" };
     if (!w) return { cls: "", tx: "لم يُرسل" };
     const t = w.at ? " (" + ioStamp(new Date(w.at).getTime()) + ")" : "";
-    return w.status === "signed" ? { cls: "signed", tx: "✅ موافق — موقّع" + t } : w.status === "refused" ? { cls: "refused", tx: "❌ أرفض التوقيع" + t } : { cls: "wait", tx: "⏳ بانتظار الرد" };
+    return w.status === "signed" ? { cls: "signed", tx: "✅ موافق — موقّع" + t } : w.status === "refused" ? { cls: "refused", tx: "❌ أرفض التوقيع" + t } : { cls: "wait", tx: "⏳ بانتظار الرد", manual: true, w };
   }
   function waRender() {
     const box = document.getElementById("waList"); if (!box) return;
@@ -8566,11 +8568,21 @@ ${contentEl.innerHTML}
     const appr = data.waitApprovals || {};
     box.innerHTML = gs.map(gr => {
       const p = wpDateParts(gr.date), rows = waRows(gr), a = appr[gr.key];
-      const cnt = { s: 0, r: 0, w: 0 }; gr.signs.forEach(x => x.status === "signed" ? cnt.s++ : x.status === "refused" ? cnt.r++ : cnt.w++);
+      const cnt = { s: 0, r: 0, w: 0 }; gr.signs.forEach(x => x.status === "signed" ? cnt.s++ : x.status === "refused" || x.manual === "refusedSign" ? cnt.r++ : x.manual ? cnt.n = (cnt.n || 0) + 1 : cnt.w++);
       return '<div class="ack-card2' + (waOpen.has(gr.key) ? " open" : "") + '" data-k="' + acEsc(gr.key) + '"><div class="hd"><span class="ic">📋</span><span class="tx"><b>' + acEsc(p.dayName || "") + '</b><span class="sub">' + acEsc(p.greg + " — " + p.hijri) + '</span><span class="sub">المعلم الغائب: ' + acEsc(gr.absent) + '</span><span class="wa-pills">' +
-        (a ? '<span class="pill all">🔒 معتمد</span>' : "") + '<span class="pill all">' + cnt.s + " موقّع</span>" + (cnt.r ? '<span class="pill none">' + cnt.r + " رفض</span>" : "") + (cnt.w ? '<span class="pill part">' + cnt.w + " بانتظار</span>" : "") + "</span></span></div>" +
+        (a ? '<span class="pill all">🔒 معتمد</span>' : "") + '<span class="pill all">' + cnt.s + " موقّع</span>" + (cnt.r ? '<span class="pill none">' + cnt.r + " رفض</span>" : "") + (cnt.n ? '<span class="pill none">' + cnt.n + " لم يطّلع</span>" : "") + (cnt.w ? '<span class="pill part">' + cnt.w + " بانتظار</span>" : "") + "</span></span></div>" +
         '<div class="ack-rows"><div class="mr-table-wrap"><table class="mr-table wa-table"><thead><tr><th>الحصة</th><th>الفصل</th><th>المنتظر</th><th>الاطلاع / التوقيع</th></tr></thead><tbody>' +
-        rows.map(r => { const st = waStatus(r); return "<tr><td>" + acEsc(PERIODS[r.period - 1] || r.period) + "</td><td>" + acEsc(r.className) + "</td><td>" + acEsc(r.subTeacher || "-") + '</td><td class="ws-' + st.cls + '">' + acEsc(st.tx) + "</td></tr>"; }).join("") +
+        rows.map(r => { const st = waStatus(r);
+          let cell = acEsc(st.tx);
+          if (st.manual) {
+            const m = st.w.manual || "";
+            cell = (m ? "" : '<div style="font-size:11.5px;">' + acEsc(st.tx) + "</div>") +
+              '<select class="ws-man" data-key="' + acEsc(wsKey(r.date, r.period, r.className, r.subTeacher)) + '"' + (st.w.locked || a ? " disabled" : "") + ">" +
+              '<option value=""' + (m ? "" : " selected") + ">— فارغ —</option>" +
+              '<option value="notSeen"' + (m === "notSeen" ? " selected" : "") + ">لم يطّلع على الرابط</option>" +
+              '<option value="refusedSign"' + (m === "refusedSign" ? " selected" : "") + ">رفض التوقيع</option></select>";
+          }
+          return "<tr><td>" + acEsc(PERIODS[r.period - 1] || r.period) + "</td><td>" + acEsc(r.className) + "</td><td>" + acEsc(r.subTeacher || "-") + '</td><td class="ws-' + (st.manual && st.w.manual ? "refused" : st.cls) + '">' + cell + "</td></tr>"; }).join("") +
         "</tbody></table></div>" +
         (a ? '<div class="ws-st signed" style="margin-top:8px;">🔒 تم الاعتماد في ' + acEsc(ioStamp(a.at)) + " — لا يستطيع المعلمون تغيير ردودهم</div>" : "") +
         '<div class="export-row" style="margin-top:8px;">' + (a || waMode ? "" : '<button class="export-btn" data-act="approve">🏁 اعتماد</button>') + '<button class="export-btn" data-act="print">🖨️ طباعة الجدول</button>' +
@@ -8584,7 +8596,7 @@ ${contentEl.innerHTML}
     if (!(window.__fbdb && window.__fbauth && window.__fbauth.currentUser)) { showToast("الاعتماد يحتاج الاتصال بالسحابة وتسجيل الدخول"); return; }
     btn.disabled = true; btn.textContent = "⏳ جاري الاعتماد…";
     wsLast = 0; await wsRefresh(true);
-    const pending = gr.signs.filter(x => !x.status).length;
+    const pending = gr.signs.filter(x => !x.status && !x.manual).length;
     if (pending && btn.dataset.confirm !== "1") { btn.disabled = false; btn.dataset.confirm = "1"; btn.textContent = "يوجد " + pending + " بلا رد — اضغط لتأكيد الاعتماد"; setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.textContent = "🏁 اعتماد"; } }, 6000); return; }
     try {
       for (const x of gr.signs) {
@@ -8612,6 +8624,12 @@ ${contentEl.innerHTML}
       waPurge(gr);
     }
     else if (btn.dataset.act === "print") { const rows = waRows(gr); wpPrint("حصص الانتظار", gr.date, [{ absentTeacher: gr.absent, records: rows, kind: rows[0] && rows[0].kind }], "انتظار_" + gr.absent); }
+  });
+  document.getElementById("waList").addEventListener("change", e => {
+    const sel = e.target.closest("select.ws-man"); if (!sel) return;
+    const x = (data.waitSigns || {})[sel.dataset.key]; if (!x || x.locked) return;
+    x.manual = sel.value || ""; x.manualAt = sel.value ? Date.now() : null;
+    saveData(); waRender(); showToast(sel.value ? "سُجّل: " + WS_MANUAL[sel.value] : "أُفرغت خانة التوقيع");
   });
   document.getElementById("waArchBtn").addEventListener("click", () => { waMode = waMode === "archived" ? "" : "archived"; waRender(); });
   document.getElementById("waTrashBtn").addEventListener("click", () => { waMode = waMode === "deleted" ? "" : "deleted"; waRender(); });
@@ -8671,6 +8689,7 @@ ${contentEl.innerHTML}
         if (ws) { const st = document.createElement("div"); st.className = "ws-st " + (ws.status || "wait");
           st.textContent = ws.status === "signed" ? "✅ " + sub + ": موافق — موقّع" + (ws.at ? " (" + ioStamp(new Date(ws.at).getTime()) + ")" : "")
             : ws.status === "refused" ? "❌ " + sub + ": غير موافق — أرفض التوقيع" + (ws.at ? " (" + ioStamp(new Date(ws.at).getTime()) + ")" : "")
+            : ws.manual ? "📝 " + sub + ": " + WS_MANUAL[ws.manual] + " (مسجّل من المنصة)"
             : "⏳ أُرسل رابط الموافقة إلى " + sub + " — بانتظار رده";
           if (ws.locked) st.textContent += " 🔒 معتمد";
           card.appendChild(st); } }
@@ -10597,7 +10616,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-07-4";
+window.APP_BUILD = "2026-11-07-5";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
