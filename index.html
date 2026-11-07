@@ -3248,12 +3248,16 @@
       let st = "—";
       if (inqDay && s.day === inqDay) {
         const att = data.attendance.find(a => a.date === inqDate && a.day === s.day && a.period === s.period && a.teacher === s.teacher && a.className === s.className);
-        const v = att ? att.status : "";
-        st = '<select class="select-styled inq-att" data-i="' + i + '" style="padding:5px 4px 5px 18px;font-size:11.5px;background-position:left 4px center">' +
+        const ov = workOverride(inqDate, s.teacher, s.period);
+        const v = ov || (att ? att.status : "");
+        const sb = (v === "absent" || v === "permission") && subFor(inqDate, s.period, s.className, s.teacher);
+        st = '<select class="select-styled inq-att" data-i="' + i + '"' + (ov ? ' disabled title="من متابعة الدوام"' : "") + ' style="padding:5px 4px 5px 18px;font-size:11.5px;background-position:left 4px center">' +
           '<option value=""' + (v === "" ? " selected" : "") + '>اختر الحالة</option>' +
           '<option value="present"' + (v === "present" ? " selected" : "") + '>حضر</option>' +
           '<option value="absent"' + (v === "absent" ? " selected" : "") + '>غائب</option>' +
-          '<option value="late"' + (v === "late" ? " selected" : "") + '>متأخر</option></select>';
+          '<option value="late"' + (v === "late" ? " selected" : "") + '>متأخر</option>' +
+          '<option value="permission"' + (v === "permission" ? " selected" : "") + '>مستأذن</option></select>' +
+          (sb ? '<div style="font-size:10.5px;color:#146c3a;font-weight:700;margin-top:2px">البديل: ' + wpEsc(sb.subTeacher) + "</div>" : "");
       }
       html += `<tr><td>${s.day}</td><td>${PERIODS[s.period - 1]}</td><td>${s.className}</td><td>${s.teacher}</td><td>${st}</td></tr>`;
     });
@@ -3369,6 +3373,17 @@
     if (autoFilled) saveData();
   }
 
+  // حالة الحصة من متابعة الدوام: الغائب تُصبح كل حصصه «غائب»، والمستأذن حصصه بعد وقت الاستئذان «مستأذن»
+  function workOverride(date, teacher, period) {
+    const w = (data.workAttendance || []).find(r => r.date === date && r.teacher === teacher);
+    if (!w) return "";
+    if (w.status === "absent") return "absent";
+    if (w.status === "permission" && wtAfterPerm(period, w.time)) return "permission";
+    return "";
+  }
+  function subFor(date, period, cls, teacher) {
+    return (data.coverageRecords || []).find(c => c.date === date && c.period === period && c.className === cls && (c.absentTeacher === teacher || !c.absentTeacher)) || null;
+  }
   function getCalRows(dateStr) {
     const realDay = dayNameFromDate(dateStr);
     const rows = [];
@@ -3466,7 +3481,8 @@
       const record = data.attendance.find(a =>
         a.date === dateStr && a.day === entry.entryDay && a.period === entry.period &&
         a.teacher === entry.teacher && a.className === entry.className && !a.archived);
-      const status = record ? record.status : "";
+      const ovr = workOverride(dateStr, entry.teacher, entry.period);
+      const status = ovr || (record ? record.status : "");
 
       const row = document.createElement("div");
       row.className = "work-row";
@@ -3506,12 +3522,19 @@
         <option value="" ${status === "" ? "selected" : ""}>اختر الحالة</option>
         <option value="present" ${status === "present" ? "selected" : ""}>حاضر</option>
         <option value="absent" ${status === "absent" ? "selected" : ""}>غائب</option>
-        <option value="late" ${status === "late" ? "selected" : ""}>متأخر</option>`;
+        <option value="late" ${status === "late" ? "selected" : ""}>متأخر</option>
+        <option value="permission" ${status === "permission" ? "selected" : ""}>مستأذن</option>`;
+      if (ovr) { statusSel.disabled = true; statusSel.title = "الحالة مأخوذة من متابعة الدوام"; }
       statusSel.addEventListener("change", () => {
         setAttendance(dateStr, entry.entryDay, entry.period, entry.teacher, entry.className, statusSel.value);
         renderClassAttendanceLog(dateStr);
       });
       controls.appendChild(statusSel);
+      if (ovr) { const b = document.createElement("span"); b.className = "status-badge " + (ovr === "absent" ? "absent" : "late"); b.textContent = ovr === "absent" ? "غياب من متابعة الدوام" : "استئذان من متابعة الدوام"; controls.appendChild(b); }
+      if (status === "absent" || status === "permission") {
+        const assignedSub = subFor(dateStr, entry.period, entry.className, entry.teacher);
+        if (assignedSub) { const b = document.createElement("span"); b.className = "status-badge present"; b.textContent = "🔁 البديل: " + assignedSub.subTeacher; controls.appendChild(b); }
+      }
 
       if (record) {
         if (record.alertSent) {
@@ -3533,14 +3556,9 @@
           controls.appendChild(b);
         }
         if (status === "absent") {
-          const assignedSub = data.coverageRecords.find(c =>
-            c.date === dateStr && c.period === entry.period && c.className === entry.className &&
-            (c.absentTeacher === entry.teacher || !c.absentTeacher));
+          const assignedSub = subFor(dateStr, entry.period, entry.className, entry.teacher);
           if (assignedSub) {
-            const b = document.createElement("span");
-            b.className = "status-badge present";
-            b.textContent = "🔁 البديل: " + assignedSub.subTeacher;
-            controls.appendChild(b);
+            /* البديل يظهر أعلاه */
           } else if (record.subPending) {
             const b = document.createElement("span");
             b.className = "status-badge none";
@@ -4350,10 +4368,8 @@
 
   function getActionSummary(r) {
     const parts = [];
-    if (r.status === "absent") {
-      const assignedSub = data.coverageRecords.find(c =>
-        c.date === r.date && c.period === r.period && c.className === r.className &&
-        (c.absentTeacher === r.teacher || !c.absentTeacher));
+    if (r.status === "absent" || r.status === "permission") {
+      const assignedSub = subFor(r.date, r.period, r.className, r.teacher);
       if (assignedSub) parts.push("بديل: " + assignedSub.subTeacher);
       else if (r.subPending) parts.push("بانتظار بديل");
     }
@@ -4371,7 +4387,17 @@
 
     dayLabelEl.textContent = dateStr ? (dayNameFromDate(dateStr) || "عطلة نهاية أسبوع") : "—";
 
-    let records = data.attendance.slice();
+    let records = data.attendance.map(a => { const o = workOverride(a.date, a.teacher, a.period); return o && o !== a.status ? Object.assign({}, a, { status: o }) : a; });
+    // حصص المعلم الغائب/المستأذن في متابعة الدوام تُضاف للتقرير وإن لم تُسجَّل
+    (data.workAttendance || []).filter(w => (w.status === "absent" || w.status === "permission") && (!dateStr || w.date === dateStr)).forEach(w => {
+      const day = dayNameFromDate(w.date); if (!day) return;
+      data.schedule.filter(x => x.day === day && x.teacher === w.teacher).forEach(x => {
+        const st = workOverride(w.date, w.teacher, x.period); if (!st) return;
+        if (typeof isSlotHidden === "function" && isSlotHidden(w.date, day, x.period, x.teacher, x.className)) return;
+        if (records.some(r => r.date === w.date && r.period === x.period && r.teacher === x.teacher && r.className === x.className)) return;
+        records.push({ date: w.date, day, period: x.period, teacher: x.teacher, className: x.className, status: st });
+      });
+    });
     if (dateStr) records = records.filter(r => r.date === dateStr);
     if (teacherFilter) records = records.filter(r => r.teacher === teacherFilter);
     records.sort((a, b) => (a.date || "").localeCompare(b.date || "") || a.period - b.period || a.teacher.localeCompare(b.teacher));
@@ -6739,8 +6765,9 @@ ${bodyHTML}
   function ptClassLog(dateStr) {
     const rows = getCalRows(dateStr).map(e => {
       const rec = data.attendance.find(a => a.date === dateStr && a.day === e.entryDay && a.period === e.period && a.teacher === e.teacher && a.className === e.className && !a.archived);
-      const sub = data.coverageRecords.find(c => c.date === dateStr && c.period === e.period && c.className === e.className && (c.absentTeacher === e.teacher || !c.absentTeacher));
-      return [PERIODS[e.period - 1], e.className, e.teacher, rec && rec.status ? statusLabel(rec.status) : "لم يُسجَّل", sub ? "المنتظر: " + sub.subTeacher : "—"];
+      const sub = subFor(dateStr, e.period, e.className, e.teacher);
+      const st = workOverride(dateStr, e.teacher, e.period) || (rec && rec.status) || "";
+      return [PERIODS[e.period - 1], e.className, e.teacher, st ? statusLabel(st) : "لم يُسجَّل", sub ? "المنتظر: " + sub.subTeacher : "—"];
     });
     ptRender("calTable", { title: "سجل متابعة الحصص — " + (dayNameFromDate(dateStr) || "") + " " + wpDateParts(dateStr).hijri, headers: ["الحصة", "الفصل", "المعلم", "الحالة", "ملاحظات"], rows, date: dateStr, fileBase: "سجل_الحصص_" + dateStr, sheet: "سجل الحصص", emptyText: "لا توجد حصص لهذا التاريخ" });
   }
@@ -10756,7 +10783,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-08-3";
+window.APP_BUILD = "2026-11-08-4";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
