@@ -630,6 +630,15 @@
   #waList .tx .sub { display: block; }
   .ws-man { width: 100%; font: inherit; font-size: 11.5px; font-weight: 700; padding: 4px; border-radius: 8px; border: 1px solid var(--line); background: #fff; margin-top: 2px; }
   .wa-table td.ws-signed { color: #146c3a; font-weight: 800; } .wa-table td.ws-refused { color: #9a2f23; font-weight: 800; } .wa-table td.ws-wait { color: #8a5200; font-weight: 700; }
+  .hol-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border-radius: 12px; margin: -6px 0 12px; font-weight: 800; font-size: 13.5px; }
+  .hol-bar.on { background: #e7f7ee; color: #146c3a; border: 1px solid #9fd6b5; }
+  .hol-bar.off { background: #fff4df; color: #8a5200; border: 1px solid #ecc98a; }
+  .hol-bar.week { background: var(--paper-2); color: var(--ink-soft); border: 1px solid var(--line); }
+  .hol-bar .export-btn { padding: 5px 10px; font-size: 12.5px; }
+  .hol-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .hol-chip { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 7px; border-radius: 10px; border: 1px solid #9fd6b5; background: #e7f7ee; color: #146c3a; cursor: pointer; min-width: 64px; }
+  .hol-chip b { font-size: 12px; } .hol-chip small { font-size: 10.5px; color: inherit; opacity: .85; } .hol-chip span { font-size: 11px; font-weight: 800; }
+  .hol-chip.off { background: #fff4df; border-color: #ecc98a; color: #8a5200; }
   .ws-st { margin-top: 6px; font-size: 12.5px; font-weight: 800; padding: 6px 10px; border-radius: 10px; }
   .ws-st.wait { background: #fff4df; color: #8a5200; } .ws-st.signed { background: #e7f7ee; color: #146c3a; } .ws-st.refused { background: #fdecea; color: #9a2f23; }
   .wt-row select { flex: 1 1 180px; min-width: 0; }
@@ -1468,6 +1477,7 @@
       <label for="lineupDateInput">التاريخ</label>
       <input type="date" id="lineupDateInput" class="date-input">
     </div>
+    <div id="lineupHolidayBar"></div>
     <div class="name-list" id="lineupList"></div>
     <div id="lineupTable"></div>
   </div>
@@ -1568,6 +1578,7 @@
       <label for="workDateInput">التاريخ</label>
       <input type="date" id="workDateInput" class="date-input">
     </div>
+    <div id="workHolidayBar"></div>
     <div id="workAttendanceList"></div>
     <div id="workTable"></div>
   </div>
@@ -2260,10 +2271,18 @@
         <select id="mrDaySelect" class="select-styled"></select>
       </div>
       <div class="field">
-        <label for="mrDateInput">التاريخ</label>
+        <label for="mrDateInput">التاريخ من</label>
         <input type="date" id="mrDateInput" class="date-input">
+        <div class="wc-hijri" id="mrFromH"></div>
+      </div>
+      <div class="field">
+        <label for="mrDateTo">إلى</label>
+        <input type="date" id="mrDateTo" class="date-input">
+        <div class="wc-hijri" id="mrToH"></div>
       </div>
     </div>
+    <div class="sched-hint" style="text-align:right; margin:-2px 0 8px;">لعرض يوم واحد اختر «من» فقط، ولفترة اختر «من» و«إلى». «الحضور» محسوب لكل المعلمين في أيام الدوام (الأحد–الخميس) ما لم يُسجَّل عليهم غياب أو تأخر أو غيرهما، وتُستثنى الجمعة والسبت والأيام المحددة إجازة.</div>
+    <div id="mrDaysBar"></div>
     <div class="print-title" id="mrPrintTitle"></div>
     <div id="mrTableWrap" style="margin-bottom:14px;"></div>
     <div class="export-row">
@@ -2655,6 +2674,7 @@
     if (!out.waitSigns || typeof out.waitSigns !== "object" || Array.isArray(out.waitSigns)) out.waitSigns = {};
     if (!out.waitApprovals || typeof out.waitApprovals !== "object" || Array.isArray(out.waitApprovals)) out.waitApprovals = {};
     if (!out.waitAckState || typeof out.waitAckState !== "object" || Array.isArray(out.waitAckState)) out.waitAckState = {};
+    if (!Array.isArray(out.holidays)) out.holidays = [];
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -4363,17 +4383,18 @@
 
     let html = '<div id="repTableWrapContent"><div class="table-caption">تقرير الحصص</div>' +
       '<div class="mr-table-wrap"><table class="mr-table"><thead><tr>' +
-      '<th>اليوم</th><th>التاريخ</th><th>المعلم</th><th>الفصل</th><th>الحصة</th><th>الحالة</th><th>الإجراء المتخذ</th>' +
+      '<th>اليوم</th><th>التاريخ الهجري</th><th>التاريخ الميلادي</th><th>المعلم</th><th>الفصل</th><th>الحصة</th><th>الحالة</th><th>الإجراء المتخذ</th>' +
       '</tr></thead><tbody>';
     records.forEach(r => {
-      html += `<tr><td>${r.day || "—"}</td><td>${r.date || "—"}</td><td>${r.teacher}</td><td>${r.className}</td><td>${PERIODS[r.period - 1]}</td><td>${statusLabel(r.status)}</td><td>${getActionSummary(r)}</td></tr>`;
+      const gd = r.date ? (([y, m, d]) => +d + "/" + +m + "/" + y + " م")(r.date.split("-")) : "—";
+      html += `<tr><td>${r.day || "—"}</td><td>${r.date ? wpDateParts(r.date).hijri : "—"}</td><td>${gd}</td><td>${r.teacher}</td><td>${r.className}</td><td>${PERIODS[r.period - 1]}</td><td>${statusLabel(r.status)}</td><td>${getActionSummary(r)}</td></tr>`;
     });
     html += "</tbody>";
 
     if (teacherFilter) {
       const counts = { present: 0, absent: 0, late: 0 };
       records.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
-      html += `<tfoot><tr><td colspan="7">إجمالي ${teacherFilter}: حضور ${counts.present} — غياب ${counts.absent} — تأخير ${counts.late}</td></tr></tfoot>`;
+      html += `<tfoot><tr><td colspan="8">إجمالي ${teacherFilter}: حضور ${counts.present} — غياب ${counts.absent} — تأخير ${counts.late}</td></tr></tfoot>`;
     }
 
     html += "</table></div></div>";
@@ -4483,6 +4504,7 @@
   }
 
   function renderLineupList(dateStr) {
+    bindHolidayBar("lineupHolidayBar", dateStr, () => renderLineupList(dateStr));
     try { ptLineup(dateStr); } catch (e) { console.error(e); }
     const listEl = document.getElementById("lineupList");
     listEl.innerHTML = "";
@@ -4582,7 +4604,28 @@
     saveData();
   }
 
+  /* ===== أيام الدوام والإجازات: الجمعة والسبت إجازة أسبوعية، وبقية الأيام دوام افتراضيًا ويمكن جعلها إجازة ===== */
+  const isHoliday = d => !!d && (data.holidays || []).includes(d);
+  function toggleHoliday(d) {
+    if (!Array.isArray(data.holidays)) data.holidays = [];
+    if (isHoliday(d)) data.holidays = data.holidays.filter(x => x !== d); else data.holidays.push(d);
+    saveData();
+  }
+  function holidayBarHtml(d) {
+    if (!d) return "";
+    const p = wpDateParts(d);
+    if (!dayNameFromDate(d)) return '<div class="hol-bar week">🏖️ ' + acEsc(p.dayName || "") + " — إجازة أسبوعية</div>";
+    const h = isHoliday(d);
+    return '<div class="hol-bar ' + (h ? "off" : "on") + '"><span>' + (h ? "🏖️ هذا اليوم إجازة — لا يُحسب فيه حضور أو غياب" : "📅 هذا اليوم يوم دوام") + '</span><button class="export-btn" data-hol="' + d + '">' + (h ? "↩️ اجعله يوم دوام" : "🏖️ اجعله إجازة") + "</button></div>";
+  }
+  function bindHolidayBar(id, d, after) {
+    const el = document.getElementById(id); if (!el) return;
+    el.innerHTML = holidayBarHtml(d);
+    const b = el.querySelector("button[data-hol]");
+    if (b) b.addEventListener("click", () => { toggleHoliday(d); showToast(isHoliday(d) ? "سُجّل اليوم إجازة" : "أُعيد اليوم يوم دوام"); after(); });
+  }
   function renderWorkAttendanceList(dateStr) {
+    bindHolidayBar("workHolidayBar", dateStr, () => renderWorkAttendanceList(dateStr));
     try { ptWork(dateStr); } catch (e) { console.error(e); }
     const listEl = document.getElementById("workAttendanceList");
     listEl.innerHTML = "";
@@ -4997,6 +5040,13 @@
     return parts.length ? parts.join(" — ") : "—";
   }
 
+  function mrDaysBar(dates) {
+    const el = document.getElementById("mrDaysBar");
+    if (!dates.length || dates.length > 70) { el.innerHTML = dates.length > 70 ? '<div class="sched-hint" style="text-align:right;">الفترة طويلة — لتحديد أيام الإجازة اختر فترة أقصر أو استخدم زر الإجازة في متابعة الدوام</div>' : ""; return; }
+    el.innerHTML = '<div class="sched-hint" style="text-align:right; margin-bottom:4px;">أيام الدوام في الفترة (اضغط على اليوم لجعله إجازة أو إعادته دوامًا):</div><div class="hol-chips">' +
+      dates.map(d => { const p = wpDateParts(d), h = isHoliday(d); return '<button class="hol-chip ' + (h ? "off" : "") + '" data-hol="' + d + '"><b>' + acEsc(p.dayName || "") + "</b><small>" + acEsc((p.hijri || "").replace(/ ?هـ$/, "")) + "</small><span>" + (h ? "🏖️ إجازة" : "📅 دوام") + "</span></button>"; }).join("") + "</div>";
+    el.querySelectorAll("button[data-hol]").forEach(b => b.addEventListener("click", () => { toggleHoliday(b.dataset.hol); renderMonitorReport(); }));
+  }
   function renderMonitorReport() {
     const type = document.getElementById("mrTypeSelect").value;
     const wrap = document.getElementById("mrTableWrap");
@@ -5008,13 +5058,32 @@
     const teacherFilter = document.getElementById("mrTeacherSelect").value;
     const statusFilter = document.getElementById("mrStatusSelect").value;
     const dayFilter = document.getElementById("mrDaySelect").value;
-    const dateFilter = document.getElementById("mrDateInput").value;
+    let dFrom = document.getElementById("mrDateInput").value, dTo = document.getElementById("mrDateTo").value;
+    if (dFrom && dTo && dTo < dFrom) [dFrom, dTo] = [dTo, dFrom];
+    if (!dFrom && dTo) dFrom = dTo;
+    if (dFrom && !dTo) dTo = dFrom;
+    const hint = id => { const v = document.getElementById(id === "mrFromH" ? "mrDateInput" : "mrDateTo").value; const p = v ? wpDateParts(v) : null; document.getElementById(id).textContent = p ? (p.dayName || "") + " — " + p.hijri : ""; };
+    hint("mrFromH"); hint("mrToH");
 
+    document.getElementById("mrDaysBar").innerHTML = "";
     let records = getMonitorTypeRecords(type).filter(r => r.status);
+    // «حاضر» هو الافتراضي ولا يُخزَّن — يُستكمل هنا لكل معلم في أيام الدوام
+    if (type === "work" || type === "lineup") {
+      const have = new Set(records.map(r => r.date + "|" + r.teacher));
+      let dates = [];
+      if (dFrom) {
+        const today = todayISODate(), d = new Date(dFrom + "T12:00:00"), end = new Date((dTo < today ? dTo : today) + "T12:00:00");
+        for (; d <= end; d.setDate(d.getDate() + 1)) { const iso = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); if (dayNameFromDate(iso)) dates.push(iso); }
+      } else dates = [...new Set(records.map(r => r.date).filter(Boolean))].filter(x => dayNameFromDate(x));
+      mrDaysBar(dates.slice().sort());
+      dates = dates.filter(x => !isHoliday(x));
+      const tlist = data.teachers.slice();
+      dates.forEach(dt => tlist.forEach(t => { if (!have.has(dt + "|" + t)) records.push({ record: null, date: dt, day: dayNameFromDate(dt), teacher: t, status: "present", detail: "" }); }));
+    }
     if (teacherFilter) records = records.filter(r => r.teacher === teacherFilter);
     if (statusFilter) records = records.filter(r => r.status === statusFilter);
     if (dayFilter) records = records.filter(r => r.day === dayFilter);
-    if (dateFilter) records = records.filter(r => r.date === dateFilter);
+    if (dFrom) records = records.filter(r => r.date && r.date >= dFrom && r.date <= dTo);
     records.sort((a, b) => (a.date || "").localeCompare(b.date || "") || a.teacher.localeCompare(b.teacher));
 
     if (records.length === 0) {
@@ -5027,13 +5096,13 @@
     const gregTxt = d => { if (!d) return "—"; const [y, m, dd] = d.split("-"); return +dd + "/" + +m + "/" + y + " م"; };
     let html = '<div id="mrTableWrapContent"><div class="table-caption">تقرير المتابعة — ' + typeLabel + (teacherFilter ? " — المعلم: " + acEsc(teacherFilter) : "") + '</div>' +
       '<div class="mr-table-wrap"><table class="mr-table"><thead><tr>' +
-      (teacherFilter ? '<th>اليوم</th><th>التاريخ الهجري</th><th>التاريخ الميلادي</th>' : '<th>اليوم</th><th>التاريخ</th><th>المعلم</th>') +
+      (teacherFilter ? '<th>اليوم</th><th>التاريخ الهجري</th><th>التاريخ الميلادي</th>' : '<th>اليوم</th><th>التاريخ الهجري</th><th>التاريخ الميلادي</th><th>المعلم</th>') +
       '<th>الحالة</th><th>تفاصيل</th><th>الإجراء</th><th>الملاحظات</th>' +
       '</tr></thead><tbody>';
     records.forEach(r => {
       const first = teacherFilter
         ? `<td>${r.day || "—"}</td><td>${r.date ? wpDateParts(r.date).hijri : "—"}</td><td>${gregTxt(r.date)}</td>`
-        : `<td>${r.day || "—"}</td><td>${r.date ? wpDateParts(r.date).hijri : "—"}</td><td>${r.teacher}</td>`;
+        : `<td>${r.day || "—"}</td><td>${r.date ? wpDateParts(r.date).hijri : "—"}</td><td>${gregTxt(r.date)}</td><td>${r.teacher}</td>`;
       html += `<tr>${first}<td>${statusLabel(r.status)}</td><td>${r.detail || "—"}</td><td>${getMonitorActionSummary(r)}</td><td></td></tr>`;
     });
     html += "</tbody>";
@@ -6956,7 +7025,7 @@ window.addEventListener("load",function(){var go=function(){setTimeout(function(
       if (!teachers.includes(e.teacher)) return;
       const p = e.date ? wpDateParts(e.date) : null;
       const subLabel = (s.subs.find(x => x[0] === e.status) || [, e.status])[1];
-      details.push({ sort: (e.date || "0") + e.teacher, row: [e.teacher, s.label, subLabel, e.day || "—", p ? p.hijri : "—", [e.minutes ? crFmtHM(e.minutes) : "", e.note].filter(Boolean).join(" — ") || "—"] });
+      details.push({ sort: (e.date || "0") + e.teacher, row: [e.teacher, s.label, subLabel, e.day || "—", p ? p.hijri : "—", p ? p.greg : "—", [e.minutes ? crFmtHM(e.minutes) : "", e.note].filter(Boolean).join(" — ") || "—"] });
     }));
     details.sort((a, b) => a.sort.localeCompare(b.sort, "ar"));
     const totalRow = ["الإجمالي"].concat(secs.flatMap(s => s.subs.map(([st]) => crCellText(totals[s.id + "|" + st] || [], s.id === "work") || "0")));
@@ -6976,7 +7045,7 @@ window.addEventListener("load",function(){var go=function(){setTimeout(function(
   }
   function crDetailsHTML(r) {
     if (!r.details.length) return "";
-    return '<div class="table-caption" style="margin-top:14px">تفاصيل الحالات</div>' + ptTableHTML(["المعلم", "القسم", "الحالة", "اليوم", "التاريخ الهجري", "التفاصيل"], r.details);
+    return '<div class="table-caption" style="margin-top:14px">تفاصيل الحالات</div>' + ptTableHTML(["المعلم", "القسم", "الحالة", "اليوم", "التاريخ الهجري", "التاريخ الميلادي", "التفاصيل"], r.details);
   }
   function crTitle(r) { return "التقرير الشامل" + (r.teacher ? " — " + r.teacher : ""); }
   function crRender() {
@@ -7007,7 +7076,7 @@ window.addEventListener("load",function(){var go=function(){setTimeout(function(
         ws["!cols"] = [{ wch: 28 }].concat(h2.slice(1).map(() => ({ wch: 16 })));
         const sheets = [[ws, "التقرير الشامل"]];
         if (r.details.length) {
-          const wd = wpSheetFromAoa([["المعلم", "القسم", "الحالة", "اليوم", "التاريخ الهجري", "التفاصيل"]].concat(r.details), "تفاصيل الحالات");
+          const wd = wpSheetFromAoa([["المعلم", "القسم", "الحالة", "اليوم", "التاريخ الهجري", "التاريخ الميلادي", "التفاصيل"]].concat(r.details), "تفاصيل الحالات");
           wd["!cols"] = [{ wch: 28 }, { wch: 18 }, { wch: 16 }, { wch: 10 }, { wch: 20 }, { wch: 30 }];
           sheets.push([wd, "التفاصيل"]);
         }
@@ -10230,6 +10299,7 @@ ${contentEl.innerHTML}
     fillMrDaySelect();
     document.getElementById("mrTypeSelect").value = "";
     document.getElementById("mrDateInput").value = "";
+    document.getElementById("mrDateTo").value = "";
     fillMrStatusSelect("");
     renderMonitorReport();
     showView("monitorReports");
@@ -10241,13 +10311,8 @@ ${contentEl.innerHTML}
   document.getElementById("mrTeacherSelect").addEventListener("change", renderMonitorReport);
   document.getElementById("mrStatusSelect").addEventListener("change", renderMonitorReport);
   document.getElementById("mrDaySelect").addEventListener("change", renderMonitorReport);
-  document.getElementById("mrDateInput").addEventListener("change", e => {
-    if (e.target.value) {
-      const day = dayNameFromDate(e.target.value);
-      if (day) document.getElementById("mrDaySelect").value = day;
-    }
-    renderMonitorReport();
-  });
+  document.getElementById("mrDateInput").addEventListener("change", renderMonitorReport);
+  document.getElementById("mrDateTo").addEventListener("change", renderMonitorReport);
   document.getElementById("exportMrExcel").addEventListener("click", exportMonitorReportExcel);
   document.getElementById("shareMrExcel").addEventListener("click", shareMonitorReportExcel);
   document.getElementById("exportMrPDF").addEventListener("click", exportMonitorReportPDF);
@@ -10691,7 +10756,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-07-8";
+window.APP_BUILD = "2026-11-08-3";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
