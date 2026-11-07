@@ -9392,7 +9392,7 @@ ${contentEl.innerHTML}
       </div>
       <div style="margin:14px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:10px 14px; break-inside:avoid;">
         <div style="font-weight:700; color:#174a59; margin-bottom:8px;">رأي مدير المدرسة:</div>
-        <div style="font-size:15px; line-height:2;">${T.ifada ? "( &nbsp; ) الإفادة مقبولة &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) الإفادة غير مقبولة، ويرجى عمل الآتي:" : "( &nbsp; ) العذر مقبول &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) العذر غير مقبول، وتعتبر ساعات مهدرة"}</div>
+        <div style="font-size:15px; line-height:2;">${T.ifada ? "( &nbsp; ) الإفادة مقبولة &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) الإفادة غير مقبولة، ويرجى عمل الآتي:" : v.type === "absence" ? "( &nbsp; ) العذر مقبول &nbsp;&nbsp;&nbsp; ( &nbsp; ) العذر غير مقبول ويتم الحسم &nbsp;&nbsp;&nbsp; ( &nbsp; ) تُحسب من إجازة الموظف الاضطرارية" : "( &nbsp; ) العذر مقبول &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) العذر غير مقبول، وتعتبر ساعات مهدرة"}</div>
         ${T.ifada ? line + line : ""}${line}
         <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:15px;">
           <div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
@@ -9783,7 +9783,7 @@ ${contentEl.innerHTML}
       { t: "table", groups, body: v.body || "" },
       { t: "sig", items: ["مدير المدرسة: موسى آل عبيد", "التوقيع: " + dots, "التاريخ: ....../....../......"] },
       { t: "box", title: "إفادة المعلم:", lines: 3, foot: ["الاسم: " + (v.teacher || dots), "التوقيع: " + dots, "التاريخ: ....../....../......"] },
-      { t: "box", title: "رأي مدير المدرسة:", text: T.ifada ? "(   ) الإفادة مقبولة      (   ) الإفادة غير مقبولة، ويرجى عمل الآتي:" : "(   ) العذر مقبول      (   ) العذر غير مقبول، وتعتبر ساعات مهدرة", lines: T.ifada ? 3 : 1, foot: ["مدير المدرسة: موسى آل عبيد", "التوقيع: " + dots, "التاريخ: ....../....../......"] }
+      { t: "box", title: "رأي مدير المدرسة:", text: T.ifada ? "(   ) الإفادة مقبولة      (   ) الإفادة غير مقبولة، ويرجى عمل الآتي:" : v.type === "absence" ? "(  ) العذر مقبول   (  ) العذر غير مقبول ويتم الحسم   (  ) تُحسب من إجازة الموظف الاضطرارية" : "(   ) العذر مقبول      (   ) العذر غير مقبول، وتعتبر ساعات مهدرة", lines: T.ifada ? 3 : 1, foot: ["مدير المدرسة: موسى آل عبيد", "التوقيع: " + dots, "التاريخ: ....../....../......"] }
     ] };
   }
   function alDocSpec(v) {
@@ -10691,7 +10691,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-07-7";
+window.APP_BUILD = "2026-11-07-8";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
