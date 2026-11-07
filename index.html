@@ -552,6 +552,14 @@
   .ack-school { color: #174a59; font-weight: 800; text-align: center; margin-bottom: 10px; }
   .ack-card h1 { font-size: 21px; text-align: center; margin: 6px 0; color: var(--ink); }
   .ack-date { text-align: center; color: var(--ink-soft); font-size: 13px; margin-bottom: 12px; }
+  .ack-opts { display: grid; gap: 6px; margin-bottom: 12px; }
+  .ack-form .ack-opt { display: flex !important; align-items: center; gap: 8px; font-weight: 700; font-size: 14.5px; padding: 9px 12px; border: 1.5px solid var(--line); border-radius: 12px; background: #fff; cursor: pointer; margin: 0; }
+  .ack-form .ack-opt input { width: 20px !important; height: 20px; min-width: 20px; flex: none; margin: 0; padding: 0; accent-color: #1F7A6D; }
+  .ack-form .ack-opt:has(input:checked) { border-color: #1F7A6D; background: #eef7f5; }
+  .ack-form textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 10px; border-radius: 12px; border: 1.5px solid var(--line); background: #fff; margin-bottom: 10px; resize: vertical; }
+  .ack-sign { display: flex !important; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; margin: 0 0 12px; padding: 10px 12px; border: 1.5px dashed #1F7A6D; border-radius: 12px; background: #eef7f5; cursor: pointer; }
+  .ack-form .ack-sign input { width: 24px !important; height: 24px; min-width: 24px; flex: none; margin: 0; padding: 0; accent-color: #1F7A6D; }
+  .ack-form .ack-sign { justify-content: flex-start; white-space: nowrap; }
   .ack-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
   .ack-form .ack-choice button { width: auto; margin: 0; border: 2px solid; padding: 14px 8px; }
   .ack-choice button { font: inherit; font-weight: 800; padding: 14px 8px; border-radius: 12px; border: 2px solid; cursor: pointer; background: #fff; }
@@ -586,6 +594,7 @@
   .ack-card2 .pill.none { background: #fdecea; color: #8c1d18; }
   .ack-card2 .ack-rows { display: none; margin-top: 8px; }
   #ioSavedHead, #alSavedHead { scroll-margin-top: 64px; }
+  .io-reply { margin-top: 6px; font-size: 13px; line-height: 1.8; background: #f4f9f8; border: 1px solid #cfe3df; border-radius: 10px; padding: 6px 10px; white-space: pre-line; }
   .la-sum { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
   .la-sum span { font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 99px; background: var(--paper-2); border: 1px solid var(--line); }
   .la-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
@@ -1723,6 +1732,8 @@
           <option value="lateClass">مساءلة تأخر عن حصة</option>
           <option value="missClass">مساءلة عدم حضور حصة</option>
           <option value="refuseWait">مساءلة رفض حصة انتظار</option>
+          <option value="missWait">مساءلة عدم حضور حصة انتظار</option>
+          <option value="lateLineup">مساءلة تأخر عن الطابور</option>
           <option value="lowGrades">إفادة معلم عن تدني مستويات طلاب في مادة</option>
           <option value="customIfada">إفادة معلم عن … (يُكتب الغرض يدويًا)</option>
           <option value="customInq">مساءلة عن … (يُكتب الموضوع يدويًا)</option>
@@ -2349,6 +2360,7 @@
     const date = (f.dateText || {}).stringValue || "";
     const hashes = ((f.hashes || {}).mapValue || {}).fields || {};
     const mode = (f.mode || {}).stringValue || "";
+    const ropts = (((f.options || {}).arrayValue || {}).values || []).map(v => v.stringValue || "").filter(Boolean);
     const locked = (f.locked || {}).booleanValue === true, lockedSt = (f.lockedStatus || {}).stringValue || "";
     const atts = (((f.attachments || {}).arrayValue || {}).values || []).map(v => { const m = (v.mapValue || {}).fields || {}; return { name: (m.name || {}).stringValue || "مرفق", type: (m.type || {}).stringValue || "", data: (m.data || {}).stringValue || "" }; }).filter(a => a.data);
     const attHtml = atts.length ? '<div class="ack-atts"><div class="ack-atts-h">📎 المرفقات (' + atts.length + ')</div>' + atts.map((a, i) => /^image\//.test(a.type)
@@ -2358,7 +2370,17 @@
       '<div class="ack-school">مدرسة عطاء بن أبي رباح المتوسطة</div>' +
       '<h1>' + esc(title) + '</h1>' + (date ? '<div class="ack-date">' + esc(date) + '</div>' : '') +
       '<div class="ack-body">' + esc(body).replace(/\n/g, "<br>") + '</div>' + attHtml +
-      (mode === "wait"
+      (mode === "reply"
+        ? '<div class="ack-form">' +
+          (ropts.length ? '<label>اختر سبب الغياب</label><div class="ack-opts">' + ropts.map((o, i) => '<label class="ack-opt"><input type="radio" name="ackOpt" value="' + i + '"><span>' + esc(o) + "</span></label>").join("") +
+            '<label class="ack-opt"><input type="radio" name="ackOpt" value=""><span>بدون اختيار</span></label></div>' : "") +
+          '<label for="ackReply">' + (ropts.length ? "إفادة إضافية (اختياري)" : "إفادة المعلم") + '</label>' +
+          '<textarea id="ackReply" rows="' + (ropts.length ? 3 : 5) + '" maxlength="2800" placeholder="اكتب إفادتك هنا…"></textarea>' +
+          '<label class="ack-sign"><input type="checkbox" id="ackSigned"><span>✍️ التوقيع</span></label>' +
+          '<label for="ackCivil">أدخل رقم السجل المدني للتأكيد</label>' +
+          '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
+          '<button id="ackBtn">📤 إرسال الإفادة</button><div class="ack-msg" id="ackMsg"></div></div>'
+        : mode === "wait"
         ? '<div class="ack-form"><label for="ackCivil">أدخل رقم السجل المدني ثم اختر موافقتك على حصة الانتظار</label>' +
           '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
           '<div class="ack-choice"><button id="ackYes" class="yes"><span class="chk">☐</span> ✅ موافق <small>(موقّع)</small></button>' +
@@ -2378,6 +2400,35 @@
       } catch (e) { alert("تعذر فتح الملف"); }
     }));
     const msg = (t, ok) => { const m = document.getElementById("ackMsg"); m.textContent = t; m.className = "ack-msg " + (ok ? "ok" : "err"); };
+    if (mode === "reply") {
+      document.getElementById("ackBtn").addEventListener("click", async () => {
+        const civil = ackNormCivil(document.getElementById("ackCivil").value);
+        const optEl = document.querySelector('input[name="ackOpt"]:checked');
+        const opt = optEl && optEl.value !== "" ? ropts[Number(optEl.value)] : "";
+        const txt = document.getElementById("ackReply").value.trim();
+        const reply = [opt, txt].filter(Boolean).join("\n"), signed = document.getElementById("ackSigned").checked;
+        if (!reply) { msg(ropts.length ? "اختر سبب الغياب أو اكتب إفادتك" : "اكتب إفادتك أولاً"); return; }
+        if (!/^\d{10}$/.test(civil)) { msg("أدخل رقم السجل المدني كاملاً (10 أرقام)"); return; }
+        const btn = document.getElementById("ackBtn"); btn.disabled = true; msg("جاري الإرسال…", true);
+        try {
+          const h = await ackHash(civil, id);
+          if (!hashes[h]) { msg("رقم السجل المدني غير مسجل لهذه المساءلة — تأكد من الرقم أو راجع إدارة المدرسة"); btn.disabled = false; return; }
+          const res = await fetch(base + "acks?documentId=" + encodeURIComponent(id + "_" + h) + "&key=" + cfg.apiKey, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fields: { noticeId: { stringValue: id }, h: { stringValue: h }, at: { timestampValue: new Date().toISOString() }, reply: { stringValue: reply }, signed: { booleanValue: signed } } })
+          });
+          if (res.ok) {
+            msg("شكراً " + (hashes[h].stringValue || "") + " — تم إرسال إفادتك" + (signed ? " وتوقيعها ✓" : " (بدون توقيع)"), true);
+            document.querySelectorAll('input[name="ackOpt"]').forEach(x => x.disabled = true);
+            document.getElementById("ackReply").disabled = true; document.getElementById("ackSigned").disabled = true; document.getElementById("ackCivil").disabled = true; return;
+          }
+          if (res.status === 409) { msg("سبق إرسال إفادتك على هذه المساءلة — لا يمكن إرسالها مرة أخرى", true); return; }
+          msg(res.status === 403 ? "تعذر الإرسال (403) — أبلغ إدارة المدرسة بتحديث إعدادات المنصة" : "تعذر الإرسال (" + res.status + ") — حاول لاحقاً");
+        } catch (e) { msg("تعذر الاتصال — تحقق من الإنترنت وحاول مرة أخرى"); }
+        btn.disabled = false;
+      });
+      return;
+    }
     if (mode === "wait" && locked) {
       const bY = document.getElementById("ackYes"), bN = document.getElementById("ackNo");
       bY.disabled = bN.disabled = true; document.getElementById("ackCivil").disabled = true;
@@ -9135,6 +9186,8 @@ ${contentEl.innerHTML}
     lateClass: { title: "مساءلة تأخر عن حصة", cls: true },
     missClass: { title: "مساءلة عدم حضور حصة", cls: true },
     refuseWait: { title: "مساءلة رفض حصة انتظار", cls: true },
+    missWait: { title: "مساءلة عدم حضور حصة انتظار", cls: true },
+    lateLineup: { title: "مساءلة تأخر عن الطابور", cls: false },
     lowGrades: { title: "إفادة معلم عن تدني مستويات طلاب في مادة", cls: false, ifada: true },
     customIfada: { title: "إفادة معلم عن", cls: false, ifada: true, custom: true },
     customInq: { title: "مساءلة عن", cls: false, custom: true }
@@ -9215,6 +9268,8 @@ ${contentEl.innerHTML}
     if (v.type === "early") return "لوحظ انصرافكم مبكرًا " + when + " قبل نهاية الدوام الرسمي (" + x(v.ref) + ") بمقدار (" + mins + ") دقيقة، حيث كان انصرافكم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     if (v.type === "lateClass") return "لوحظ تأخركم عن الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + " بمقدار (" + mins + ") دقيقة عن بداية الحصة (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     if (v.type === "missClass") return "لوحظ عدم حضوركم الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    if (v.type === "missWait") return "لوحظ عدم حضوركم حصة الانتظار المكلفين بها في الحصة (" + x(v.period) + ") بالفصل (" + x(v.cls) + ") بدلًا من المعلم الغائب (" + x(v.absent) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    if (v.type === "lateLineup") return "لوحظ تأخركم عن حضور الطابور الصباحي " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     if (v.type === "refuseWait") return "نظرًا لرفضكم حصة الانتظار في الحصة (" + x(v.period) + ") بالفصل (" + x(v.cls) + ") بدلًا من المعلم الغائب (" + x(v.absent) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     return "";
   }
@@ -9225,7 +9280,7 @@ ${contentEl.innerHTML}
     const rf = ioRefTime(), mn = ioMinutes();
     ioEl("ioTimeH").textContent = (t === "late" ? "بداية الدوام الرسمي: " : t === "early" ? "نهاية الدوام الرسمي: " : "بداية الحصة: ") + (rf || (t === "lateClass" ? "اختر الحصة" : "—")) + (mn != null ? " — " + (t === "early" ? "الانصراف المبكر: " : "التأخير: ") + mn + " دقيقة" : "");
     ioEl("ioClassBox").style.display = T && T.cls ? "" : "none";
-    ioEl("ioAbsentBox").style.display = t === "refuseWait" ? "" : "none";
+    ioEl("ioAbsentBox").style.display = t === "refuseWait" || t === "missWait" ? "" : "none";
     ioEl("ioGradesBox").style.display = t === "lowGrades" ? "" : "none";
     ioEl("ioPurposeBox").style.display = T && T.custom ? "" : "none";
     ioEl("ioPurposeLbl").textContent = t === "customIfada" ? "الغرض من الإفادة (يُكمل العنوان: إفادة معلم عن …)" : "موضوع المساءلة (يُكمل العنوان: مساءلة عن …)";
@@ -9236,7 +9291,7 @@ ${contentEl.innerHTML}
   }
   function ioAutoClass() {
     const tch = ioEl("ioTeacher").value, per = Number(ioEl("ioPeriod").value), day = ioEl("ioDay").value;
-    if (!tch || !per || !day || ioEl("ioType").value === "refuseWait") return;
+    if (!tch || !per || !day || ioEl("ioType").value === "refuseWait" || ioEl("ioType").value === "missWait") return;
     const s = data.schedule.find(x => x.day === day && x.teacher === tch && Number(x.period) === per);
     if (s && [...ioEl("ioClass").options].some(o => o.value === s.className)) ioEl("ioClass").value = s.className;
   }
@@ -9301,6 +9356,8 @@ ${contentEl.innerHTML}
   }
   function ioPrintRec(v) {
     const T = Object.assign({}, IO_TYPES[v.type] || { cls: false }, { title: ioTitleOf(v) }), body = v.body || "";
+    const rsrc = v.replyAt ? v : (data.officialInq || []).find(x => x.id === (v.id || ioCurId));
+    const rp = rsrc && rsrc.replyAt ? rsrc : null;
     const date = v.dateIso || todayISODate();
     const B = "border:1.5px solid #174a59; padding:8px 6px; text-align:center; font-size:15px;";
     const H = B + " background:#174a59; color:#fff; font-weight:700;";
@@ -9309,7 +9366,7 @@ ${contentEl.innerHTML}
     if (v.type === "late") cells.push(["وقت الحضور", v.time], ["دقائق التأخير", v.mins == null ? "" : String(v.mins)]);
     if (v.type === "early") cells.push(["وقت الانصراف", v.time], ["دقائق الانصراف المبكر", v.mins == null ? "" : String(v.mins)]);
     if (v.type === "lateClass") cells.push(["وقت الحضور", v.time], ["دقائق التأخير", v.mins == null ? "" : String(v.mins)]);
-    if (v.type === "refuseWait") cells.push(["المعلم الغائب", v.absent]);
+    if (v.type === "refuseWait" || v.type === "missWait") cells.push(["المعلم الغائب", v.absent]);
     if (v.type === "lowGrades") cells.push(["المادة", v.subject], ["الفصل", v.gcls]);
     const n = cells.length;
     const val = (x, raw) => x ? (raw ? x : wpEsc(x)) : "&nbsp;";
@@ -9328,9 +9385,9 @@ ${contentEl.innerHTML}
       </div>
       <div style="margin:16px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:10px 14px; break-inside:avoid;">
         <div style="font-weight:700; color:#174a59; margin-bottom:4px;">إفادة المعلم:</div>
-        ${line}${line}${line}
+        ${rp ? '<div style="white-space:pre-line; line-height:2; font-size:15.5px; min-height:60px; border-bottom:1.5px dotted #174a59; padding-bottom:4px;">' + wpEsc(rp.teacherReply || "") + "</div>" : line + line + line}
         <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:15px;">
-          <div>الاسم: ${v.teacher ? wpEsc(v.teacher) : "...................................."}</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
+          <div>الاسم: ${v.teacher ? wpEsc(v.teacher) : "...................................."}</div><div>التوقيع: ${rp ? (rp.teacherSigned ? '<b style="color:#146c3a;">موقّع ✓</b>' : '<b style="color:#9a2f23;">لم يوقّع المعلم</b>') : "...................."}</div><div>التاريخ: ${rp && rp.replyAt ? wpEsc(wpDateParts(rp.replyAt.slice(0, 10)).hijri || "") : "......./......./......."}</div>
         </div>
       </div>
       <div style="margin:14px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:10px 14px; break-inside:avoid;">
@@ -9400,9 +9457,11 @@ ${contentEl.innerHTML}
       return '<div class="ack-card2' + (ioOpenFolders.has(n) ? " open" : "") + '" data-t="' + acEsc(n) + '"><div class="hd"><span class="ic">📁</span><span class="tx"><b>' + acEsc(n) + '</b><span class="sub">آخر مساءلة: ' + acEsc(list[0].hijri || "—") + '</span></span><span class="pill part">' + list.length + "</span>" + (list.some(r => !r.signed) ? '<span class="pill none">' + list.filter(r => !r.signed).length + " غير موقّعة</span>" : "") + "</div>" +
         '<div class="ack-rows">' + list.map(r => '<div class="ack-item" data-id="' + r.id + '"><div class="hd"><b>' + acEsc(ioTitleOf(r)) + '</b><span class="pill">' + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + "</span></div>" +
           '<div class="sub" style="font-size:12px; color:var(--ink-soft); margin-top:4px;">' + acEsc((r.body || "").slice(0, 110)) + (r.body && r.body.length > 110 ? "…" : "") + "</div>" +
+          (r.replyAt ? '<div class="io-reply"><b>إفادة المعلم:</b> ' + acEsc(r.teacherReply || "") + "</div>" : "") +
           '<div class="io-st">' +
             (r.printedAt ? '<span class="io-b ok">🖨️ تمت الطباعة' + (r.printCount === 2 ? " (مرتين)" : r.printCount > 2 && r.printCount <= 10 ? " (" + r.printCount + " مرات)" : r.printCount > 10 ? " (" + r.printCount + " مرة)" : "") + " — " + acEsc(ioStamp(r.printedAt)) + "</span>" : '<span class="io-b no">لم تُطبع بعد</span>') +
             (r.ackId ? (linkState(r).conf ? '<span class="io-b ok">✅ اطّلع وأكّد</span>' : '<span class="io-b no">🔗 أُرسل الرابط — بانتظار التأكيد</span>') : "") +
+            (r.replyAt ? '<span class="io-b ' + (r.teacherSigned ? "ok" : "no") + '">' + (r.teacherSigned ? "✍️ أفاد المعلم ووقّع" : "✍️ أفاد المعلم — لم يوقّع") + "</span>" : "") +
             '<label class="io-chk"><input type="checkbox" data-flag="delivered"' + (r.delivered ? " checked" : "") + '> 📨 تم تسليمها للمعلم</label>' +
             '<label class="io-chk"><input type="checkbox" data-flag="signed"' + (r.signed ? " checked" : "") + '> ✍️ تم توقيعها</label>' +
           "</div>" +
@@ -9715,7 +9774,7 @@ ${contentEl.innerHTML}
     if (T.cls) cells.push(["الحصة", v.period], ["الفصل", v.cls]);
     if (v.type === "late" || v.type === "lateClass") cells.push(["وقت الحضور", v.time], ["دقائق التأخير", v.mins == null ? "" : String(v.mins)]);
     if (v.type === "early") cells.push(["وقت الانصراف", v.time], ["دقائق الانصراف", v.mins == null ? "" : String(v.mins)]);
-    if (v.type === "refuseWait") cells.push(["المعلم الغائب", v.absent]);
+    if (v.type === "refuseWait" || v.type === "missWait") cells.push(["المعلم الغائب", v.absent]);
     if (v.type === "lowGrades") cells.push(["المادة", v.subject], ["الفصل", v.gcls]);
     const groups = [[["اسم المعلم", v.teacher, 1], ["السجل المدني", v.civil, 1]]];
     for (let i = 0; i < cells.length; i += 4) groups.push(cells.slice(i, i + 4));
@@ -9782,13 +9841,16 @@ ${contentEl.innerHTML}
       if (r.cls) lines.push("الفصل: " + r.cls);
       if (r.subject) lines.push("المادة: " + r.subject);
       if (r.gcls) lines.push("الفصل: " + r.gcls);
-      if (r.absent) lines.push("المعلم الغائب: " + r.absent);
+      if (r.absent && (r.type === "refuseWait" || r.type === "missWait")) lines.push("المعلم الغائب: " + r.absent);
       if (r.time) lines.push("الوقت: " + r.time + (r.mins != null && r.mins !== "" ? " (" + r.mins + " دقيقة)" : ""));
     }
     if (r.hijri) lines.unshift("التاريخ: " + (r.day ? r.day + " " : "") + r.hijri + (r.greg ? " — " + r.greg : ""));
     return "المكرم المعلم / " + r.teacher + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\n" + (lines.length ? lines.join("\n") + "\n\n" : "") + (r.body || "") +
-      (kind === "inq" ? "\n\nنأمل الاطلاع، وتسليم الإفادة لإدارة المدرسة." : "") + "\n\nمدير المدرسة: موسى آل عبيد";
+      (kind === "inq" ? (linkIsReply(kind, r) ? "\n\nنأمل كتابة إفادتكم في الخانة أدناه واختيار «التوقيع»." : "\n\nنأمل الاطلاع، وتسليم الإفادة لإدارة المدرسة.") : "") + "\n\nمدير المدرسة: موسى آل عبيد";
   }
+  const IO_ABSENCE_OPTIONS = ["إجازة اضطرارية وتم رفعها في فارس", "إجازة اضطرارية وسأرفعها في فارس", "إجازة مرضية وتم رفعها في فارس", "إجازة مرضية وسأرفعها في فارس", "إجازة مرافق وتم رفعها في فارس", "إجازة مرافق وسأرفعها في فارس", "موعد"];
+  const IO_REPLY_TYPES = ["absence", "missClass", "lateClass", "missWait", "refuseWait", "lineup", "lateLineup", "late"];
+  const linkIsReply = (kind, r) => kind === "inq" && IO_REPLY_TYPES.includes(r.type);
   function linkTitle(kind, r) { return kind === "alert" ? "تنبيه — " + (r.typeName || "") : (r.title || ioTitleOf(r)); }
   // ينشئ رابط الاطلاع (أو يعيد استخدام السابق) ثم يفتح واتساب المعلم
   function linkSend(kind, r, files) {
@@ -9799,7 +9861,7 @@ ${contentEl.innerHTML}
     if (files && files.reduce((n, a) => n + a.data.length, 0) > LINK_MAX) { showToast("حجم المرفقات مع الورقة كبير — أزل بعض المرفقات أو ألغِ إرفاق الورقة"); return; }
     const title = linkTitle(kind, r);
     const msg = link => "السلام عليكم ورحمة الله وبركاته\nالمكرم المعلم / " + r.teacher + " وفقه الله\n\nنفيدكم بصدور (" + title + ")" + (r.hijri ? " بتاريخ " + r.hijri : "") +
-      "، نأمل الاطلاع عليها وتأكيد الاستلام برقم السجل المدني عبر الرابط:\n" + link + "\n\nإدارة مدرسة عطاء بن أبي رباح المتوسطة";
+      (linkIsReply(kind, r) ? "، نأمل الاطلاع عليها وكتابة إفادتكم وتوقيعها برقم السجل المدني عبر الرابط:\n" : "، نأمل الاطلاع عليها وتأكيد الاستلام برقم السجل المدني عبر الرابط:\n") + link + "\n\nإدارة مدرسة عطاء بن أبي رباح المتوسطة";
     let w = null; try { w = window.open("", "_blank"); } catch (e) {}
     const go = url => { if (w && !w.closed) w.location.href = url; else openExternalLink(url); };
     const wa = link => "https://wa.me/" + nfWaPhone(phone) + "?text=" + encodeURIComponent(msg(link));
@@ -9817,6 +9879,7 @@ ${contentEl.innerHTML}
       const dp = wpDateParts(todayISODate());
       const doc = { title, body: linkBody(kind, r), dateText: (dp.dayName || "") + " " + dp.hijri + " — " + dp.greg, hashes: { [h]: r.teacher }, createdAt: new Date().toISOString() };
       if (files && files.length) doc.attachments = files.map(a => ({ name: a.name, type: a.type, data: a.data }));
+      if (linkIsReply(kind, r)) { doc.mode = "reply"; if (r.type === "absence") doc.options = IO_ABSENCE_OPTIONS.slice(); }
       await window.__fbdb.collection("notices").doc(id).set(doc);
       if (!Array.isArray(data.notices)) data.notices = [];
       data.notices.unshift({ id, title, date: todayISODate(), createdAt: Date.now(), recipients: { [r.teacher]: h }, acks: {}, single: true, src: kind, srcId: r.id });
@@ -9836,10 +9899,21 @@ ${contentEl.innerHTML}
     linkSyncBusy = true;
     let fail = null;
     try {
+      const owner = {};
+      [...(data.officialInq || []), ...(data.officialAlerts || [])].forEach(r => linkIds(r).forEach(i => owner[i] = r));
       for (const id of ids) {
         let n = (data.notices || []).find(x => x.id === id);
         if (!n) continue;
-        try { await ackFetch(n); } catch (e) { fail = e; console.error("ackFetch", id, e); }
+        try {
+          const snap = await window.__fbdb.collection("acks").where("noticeId", "==", id).get();
+          const byHash = {}; Object.entries(n.recipients || {}).forEach(([t, h]) => byHash[h] = t);
+          n.acks = n.acks || {};
+          snap.forEach(d => { const a = d.data(), t = byHash[a.h], at = toIsoAny(a.at) || "?";
+            if (t && !n.acks[t]) n.acks[t] = at;
+            const r = owner[id];
+            if (r && (a.reply != null || a.signed != null) && (!r.replyAt || at >= r.replyAt)) { r.teacherReply = a.reply || ""; r.teacherSigned = !!a.signed; r.replyAt = at; }
+          });
+        } catch (e) { fail = e; console.error("ackFetch", id, e); }
       }
       saveData();
     } finally { linkSyncBusy = false; }
@@ -9881,6 +9955,7 @@ ${contentEl.innerHTML}
         '<div class="la-step ' + (s.conf ? "ok" : "wait") + '"><b>👁️ الاطلاع والتأكيد</b>' + (s.conf ? acEsc(laFmt(s.conf)) : "بانتظار المعلم") + "</div>" +
         '<div class="la-step ' + (s.appr ? "ok" : "") + '"><b>🏁 الاعتماد</b><label><input type="checkbox" data-appr' + (s.appr ? " checked" : "") + (s.conf ? "" : " disabled") + "> " + (s.appr ? "معتمد" : "اعتماد") + "</label>" + (s.appr && r.approvedAt ? "<br>" + acEsc(ioStamp(r.approvedAt)) : "") + "</div>" +
       "</div>" +
+      (r.replyAt ? '<div class="io-reply"><b>إفادة المعلم:</b> ' + acEsc(r.teacherReply || "") + '<div style="margin-top:4px; font-weight:800; color:' + (r.teacherSigned ? "#146c3a" : "#9a2f23") + ';">' + (r.teacherSigned ? "✍️ موقّع ✓" : "لم يوقّع المعلم") + "</div></div>" : "") +
       '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="resend">📱 إعادة إرسال الرابط</button><button class="export-btn" data-act="print">🖨️ طباعة</button></div></div>').join("");
   }
   document.getElementById("laList").addEventListener("change", e => {
@@ -10616,7 +10691,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-07-5";
+window.APP_BUILD = "2026-11-07-7";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
