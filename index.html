@@ -9663,7 +9663,8 @@ ${contentEl.innerHTML}
   // ===== التنبيه الأول/الثاني/الثالث عن ساعات التأخير =====
   const isLH = t => /^lateHours[23]?$/.test(t || "");
   let alLate = [];
-  const alFmtHM = m => { m = Math.round(m || 0); const h = Math.floor(m / 60), r = m % 60; return !m ? "0 دقيقة" : (h ? (h === 1 ? "ساعة" : h === 2 ? "ساعتان" : h <= 10 ? h + " ساعات" : h + " ساعة") : "") + (h && r ? " و" : "") + (r ? r + " دقيقة" : ""); };
+  // مجموع التأخير بالساعات بصيغة ساعات:دقائق (مثال: 2:10 ساعة)
+  const alFmtHM = m => { m = Math.round(m || 0); const h = Math.floor(m / 60), r = m % 60; return h + ":" + String(r).padStart(2, "0") + " ساعة"; };
   const alLateInc = rows => (rows || []).filter(r => r.inc !== false);
   const alLateTotal = () => alLateInc(alLate).reduce((n, r) => n + (Number(r.minutes) || 0), 0);
   function alLateRange(v) {
@@ -10946,7 +10947,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-08-10";
+window.APP_BUILD = "2026-11-08-11";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
