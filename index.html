@@ -560,6 +560,7 @@
   .ack-sign { display: flex !important; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; margin: 0 0 12px; padding: 10px 12px; border: 1.5px dashed #1F7A6D; border-radius: 12px; background: #eef7f5; cursor: pointer; }
   .ack-form .ack-sign input { width: 24px !important; height: 24px; min-width: 24px; flex: none; margin: 0; padding: 0; accent-color: #1F7A6D; }
   .ack-form .ack-sign { justify-content: flex-start; white-space: nowrap; }
+  .ack-form .ack-no-sign { margin-top: 8px; background: #fff !important; color: #8a5200 !important; border: 2px solid #d9a441 !important; }
   .ack-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
   .ack-form .ack-choice button { width: auto; margin: 0; border: 2px solid; padding: 14px 8px; }
   .ack-choice button { font: inherit; font-weight: 800; padding: 14px 8px; border-radius: 12px; border: 2px solid; cursor: pointer; background: #fff; }
@@ -625,6 +626,11 @@
   .wa-pills { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
   .wa-table th, .wa-table td { white-space: normal !important; font-size: 12.5px; padding: 6px 4px !important; }
   #waList .mr-table-wrap { overflow-x: visible; }
+  #alLateRows table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 6px; }
+  #alLateRows th { background: #174a59; color: #fff; padding: 5px 3px; font-weight: 700; }
+  #alLateRows td { border: 1px solid var(--line); padding: 3px; text-align: center; }
+  #alLateRows input { width: 100%; box-sizing: border-box; font: inherit; font-size: 12px; padding: 4px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  #alLateRows tfoot td { font-weight: 800; background: var(--paper-2); }
   #waList .wa-table { min-width: 0 !important; width: 100%; table-layout: fixed; }
   #waList .wa-table th:nth-child(1) { width: 15%; } #waList .wa-table th:nth-child(2) { width: 13%; } #waList .wa-table th:nth-child(3) { width: 22%; }
   #waList .tx .sub { display: block; }
@@ -1851,6 +1857,9 @@
           <option value="lateDutyRecess">التأخر عن حضور مناوبة الفسحة</option>
           <option value="missDutyEnd">عدم حضور مناوبة نهاية الدوام</option>
           <option value="lateDutyEnd">التأخر عن حضور مناوبة نهاية الدوام</option>
+          <option value="lateHours">التنبيه الأول عن ساعات التأخير</option>
+          <option value="lateHours2">التنبيه الثاني عن ساعات التأخير</option>
+          <option value="lateHours3">التنبيه الثالث عن ساعات التأخير</option>
           <option value="other">أخرى</option>
         </select>
       </div>
@@ -1866,6 +1875,15 @@
       <div class="sched-grid" style="margin-bottom:10px;">
         <div class="field"><label for="alDay">اليوم</label><select id="alDay" class="select-styled"></select></div>
         <div class="field"><label for="alDate">التاريخ</label><select id="alDate" class="select-styled"></select></div>
+      </div>
+      <div id="alLateBox" style="display:none; margin-bottom:10px;">
+        <div class="sched-grid" style="margin-bottom:6px;">
+          <div class="field"><label for="alLFrom">التأخير من تاريخ (ميلادي)</label><input type="date" id="alLFrom" class="date-input"><div class="wc-hijri" id="alLFromH"></div></div>
+          <div class="field"><label for="alLTo">إلى تاريخ (ميلادي)</label><input type="date" id="alLTo" class="date-input"><div class="wc-hijri" id="alLToH"></div></div>
+        </div>
+        <div class="sched-hint" style="text-align:right;">تُجلب أيام التأخير في الفترة تلقائيًا من متابعة الدوام. ضع علامة ✓ على الأيام التي ترغب بإدراجها واحتسابها — غير المؤشَّرة لا تظهر في الطباعة ولا تُحسب.</div>
+        <div id="alLateRows"></div>
+        <div class="export-row" style="margin-top:6px;"><button class="export-btn" id="alLateAdd" type="button">➕ إضافة يوم</button><button class="export-btn" id="alLateReload" type="button">🔄 إعادة الجلب من متابعة الدوام</button></div>
       </div>
       <div class="field" style="margin-bottom:10px;">
         <label for="alBody">نص التنبيه (قابل للتعديل)</label>
@@ -2409,9 +2427,11 @@
           '<div class="ack-choice"><button id="ackYes" class="yes"><span class="chk">☐</span> ✅ موافق <small>(موقّع)</small></button>' +
           '<button id="ackNo" class="no"><span class="chk">☐</span> ❌ غير موافق <small>(أرفض التوقيع)</small></button></div>' +
           '<div class="ack-msg" id="ackMsg"></div><button id="ackBtn" hidden></button></div>'
-        : '<div class="ack-form"><label for="ackCivil">أدخل رقم السجل المدني لتأكيد اطلاعك على الإشعار</label>' +
+        : '<div class="ack-form"><label for="ackCivil">' + (mode === "sign" ? "أدخل رقم السجل المدني ثم اختر «تم العلم والتوقيع» أو «تم العلم — بدون توقيع»" : "أدخل رقم السجل المدني لتأكيد اطلاعك على الإشعار") + '</label>' +
           '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
-          '<button id="ackBtn">✅ أؤكد اطلاعي على الإشعار</button><div class="ack-msg" id="ackMsg"></div></div>') +
+          '<button id="ackBtn">' + (mode === "sign" ? "✍️ تم العلم والتوقيع" : "✅ أؤكد اطلاعي على الإشعار") + '</button>' +
+          (mode === "sign" ? '<button id="ackBtnNo" class="ack-no-sign">👁️ تم العلم — بدون توقيع</button>' : "") +
+          '<div class="ack-msg" id="ackMsg"></div></div>') +
       '<div class="ack-note">لا يُحفظ رقم السجل المدني في هذه الصفحة، ويُستخدم فقط للتحقق.</div></div>';
     page.querySelectorAll(".ack-file").forEach(b => b.addEventListener("click", () => {
       const a = atts[Number(b.dataset.i)]; if (!a) return;
@@ -2423,6 +2443,29 @@
       } catch (e) { alert("تعذر فتح الملف"); }
     }));
     const msg = (t, ok) => { const m = document.getElementById("ackMsg"); m.textContent = t; m.className = "ack-msg " + (ok ? "ok" : "err"); };
+    if (mode === "sign") {
+      const send = async signed => {
+        const civil = ackNormCivil(document.getElementById("ackCivil").value);
+        if (!/^\d{10}$/.test(civil)) { msg("أدخل رقم السجل المدني كاملاً (10 أرقام)"); return; }
+        const b1 = document.getElementById("ackBtn"), b2 = document.getElementById("ackBtnNo");
+        b1.disabled = b2.disabled = true; msg("جاري التسجيل…", true);
+        try {
+          const h = await ackHash(civil, id);
+          if (!hashes[h]) { msg("رقم السجل المدني غير مسجل لهذا التنبيه — تأكد من الرقم أو راجع إدارة المدرسة"); b1.disabled = b2.disabled = false; return; }
+          const res = await fetch(base + "acks?documentId=" + encodeURIComponent(id + "_" + h) + "&key=" + cfg.apiKey, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fields: { noticeId: { stringValue: id }, h: { stringValue: h }, at: { timestampValue: new Date().toISOString() }, signed: { booleanValue: signed } } })
+          });
+          if (res.ok) { msg("شكراً " + (hashes[h].stringValue || "") + " — تم تسجيل: " + (signed ? "تم العلم والتوقيع ✓" : "تم العلم ولم يوقّع"), signed); document.getElementById("ackCivil").disabled = true; return; }
+          if (res.status === 409) { msg("سبق تسجيل ردّك على هذا التنبيه", true); return; }
+          msg(res.status === 403 ? "تعذر التسجيل (403) — أبلغ إدارة المدرسة" : "تعذر التسجيل (" + res.status + ") — حاول لاحقاً");
+        } catch (e) { msg("تعذر الاتصال — تحقق من الإنترنت وحاول مرة أخرى"); }
+        b1.disabled = b2.disabled = false;
+      };
+      document.getElementById("ackBtn").addEventListener("click", () => send(true));
+      document.getElementById("ackBtnNo").addEventListener("click", () => send(false));
+      return;
+    }
     if (mode === "reply") {
       document.getElementById("ackBtn").addEventListener("click", async () => {
         const civil = ackNormCivil(document.getElementById("ackCivil").value);
@@ -2499,8 +2542,8 @@
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ fields: { noticeId: { stringValue: id }, h: { stringValue: h }, at: { timestampValue: new Date().toISOString() } } })
         });
-        if (res.ok) msg("شكراً " + name + " — تم تأكيد اطلاعك على الإشعار ✓", true);
-        else if (res.status === 409) msg("سبق أن أكدت اطلاعك على هذا الإشعار ✓", true);
+        if (res.ok) msg(mode === "sign" ? "شكراً " + name + " — تم تسجيل العلم والتوقيع ✓" : "شكراً " + name + " — تم تأكيد اطلاعك على الإشعار ✓", true);
+        else if (res.status === 409) msg(mode === "sign" ? "سبق تسجيل العلم والتوقيع ✓" : "سبق أن أكدت اطلاعك على هذا الإشعار ✓", true);
         else { msg("تعذر تسجيل التأكيد (" + res.status + ") — حاول لاحقاً"); btn.disabled = false; }
       } catch (e) { msg("تعذر الاتصال — تحقق من الإنترنت وحاول مرة أخرى"); btn.disabled = false; }
     });
@@ -9601,7 +9644,8 @@ ${contentEl.innerHTML}
     missDutyRecess: ["عدم حضور مناوبة الفسحة", "عدم حضوركم المناوبة المكلفين بها وقت الفسحة", "بحضور المناوبة المكلفين بها في وقتها"],
     lateDutyRecess: ["التأخر عن حضور مناوبة الفسحة", "تأخركم عن حضور المناوبة المكلفين بها وقت الفسحة", "بالحضور للمناوبة في وقتها وعدم التأخر عنها"],
     missDutyEnd: ["عدم حضور مناوبة نهاية الدوام", "عدم حضوركم المناوبة المكلفين بها نهاية الدوام", "بحضور المناوبة المكلفين بها في وقتها"],
-    lateDutyEnd: ["التأخر عن حضور مناوبة نهاية الدوام", "تأخركم عن حضور المناوبة المكلفين بها نهاية الدوام", "بالحضور للمناوبة في وقتها وعدم التأخر عنها"], other: ["أخرى", "", "بالأنظمة والتعليمات"]
+    lateDutyEnd: ["التأخر عن حضور مناوبة نهاية الدوام", "تأخركم عن حضور المناوبة المكلفين بها نهاية الدوام", "بالحضور للمناوبة في وقتها وعدم التأخر عنها"],
+    lateHours: ["التنبيه الأول عن ساعات التأخير", "", ""], lateHours2: ["التنبيه الثاني عن ساعات التأخير", "", ""], lateHours3: ["التنبيه الثالث عن ساعات التأخير", "", ""], other: ["أخرى", "", "بالأنظمة والتعليمات"]
   };
   const alEl = id => document.getElementById(id);
   let alCurId = "";
@@ -9616,20 +9660,58 @@ ${contentEl.innerHTML}
     if (!t || !tch || t === "other") return 0;
     return (data.officialInq || []).filter(r => r.teacher === tch && (r.type === t || (t === "lateClass" && r.type === "lateClass") || (t === "missClass" && r.type === "missClass"))).length;
   }
+  // ===== التنبيه الأول/الثاني/الثالث عن ساعات التأخير =====
+  const isLH = t => /^lateHours[23]?$/.test(t || "");
+  let alLate = [];
+  const alFmtHM = m => { m = Math.round(m || 0); const h = Math.floor(m / 60), r = m % 60; return !m ? "0 دقيقة" : (h ? (h === 1 ? "ساعة" : h === 2 ? "ساعتان" : h <= 10 ? h + " ساعات" : h + " ساعة") : "") + (h && r ? " و" : "") + (r ? r + " دقيقة" : ""); };
+  const alLateInc = rows => (rows || []).filter(r => r.inc !== false);
+  const alLateTotal = () => alLateInc(alLate).reduce((n, r) => n + (Number(r.minutes) || 0), 0);
+  function alLateRange(v) {
+    const inc = alLateInc(v.lateRows), f = v.lateFrom || (inc[0] && inc[0].date) || "", t = v.lateTo || (inc.length && inc[inc.length - 1].date) || "";
+    const one = d => { if (!d) return ""; const p = wpDateParts(d); return (p.dayName ? p.dayName + " " : "") + p.hijri + " (" + ioGreg(d) + ")"; };
+    return f ? "من " + one(f) + (t && t !== f ? " إلى " + one(t) : "") : "";
+  }
+  function alLateHints() {
+    [["alLFrom", "alLFromH"], ["alLTo", "alLToH"]].forEach(([i, h]) => { const v = alEl(i).value, p = v ? wpDateParts(v) : null; alEl(h).textContent = p ? (p.dayName || "") + " — " + p.hijri : ""; });
+  }
+  function alLateLoad() {
+    const t = alEl("alTeacher").value, f = alEl("alLFrom").value, to = alEl("alLTo").value;
+    if (!t) { alLate = []; alLateRender(); return; }
+    alLateHints();
+    const notes = {}, excl = new Set(); alLate.forEach(r => { if (r.note) notes[r.date] = r.note; if (r.inc === false) excl.add(r.date); });
+    alLate = (data.workAttendance || []).filter(r => r.teacher === t && r.status === "late" && r.date && (!f || r.date >= f) && (!to || r.date <= to))
+      .map(r => ({ date: r.date, minutes: r.time ? computeLateDiff(r.time) : (r.diffMinutes || 0), note: notes[r.date] || "", inc: !excl.has(r.date) }))
+      .filter(r => r.minutes > 0).sort((a, b) => a.date.localeCompare(b.date));
+    alLateRender();
+  }
+  function alLateRender() {
+    const box = alEl("alLateRows"); if (!box) return;
+    const tot = alLateTotal();
+    let n = 0;
+    box.innerHTML = '<table><thead><tr><th style="width:9%">إدراج</th><th style="width:7%">م</th><th style="width:29%">التاريخ</th><th style="width:15%">الدقائق</th><th>ملاحظات</th><th style="width:8%"></th></tr></thead><tbody>' +
+      (alLate.length ? alLate.map((r, i) => { const p = r.date ? wpDateParts(r.date) : null, on = r.inc !== false;
+        return '<tr style="' + (on ? "" : "opacity:.45") + '"><td><input type="checkbox" data-i="' + i + '" data-f="inc"' + (on ? " checked" : "") + ' style="width:18px;height:18px"></td><td>' + (on ? ++n : "—") + '</td><td><input type="date" data-i="' + i + '" data-f="date" value="' + acEsc(r.date || "") + '"><div style="font-size:10.5px;color:var(--ink-soft)">' + acEsc(p ? (p.dayName || "") + " " + p.hijri : "") + '</div></td><td><input type="number" min="0" data-i="' + i + '" data-f="minutes" value="' + (r.minutes || "") + '"></td><td><input type="text" data-i="' + i + '" data-f="note" value="' + acEsc(r.note || "") + '"></td><td><button class="export-btn" style="padding:3px 6px" data-del="' + i + '" type="button">✕</button></td></tr>'; }).join("")
+        : '<tr><td colspan="6" style="padding:10px;color:var(--ink-soft)">لا توجد أيام تأخير مسجلة في الفترة — اختر المعلم والفترة أو أضف يومًا</td></tr>') +
+      '</tbody><tfoot><tr><td colspan="3">المجموع (' + (n === 1 ? "يوم واحد" : n === 2 ? "يومان" : n <= 10 ? n + " أيام" : n + " يومًا") + ')</td><td>' + tot + '</td><td colspan="2">' + acEsc(alFmtHM(tot)) + "</td></tr></tfoot></table>";
+  }
   function alVals() {
     const d = alEl("alDate").value, p = d ? wpDateParts(d) : null, t = alEl("alType").value;
-    return { type: t, typeName: t ? AL_TYPES[t][0] : "", teacher: alEl("alTeacher").value, civil: ackNormCivil(alEl("alCivil").value),
+    const v = { type: t, typeName: t ? AL_TYPES[t][0] : "", teacher: alEl("alTeacher").value, civil: ackNormCivil(alEl("alCivil").value),
       day: alEl("alDay").value || (p && p.dayName) || "", dateIso: d, hijri: p ? p.hijri : "", greg: d ? ioGreg(d) : "",
       body: alEl("alBody").value.trim(), prev: alPrevCount() };
+    if (isLH(t)) { v.lateRows = alLate.map(r => Object.assign({}, r)); v.lateTotal = alLateTotal(); v.lateFrom = alEl("alLFrom").value; v.lateTo = alEl("alLTo").value; }
+    return v;
   }
   function alDefaultBody() {
     const v = alVals(); if (!v.type) return "";
+    if (isLH(v.type)) return "نود تنبيهكم بأن ساعات تأخيركم بلغت (" + alFmtHM(v.lateTotal) + ")، لذلك تم تنبيهكم" + (v.type === "lateHours2" ? " للمرة الثانية" : v.type === "lateHours3" ? " للمرة الثالثة" : "") + "، ونأمل منكم الالتزام بالحضور المبكر.\nوشكرًا.";
     const when = v.hijri ? " يوم " + v.day + " الموافق " + v.hijri : "";
     const rep = v.prev > 0 ? "، وتكرار ذلك منكم رغم مساءلتكم عنه (" + (v.prev === 1 ? "مرة واحدة" : v.prev === 2 ? "مرتين" : v.prev <= 10 ? v.prev + " مرات" : v.prev + " مرة") + ")" : "";
     const what = v.type === "other" ? "ما لوحظ عليكم من مخالفة" : "ما لوحظ من " + AL_TYPES[v.type][1];
     return "نظرًا ل" + what + when + rep + "، نرجو منكم الالتزام " + AL_TYPES[v.type][2] + "، وفي حال تكرار ذلك سيتم اتخاذ الإجراء النظامي حيال ذلك.";
   }
   function alSync(regen) {
+    alEl("alLateBox").style.display = isLH(alEl("alType").value) ? "" : "none";
     const v = alVals();
     alEl("alInfo").textContent = !v.teacher ? "" : (v.civil ? "" : "لا يوجد سجل مدني محفوظ لهذا المعلم — اكتبه هنا ليُحفظ في بياناته. ") + (v.prev ? "عدد المساءلات المحفوظة له من هذا النوع: " + v.prev : "");
     if (regen) alEl("alBody").value = alDefaultBody();
@@ -9650,7 +9732,7 @@ ${contentEl.innerHTML}
     if (!v.teacher) { if (!quiet) { showToast("اختر المعلم ليُحفظ التنبيه في مجلده"); alEl("alTeacher").focus(); } return false; }
     if (!Array.isArray(data.officialAlerts)) data.officialAlerts = [];
     const old = alCurId && data.officialAlerts.find(r => r.id === alCurId);
-    const rec = Object.assign({}, v, { title: "تنبيه — " + v.typeName, id: old ? old.id : "al" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), createdAt: old ? old.createdAt : Date.now(), updatedAt: Date.now() });
+    const rec = Object.assign({}, v, { title: isLH(v.type) ? v.typeName : "تنبيه — " + v.typeName, id: old ? old.id : "al" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), createdAt: old ? old.createdAt : Date.now(), updatedAt: Date.now() });
     if (old) Object.assign(old, rec); else data.officialAlerts.push(rec);
     alCurId = rec.id; saveData(); alRenderSaved(); alEditNote();
     if (!quiet) showToast((old ? "حُدّث التنبيه" : "حُفظ التنبيه") + " في مجلد " + v.teacher);
@@ -9660,7 +9742,35 @@ ${contentEl.innerHTML}
     const r = (data.officialAlerts || []).find(x => x.id === id); if (!r) return;
     r[key + "At"] = Date.now(); r[key + "Count"] = (r[key + "Count"] || 0) + 1; saveData(); alRenderSaved();
   }
+  function alPrintLate(v) {
+    const title = v.typeName || "التنبيه الأول عن ساعات التأخير";
+    const B = "border:1.5px solid #174a59; padding:7px 6px; text-align:center; font-size:15px;";
+    const H = B + " background:#174a59; color:#fff; font-weight:700;";
+    const rec = (data.officialAlerts || []).find(x => x.id === (v.id || alCurId)) || v;
+    const conf = rec.ackId ? linkState(rec).conf : "";
+    const noSign = conf && rec.replyAt && rec.teacherSigned === false;
+    const rows = alLateInc(v.lateRows), tot = rows.reduce((n, r) => n + (Number(r.minutes) || 0), 0), rng = alLateRange(v);
+    const t1 = `<table style="width:100%; border-collapse:collapse; margin:8px 0 12px; table-layout:fixed;">
+        <tr><td style="${H}">اسم المعلم</td><td style="${H}">السجل المدني</td></tr>
+        <tr><td style="${B} font-weight:700; height:32px;">${wpEsc(v.teacher || "")}</td><td style="${B} font-weight:700; letter-spacing:1px;">${wpEsc(v.civil || "")}</td></tr></table>`;
+    const t2 = (rng ? `<div style="text-align:center; font-weight:800; color:#174a59; font-size:15.5px; margin:2px 0 6px;">${wpEsc(rng)}</div>` : "") + `<table style="width:100%; border-collapse:collapse; margin:0 0 12px;">
+        <tr><th style="${H} width:7%">م</th><th style="${H} width:13%">اليوم</th><th style="${H} width:22%">التاريخ الهجري</th><th style="${H} width:17%">التاريخ الميلادي</th><th style="${H} width:13%">دقائق التأخير</th><th style="${H}">ملاحظات</th></tr>
+        ${rows.length ? rows.map((r, i) => { const p = wpDateParts(r.date); return `<tr><td style="${B}">${i + 1}</td><td style="${B}">${wpEsc(p.dayName || "")}</td><td style="${B}">${wpEsc(p.hijri || "")}</td><td style="${B}">${wpEsc(ioGreg(r.date))}</td><td style="${B} font-weight:700;">${Number(r.minutes) || 0}</td><td style="${B}">${wpEsc(r.note || "")}</td></tr>`; }).join("") : `<tr><td colspan="6" style="${B}">—</td></tr>`}
+        <tr><td colspan="4" style="${H}">المجموع</td><td style="${B} font-weight:800; background:#eef5f3;">${tot}</td><td style="${B} font-weight:800; background:#eef5f3;">${wpEsc(alFmtHM(tot))}</td></tr></table>`;
+    const sig = !conf ? "...................." : noSign ? '<b style="color:#9a5b00;">تم العلم ولم يوقّع</b>' : '<b style="color:#146c3a;">تم العلم والتوقيع ✓</b>';
+    const sigDate = conf && conf !== "?" ? wpEsc(wpDateParts(new Date(conf).toISOString().slice(0, 10)).hijri || "") : "......./......./.......";
+    const inner = `${t1}${t2}
+      <div style="font-size:16.5px; line-height:2.1; white-space:pre-line; margin:4px 6px 0; font-weight:600;">${wpEsc(v.body || "")}</div>
+      <div style="display:flex; justify-content:space-between; margin:26px 12px 0; font-size:15px;">
+        <div><b style="color:#174a59;">اسم المعلم:</b> ${wpEsc(v.teacher || "....................")}</div><div>التوقيع: ${sig}</div><div>التاريخ: ${sigDate}</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin:30px 12px 0; font-size:15px;">
+        <div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
+      </div>`;
+    wpOpenDoc(wpShellDoc(title, wpGenericPage(title, inner, v.dateIso || todayISODate()), { fitOnePage: true }), "تنبيه_ساعات_التأخير" + (v.teacher ? "_" + v.teacher : ""));
+  }
   function alPrintRec(v) {
+    if (isLH(v.type)) return alPrintLate(v);
     const title = "خطاب تنبيه";
     const B = "border:1.5px solid #174a59; padding:8px 6px; text-align:center; font-size:15px;";
     const H = B + " background:#174a59; color:#fff; font-weight:700;";
@@ -9706,7 +9816,8 @@ ${contentEl.innerHTML}
   function alClear() {
     alCurId = "";
     linkFiles.alert = []; alEl("alFiles").value = ""; alEl("alFilesInfo").textContent = "";
-    ["alType", "alTeacher", "alCivil", "alDay", "alBody"].forEach(id => alEl(id).value = "");
+    ["alType", "alTeacher", "alCivil", "alDay", "alBody", "alLFrom", "alLTo"].forEach(id => alEl(id).value = "");
+    alLate = []; alLateRender();
     alFillDates(); alEl("alDate").value = ""; alSync(true); alEditNote();
   }
   function alLoad(id) {
@@ -9714,6 +9825,7 @@ ${contentEl.innerHTML}
     alCurId = r.id; alEl("alType").value = r.type || ""; alEl("alTeacher").value = data.teachers.includes(r.teacher) ? r.teacher : "";
     alEl("alCivil").value = r.civil || ""; alEl("alDay").value = r.day || ""; alFillDates();
     if (r.dateIso && ![...alEl("alDate").options].some(o => o.value === r.dateIso)) alEl("alDate").insertAdjacentHTML("beforeend", ioOpt(r.dateIso, (r.hijri || "") + "  —  " + (r.greg || "")));
+    alEl("alLFrom").value = r.lateFrom || ""; alEl("alLTo").value = r.lateTo || ""; alLate = (r.lateRows || []).map(x => Object.assign({}, x)); alLateHints(); alLateRender();
     alEl("alDate").value = r.dateIso || ""; alSync(false); alEl("alBody").value = r.body || ""; alEditNote(); window.scrollTo(0, 0);
   }
   const alOpenFolders = new Set();
@@ -9728,12 +9840,12 @@ ${contentEl.innerHTML}
     box.innerHTML = names.map(n => {
       const list = groups[n].slice().sort((a, b) => String(b.dateIso || "").localeCompare(String(a.dateIso || "")) || b.createdAt - a.createdAt);
       return '<div class="ack-card2' + (alOpenFolders.has(n) ? " open" : "") + '" data-t="' + acEsc(n) + '"><div class="hd"><span class="ic">📁</span><span class="tx"><b>' + acEsc(n) + '</b><span class="sub">آخر تنبيه: ' + acEsc(list[0].hijri || "—") + '</span></span><span class="pill part">' + list.length + "</span></div>" +
-        '<div class="ack-rows">' + list.map(r => '<div class="ack-item" data-id="' + r.id + '"><div class="hd"><b>🔔 تنبيه — ' + acEsc(r.typeName) + '</b><span class="pill">' + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + "</span></div>" +
+        '<div class="ack-rows">' + list.map(r => '<div class="ack-item" data-id="' + r.id + '"><div class="hd"><b>🔔 ' + acEsc(isLH(r.type) ? r.typeName : "تنبيه — " + r.typeName) + '</b><span class="pill">' + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + "</span></div>" +
           '<div class="sub" style="font-size:12px; color:var(--ink-soft); margin-top:4px;">' + acEsc((r.body || "").slice(0, 110)) + (r.body && r.body.length > 110 ? "…" : "") + "</div>" +
           '<div class="io-st">' +
             (r.printedAt ? '<span class="io-b ok">🖨️ طُبع' + alTimes(r.printedCount) + " — " + acEsc(ioStamp(r.printedAt)) + "</span>" : '<span class="io-b no">لم يُطبع</span>') +
             (r.sentAt ? '<span class="io-b ok">📱 أُرسل واتساب' + alTimes(r.sentCount) + " — " + acEsc(ioStamp(r.sentAt)) + "</span>" : '<span class="io-b no">لم يُرسل</span>') +
-            (r.ackId ? (linkState(r).conf ? '<span class="io-b ok">✅ اطّلع وأكّد</span>' : '<span class="io-b no">⏳ بانتظار تأكيد الاطلاع</span>') : "") +
+            (r.ackId ? (linkState(r).conf ? (isLH(r.type) ? (r.replyAt && r.teacherSigned === false ? '<span class="io-b no">👁️ تم العلم ولم يوقّع</span>' : '<span class="io-b ok">✍️ تم العلم والتوقيع</span>') : '<span class="io-b ok">✅ اطّلع وأكّد</span>') : '<span class="io-b no">⏳ بانتظار تأكيد الاطلاع</span>') : "") +
             '<label class="io-chk"><input type="checkbox" data-flag="delivered"' + (r.delivered ? " checked" : "") + '> 📨 تم تسليمه للمعلم</label>' +
             '<label class="io-chk"><input type="checkbox" data-flag="signed"' + (r.signed ? " checked" : "") + '> ✍️ تم توقيعه</label>' +
           "</div>" +
@@ -9762,8 +9874,25 @@ ${contentEl.innerHTML}
   });
   alEl("alSearch").addEventListener("input", alRenderSaved);
   alEl("alGoSaved").addEventListener("click", () => setTimeout(() => alEl("alSavedHead").scrollIntoView({ behavior: "smooth", block: "start" }), 60));
-  alEl("alType").addEventListener("change", () => alSync(true));
-  alEl("alTeacher").addEventListener("change", () => { alEl("alCivil").value = (data.teacherCivil || {})[alEl("alTeacher").value] || ""; alSync(true); });
+  alEl("alType").addEventListener("change", () => {
+    if (isLH(alEl("alType").value)) {
+      if (!alEl("alDate").value) { const td = todayISODate(); if (dayNameFromDate(td)) { alEl("alDay").value = dayNameFromDate(td); alFillDates(); alEl("alDate").value = td; } }
+      alLateLoad();
+    }
+    alSync(true);
+  });
+  ["alLFrom", "alLTo"].forEach(id => alEl(id).addEventListener("change", () => { alLateLoad(); alSync(true); }));
+  alEl("alLateReload").addEventListener("click", () => { alLateLoad(); alSync(true); });
+  alEl("alLateAdd").addEventListener("click", () => { alLate.push({ date: todayISODate(), minutes: 0, note: "", inc: true }); alLateRender(); });
+  alEl("alLateRows").addEventListener("change", e => {
+    const el = e.target.closest("input[data-f]"); if (!el) return;
+    const r = alLate[Number(el.dataset.i)]; if (!r) return;
+    r[el.dataset.f] = el.dataset.f === "inc" ? el.checked : el.dataset.f === "minutes" ? Math.max(0, Number(el.value) || 0) : el.value;
+    if (el.dataset.f === "date") alLate.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+    if (el.dataset.f !== "note") setTimeout(() => { alLateRender(); alSync(true); }, 0);
+  });
+  alEl("alLateRows").addEventListener("click", e => { const b = e.target.closest("button[data-del]"); if (!b) return; alLate.splice(Number(b.dataset.del), 1); alLateRender(); alSync(true); });
+  alEl("alTeacher").addEventListener("change", () => { alEl("alCivil").value = (data.teacherCivil || {})[alEl("alTeacher").value] || ""; if (isLH(alEl("alType").value)) alLateLoad(); alSync(true); });
   alEl("alCivil").addEventListener("change", () => {
     const t = alEl("alTeacher").value, c = ackNormCivil(alEl("alCivil").value); alEl("alCivil").value = c;
     if (t && /^[12]\d{9}$/.test(c) && (data.teacherCivil || {})[t] !== c) { if (!data.teacherCivil) data.teacherCivil = {}; data.teacherCivil[t] = c; saveData(); showToast("حُفظ السجل المدني في بيانات المعلم"); }
@@ -9845,9 +9974,17 @@ ${contentEl.innerHTML}
             }
             y += 54 + vh;
           });
+          if (b.body === null) { y += 24; return; }
           ctx.font = "500 29px " + F; const bl = nfWrap(ctx, b.body || " ", IW - 40); const bh = bl.length * 48 + 30;
           if (draw) { ctx.strokeStyle = "#174a59"; ctx.lineWidth = 2; ctx.strokeRect(M, y, IW, bh); ctx.fillStyle = "#111"; ctx.textAlign = "right"; bl.forEach((ln, i) => ctx.fillText(ln, W - M - 20, y + 46 + i * 48)); }
           y += bh + 24;
+        } else if (b.t === "grid") {
+          const tw = b.widths.reduce((n, w) => n + w, 0), ws = b.widths.map(w => IW * w / tw);
+          const cell = (txt, x, w, yy, h, head, bold) => { if (!draw) return; ctx.strokeStyle = "#174a59"; ctx.lineWidth = 2; if (head) { ctx.fillStyle = "#174a59"; ctx.fillRect(x, yy, w, h); } ctx.strokeRect(x, yy, w, h); ctx.fillStyle = head ? "#fff" : "#111"; ctx.textAlign = "center"; ctx.font = (head || bold ? "700 " : "500 ") + (head ? "24px " : "25px ") + F; let tx = String(txt || ""); while (tx.length > 1 && ctx.measureText(tx).width > w - 12) tx = tx.slice(0, -1); ctx.fillText(tx, x + w / 2, yy + h / 2 + 9); };
+          let x = W - M; b.headers.forEach((hd, i) => { x -= ws[i]; cell(hd, x, ws[i], y, 52, true); }); y += 52;
+          (b.rows.length ? b.rows : [b.headers.map(() => "")]).forEach(r => { let xx = W - M; r.forEach((c, i) => { xx -= ws[i]; cell(c, xx, ws[i], y, 50, false, i === 4); }); y += 50; });
+          if (b.foot) { const w1 = ws.slice(0, 4).reduce((n, w) => n + w, 0); cell(b.foot[0], W - M - w1, w1, y, 54, true); cell(b.foot[1], M, IW - w1, y, 54, false, true); y += 54; }
+          y += 24;
         } else if (b.t === "sig") {
           rowText(b.items, y + 34, "500 28px " + F); y += 60;
         } else if (b.t === "box") {
@@ -9892,6 +10029,19 @@ ${contentEl.innerHTML}
   }
   function alDocSpec(v) {
     const dots = "...................";
+    if (isLH(v.type)) {
+      const rows = alLateInc(v.lateRows), tot = rows.reduce((n, r) => n + (Number(r.minutes) || 0), 0), rng = alLateRange(v);
+      return { title: v.typeName || "التنبيه الأول عن ساعات التأخير", dateIso: v.dateIso, blocks: [
+        { t: "table", groups: [[["اسم المعلم", v.teacher, 1], ["السجل المدني", v.civil, 1]]], body: null },
+        ...(rng ? [{ t: "text", text: rng, font: "800 27px ", align: "center", color: "#174a59", gap: 6 }] : []),
+        { t: "grid", headers: ["م", "اليوم", "التاريخ الهجري", "التاريخ الميلادي", "الدقائق", "ملاحظات"], widths: [6, 12, 24, 18, 11, 29],
+          rows: rows.map((r, i) => { const p = wpDateParts(r.date); return [String(i + 1), p.dayName || "", p.hijri || "", ioGreg(r.date), String(Number(r.minutes) || 0), r.note || ""]; }),
+          foot: ["المجموع", String(tot) + " دقيقة = " + alFmtHM(tot)] },
+        { t: "text", text: v.body || "", font: "700 30px " },
+        { t: "sig", items: ["اسم المعلم: " + (v.teacher || dots), "التوقيع: " + dots, "التاريخ: ....../....../......"] },
+        { t: "sig", items: ["مدير المدرسة: موسى آل عبيد", "التوقيع: " + dots, "التاريخ: ....../....../......"] }
+      ] };
+    }
     return { title: "خطاب تنبيه", dateIso: v.dateIso, blocks: [
       { t: "text", text: "المكرم المعلم / " + (v.teacher || dots) + "   وفقه الله", font: "800 30px " },
       { t: "text", text: "السلام عليكم ورحمة الله وبركاته", font: "800 30px ", align: "center", color: "#174a59" },
@@ -9938,7 +10088,11 @@ ${contentEl.innerHTML}
   }
   function linkBody(kind, r) {
     const lines = [];
-    if (kind === "alert") {
+    if (kind === "alert" && isLH(r.type)) {
+      { const rg = alLateRange(r); if (rg) lines.push(rg); }
+      alLateInc(r.lateRows).forEach((x, i) => { const p = wpDateParts(x.date); lines.push((i + 1) + "- " + (p.dayName || "") + " " + p.hijri + " — " + x.minutes + " دقيقة" + (x.note ? " (" + x.note + ")" : "")); });
+      lines.push("المجموع: " + (r.lateTotal || 0) + " دقيقة = " + alFmtHM(r.lateTotal));
+    } else if (kind === "alert") {
       lines.push("نوع المخالفة: " + (r.typeName || ""));
     } else {
       if (r.period) lines.push("الحصة: " + r.period);
@@ -9955,7 +10109,7 @@ ${contentEl.innerHTML}
   const IO_ABSENCE_OPTIONS = ["إجازة اضطرارية وتم رفعها في فارس", "إجازة اضطرارية وسأرفعها في فارس", "إجازة مرضية وتم رفعها في فارس", "إجازة مرضية وسأرفعها في فارس", "إجازة مرافق وتم رفعها في فارس", "إجازة مرافق وسأرفعها في فارس", "موعد"];
   const IO_REPLY_TYPES = ["absence", "missClass", "lateClass", "missWait", "refuseWait", "lineup", "lateLineup", "late"];
   const linkIsReply = (kind, r) => kind === "inq" && IO_REPLY_TYPES.includes(r.type);
-  function linkTitle(kind, r) { return kind === "alert" ? "تنبيه — " + (r.typeName || "") : (r.title || ioTitleOf(r)); }
+  function linkTitle(kind, r) { return kind === "alert" ? (isLH(r.type) ? r.typeName : "تنبيه — " + (r.typeName || "")) : (r.title || ioTitleOf(r)); }
   // ينشئ رابط الاطلاع (أو يعيد استخدام السابق) ثم يفتح واتساب المعلم
   function linkSend(kind, r, files) {
     const phone = (data.teacherPhones[r.teacher] || "").trim();
@@ -9983,6 +10137,7 @@ ${contentEl.innerHTML}
       const dp = wpDateParts(todayISODate());
       const doc = { title, body: linkBody(kind, r), dateText: (dp.dayName || "") + " " + dp.hijri + " — " + dp.greg, hashes: { [h]: r.teacher }, createdAt: new Date().toISOString() };
       if (files && files.length) doc.attachments = files.map(a => ({ name: a.name, type: a.type, data: a.data }));
+      if (kind === "alert" && isLH(r.type)) doc.mode = "sign";
       if (linkIsReply(kind, r)) { doc.mode = "reply"; if (r.type === "absence") doc.options = IO_ABSENCE_OPTIONS.slice(); }
       await window.__fbdb.collection("notices").doc(id).set(doc);
       if (!Array.isArray(data.notices)) data.notices = [];
@@ -10056,7 +10211,7 @@ ${contentEl.innerHTML}
       '<div class="sub" style="font-size:12px; color:var(--ink-soft); margin-top:3px;">' + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + (r.attachNames && r.attachNames.length ? " — 📎 " + r.attachNames.length + " مرفق" : "") + "</div>" +
       '<div class="la-steps">' +
         '<div class="la-step ok"><b>📤 الإرسال</b>' + acEsc(ioStamp(r.linkSentAt)) + (r.linkSentCount > 1 ? "<br>(" + r.linkSentCount + " مرات)" : "") + "</div>" +
-        '<div class="la-step ' + (s.conf ? "ok" : "wait") + '"><b>👁️ الاطلاع والتأكيد</b>' + (s.conf ? acEsc(laFmt(s.conf)) : "بانتظار المعلم") + "</div>" +
+        '<div class="la-step ' + (s.conf ? (isLH(r.type) && r.replyAt && r.teacherSigned === false ? "wait" : "ok") : "wait") + '"><b>👁️ الاطلاع والتأكيد</b>' + (s.conf ? (isLH(r.type) ? (r.replyAt && r.teacherSigned === false ? "تم العلم ولم يوقّع<br>" : "تم العلم والتوقيع<br>") : "") + acEsc(laFmt(s.conf)) : "بانتظار المعلم") + "</div>" +
         '<div class="la-step ' + (s.appr ? "ok" : "") + '"><b>🏁 الاعتماد</b><label><input type="checkbox" data-appr' + (s.appr ? " checked" : "") + (s.conf ? "" : " disabled") + "> " + (s.appr ? "معتمد" : "اعتماد") + "</label>" + (s.appr && r.approvedAt ? "<br>" + acEsc(ioStamp(r.approvedAt)) : "") + "</div>" +
       "</div>" +
       (r.replyAt ? '<div class="io-reply"><b>إفادة المعلم:</b> ' + acEsc(r.teacherReply || "") + '<div style="margin-top:4px; font-weight:800; color:' + (r.teacherSigned ? "#146c3a" : "#9a2f23") + ';">' + (r.teacherSigned ? "✍️ موقّع ✓" : "لم يوقّع المعلم") + "</div></div>" : "") +
@@ -10791,7 +10946,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-08-5";
+window.APP_BUILD = "2026-11-08-10";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
