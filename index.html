@@ -2751,6 +2751,7 @@
     if (!out.waitAckState || typeof out.waitAckState !== "object" || Array.isArray(out.waitAckState)) out.waitAckState = {};
     if (!Array.isArray(out.holidays)) out.holidays = [];
     if (!out.shiftPlans || typeof out.shiftPlans !== "object" || Array.isArray(out.shiftPlans)) out.shiftPlans = {};
+    if (!out.shiftManual || typeof out.shiftManual !== "object" || Array.isArray(out.shiftManual)) out.shiftManual = {};
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -10586,7 +10587,15 @@ ${contentEl.innerHTML}
       else { state[e.className][e.period] = e.teacher; (occ[e.teacher] = occ[e.teacher] || new Set()).add(e.period); }
     });
     const dayMax = Math.max(0, ...entries.map(e => e.period)); // آخر حصة في اليوم الدراسي
-    const items = [], locked = new Set(); // خلايا ثُبّتت بترحيل سابق فلا تُبدَّل
+    const items = [], locked = new Set();
+    // التعديل اليدوي: معلم يُختار مكان حصة الغائب (منتظر)
+    const man = ((data.shiftManual || {})[date]) || {};
+    Object.entries(man).forEach(([k, t]) => {
+      const [cls, per] = [k.split("|")[0], Number(k.split("|")[1])];
+      if (!state[cls] || state[cls][per] !== null || !t) return;
+      state[cls][per] = t; (occ[t] = occ[t] || new Set()).add(per); locked.add(cls + "|" + per);
+      items.push({ cls, period: per, absent: absentOf[cls + "|" + per], type: "manual", teacher: t, moves: [] });
+    }); // خلايا ثُبّتت بترحيل سابق فلا تُبدَّل
     const last = st => Math.max(...Object.keys(st).map(Number));
     Object.keys(state).sort((a, b) => a.localeCompare(b, "ar")).forEach(cls => {
       const st = state[cls];
@@ -10645,7 +10654,9 @@ ${contentEl.innerHTML}
       }
     });
     items.sort((a, b) => String(a.absent).localeCompare(String(b.absent), "ar") || a.period - b.period);
-    return { day, items };
+    // المعلمون المتاحون في كل حصة بعد الخطة (للتعديل اليدوي)
+    const freeAt = p => data.teachers.filter(t => !unavail(t, p) && !(occ[t] && occ[t].has(p))).sort((a, b) => a.localeCompare(b, "ar"));
+    return { day, items, freeAt };
   }
   const shPer = p => PERIODS[p - 1] || p;
   // تسلسل النقلات بالفصول والحصص والمعلمين
@@ -10666,6 +10677,7 @@ ${contentEl.innerHTML}
   function shDesc(it) {
     if (it.type === "drop") return ["🗑️ الحصة الأخيرة للمعلم الغائب — تُحذف، ولا يوضع لها منتظر أو بدل، ولا تظهر في الجدول المطبوع"];
     if (it.type === "wait") return ["⚠️ تعذّر الترحيل — يوضع منتظر من جدول الانتظار"];
+    if (it.type === "manual") return ["✍️ تعديل يدوي: الأستاذ " + it.teacher + " منتظر"];
     return shSteps(it);
   }
   function shRender() {
@@ -10678,10 +10690,15 @@ ${contentEl.innerHTML}
     const it = shPlan.items;
     if (!it.length) { sum.innerHTML = ""; act.style.display = "none"; list.innerHTML = '<div class="empty-state">لا يوجد معلمون غائبون أو مستأذنون في هذا اليوم في متابعة الدوام</div>'; return; }
     const c = t => it.filter(x => x.type === t).length;
-    sum.innerHTML = '<span style="color:#146c3a">🔀 ترحيل: ' + c("shift") + '</span><span style="color:#174a59">🗑️ حذف آخر حصة: ' + c("drop") + '</span><span style="color:#8a5200">⚠️ تحتاج منتظر: ' + c("wait") + "</span>";
+    sum.innerHTML = '<span style="color:#146c3a">🔀 ترحيل: ' + c("shift") + '</span>' + (c("manual") ? '<span style="color:#174a59">✍️ يدوي: ' + c("manual") + "</span>" : "") + '<span style="color:#174a59">🗑️ حذف آخر حصة: ' + c("drop") + '</span><span style="color:#8a5200">⚠️ تحتاج منتظر: ' + c("wait") + "</span>";
     const groups = {}; it.forEach(x => (groups[x.absent] = groups[x.absent] || []).push(x));
     list.innerHTML = Object.keys(groups).map(a => '<div class="ack-item" style="margin-top:8px;"><div class="hd"><b>المعلم الغائب: ' + acEsc(a) + "</b></div>" +
-      groups[a].map(x => '<div class="ws-st ' + (x.type === "wait" ? "wait" : "signed") + '" style="margin-top:6px;"><div style="font-weight:800;">الحصة ' + acEsc(shPer(x.period)) + " — فصل " + acEsc(x.cls) + "</div>" + shDesc(x).map(d => '<div style="font-weight:600;">' + acEsc(d) + "</div>").join("") + "</div>").join("") + "</div>").join("");
+      groups[a].map(x => {
+        const k = x.cls + "|" + x.period, cur = x.type === "manual" ? x.teacher : "";
+        const opts = [...new Set([cur, ...shPlan.freeAt(x.period)].filter(Boolean))];
+        const sel = x.type === "drop" ? "" : '<div style="margin-top:6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;"><span style="font-size:12px; font-weight:700;">تعديل يدوي (منتظر):</span><select class="select-styled sh-man" data-k="' + acEsc(k) + '" style="flex:1; min-width:150px; padding:5px 8px; font-size:12.5px;"><option value="">' + (cur ? "— إلغاء التعديل اليدوي —" : "— تلقائي —") + "</option>" + opts.map(t => '<option value="' + acEsc(t) + '"' + (t === cur ? " selected" : "") + ">" + acEsc(t) + "</option>").join("") + "</select></div>";
+        return '<div class="ws-st ' + (x.type === "wait" ? "wait" : "signed") + '" style="margin-top:6px;"><div style="font-weight:800;">الحصة ' + acEsc(shPer(x.period)) + " — فصل " + acEsc(x.cls) + "</div>" + shDesc(x).map(d => '<div style="font-weight:600;">' + acEsc(d) + "</div>").join("") + sel + "</div>";
+      }).join("") + "</div>").join("");
     act.style.display = "";
     const ap = (data.shiftPlans || {})[date];
     if (ap) { const n = document.getElementById("shApplied"); n.style.display = ""; n.textContent = "✅ سبق اعتماد ترحيل هذا اليوم في " + ioStamp(ap.at); }
@@ -10689,6 +10706,10 @@ ${contentEl.innerHTML}
   function shApply() {
     if (!shPlan || !shPlan.items.length) return;
     const date = shPlan.date;
+    shPlan.items.filter(x => x.type === "manual").forEach(x => {
+      data.coverageRecords = (data.coverageRecords || []).filter(r => !(r.date === date && r.period === x.period && r.className === x.cls));
+      data.coverageRecords.push({ id: "sm" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date, day: shPlan.day, period: x.period, className: x.cls, absentTeacher: x.absent, subTeacher: x.teacher, note: "منتظر" });
+    });
     shPlan.items.filter(x => x.type === "shift").forEach(x => {
       const m = x.moves.find(y => y.type !== "swap") || x.moves[0];
       data.coverageRecords = (data.coverageRecords || []).filter(r => !(r.date === date && r.period === x.period && r.className === x.cls));
@@ -10725,6 +10746,7 @@ ${contentEl.innerHTML}
           });
         }
         // الحصة الأخيرة للغائب تُحذف ولا تظهر في الجدول
+        else if (x.type === "manual") rs.push({ per: x.period, cls: x.cls, t: x.teacher, note: "منتظر" });
         else if (x.type === "wait") { const c = (data.coverageRecords || []).find(r => r.date === date && r.period === x.period && r.className === x.cls); rs.push({ per: x.period, cls: x.cls, t: c && c.subTeacher ? c.subTeacher : "", note: "منتظر" }); }
       });
       rs.sort((u, v) => u.per - v.per || String(u.cls).localeCompare(String(v.cls), "ar"));
@@ -10752,6 +10774,13 @@ ${contentEl.innerHTML}
   }
   document.getElementById("openShift").addEventListener("click", () => { const d = document.getElementById("shDate"); if (!d.value) d.value = todayISODate(); shRender(); showView("shift"); });
   document.getElementById("shDate").addEventListener("change", shRender);
+  document.getElementById("shList").addEventListener("change", e => {
+    const sel = e.target.closest("select.sh-man"); if (!sel || !shPlan) return;
+    if (!data.shiftManual || typeof data.shiftManual !== "object") data.shiftManual = {};
+    const m = data.shiftManual[shPlan.date] = data.shiftManual[shPlan.date] || {};
+    if (sel.value) m[sel.dataset.k] = sel.value; else delete m[sel.dataset.k];
+    saveData(); shRender(); showToast(sel.value ? "عُيّن الأستاذ " + sel.value + " منتظرًا" : "أُلغي التعديل اليدوي");
+  });
   document.getElementById("shApply").addEventListener("click", shApply);
   document.getElementById("shPrint").addEventListener("click", shPrint);
 
@@ -11163,7 +11192,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-9";
+window.APP_BUILD = "2026-11-14-10";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
