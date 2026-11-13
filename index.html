@@ -10661,7 +10661,6 @@ ${contentEl.innerHTML}
         first = false;
       }
     });
-    out.push((++n) + ") فصل " + it.cls + ": تُحذف الحصة " + shPer(it.deleted));
     return out;
   }
   function shDesc(it) {
@@ -10742,7 +10741,7 @@ ${contentEl.innerHTML}
           <thead><tr><th class="c-p" style="width:11%">الحصة</th><th class="c-cls" style="width:8%">الفصل</th><th class="c-name" style="width:19%">المعلم</th><th class="c-sign" style="width:15%">التوقيع</th><th class="c-note" style="width:47%">الملاحظة</th></tr></thead>
           <tbody>${rs.map(r => `<tr><td class="c-p">${wpEsc(shPer(r.per))}</td><td class="c-cls">${wpEsc(r.cls)}</td><td class="c-name">${wpEsc(r.t)}</td><td class="c-sign"></td><td class="c-note">${wpEsc(r.note)}</td></tr>`).join("")}</tbody>
         </table>
-        ${(() => { const sh = groups[a].filter(x => x.type === "shift"); return sh.length ? `<div style="margin:12px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:8px 12px; font-size:13.5px; line-height:1.9; break-inside:avoid;"><div style="font-weight:800; color:#174a59; margin-bottom:2px;">تسلسل النقلات:</div>${sh.map(x => `<div style="margin-top:6px;"><b>حصة ${wpEsc(shPer(x.period))} — فصل ${wpEsc(x.cls)}:</b>${shSteps(x).map(st => `<div style="display:flex; justify-content:space-between; align-items:flex-end; gap:10px; border-bottom:1px dotted #9fb8b2; padding:3px 0;"><span>${wpEsc(st)}</span>${/الأستاذ/.test(st) ? '<span style="white-space:nowrap; color:#174a59; font-weight:700;">التوقيع: ....................</span>' : ""}</div>`).join("")}</div>`).join("")}</div>` : ""; })()}
+        ${(() => { const sh = groups[a].filter(x => x.type === "shift"); return sh.length ? `<div style="margin:12px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:8px 12px; font-size:13.5px; line-height:1.9; break-inside:avoid;"><div style="font-weight:800; color:#174a59; margin-bottom:2px;">سلسلة التنقلات:</div>${sh.map(x => `<div style="margin-top:6px;"><b>حصة ${wpEsc(shPer(x.period))} — فصل ${wpEsc(x.cls)}:</b>${shSteps(x).map(st => `<div style="display:flex; justify-content:space-between; align-items:flex-end; gap:10px; border-bottom:1px dotted #9fb8b2; padding:3px 0;"><span>${wpEsc(st)}</span>${/الأستاذ/.test(st) ? '<span style="white-space:nowrap; color:#174a59; font-weight:700;">التوقيع: ....................</span>' : ""}</div>`).join("")}</div>`).join("")}</div>` : ""; })()}
         <div class="sigs">
           <div class="sig"><div class="t">وكيل الشؤون التعليمية</div><div class="n">موسى آل ضاحي</div></div>
           <div class="sig"><div class="t">مدير المدرسة</div><div class="n">موسى آل عبيد</div></div>
@@ -11164,7 +11163,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-8";
+window.APP_BUILD = "2026-11-14-9";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
