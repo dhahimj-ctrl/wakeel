@@ -1728,7 +1728,35 @@
         <h2>حصر حصص الانتظار</h2>
         <div class="count">ما حضره كل معلم</div>
       </button>
+      <button class="tile coverage" id="openShift" style="grid-column:1/-1;">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M21 7H9a4 4 0 0 0-4 4v1"/><path d="M7 21l-4-4 4-4"/><path d="M3 17h12a4 4 0 0 0 4-4v-1"/></svg></div>
+        <h2>ترحيل الحصص</h2>
+        <div class="count">نقل الحصص الأخيرة لسد حصص الغائب</div>
+      </button>
     </div>
+  </div>
+
+  <!-- ترحيل الحصص -->
+  <div class="detail" id="shiftView">
+    <div class="back-row">
+      <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
+    </div>
+    <div class="detail-header"><h2>ترحيل الحصص</h2></div>
+    <div class="sched-form">
+      <div class="field" style="margin-bottom:8px;">
+        <label for="shDate">التاريخ</label>
+        <input type="date" id="shDate" class="date-input">
+        <div class="wc-hijri" id="shDateH"></div>
+      </div>
+      <div class="sched-hint" style="text-align:right;">لكل حصة لمعلم غائب أو مستأذن: يُبحث عن معلم لديه حصة أخيرة مع نفس الفصل وهو غير مشغول وقت الحصة الفارغة، فتُنقل حصته إليها وتُحذف الحصة الأخيرة للفصل. إن كان مشغولًا تُحرَّك الحصص المتتالية حتى يصل الفراغ لآخر اليوم، وإن تعذّر ذلك يوضع منتظر.</div>
+    </div>
+    <div id="shSum" class="la-sum" style="margin-top:10px;"></div>
+    <div id="shList"></div>
+    <div class="export-row" id="shActions" style="margin-top:10px; display:none;">
+      <button class="export-btn" id="shApply">✅ اعتماد ونقل لجدول الانتظار</button>
+      <button class="export-btn" id="shPrint">🖨️ طباعة الترحيل</button>
+    </div>
+    <div class="sched-hint" id="shApplied" style="text-align:right; margin-top:6px; color:#146c3a; display:none;"></div>
   </div>
 
   <!-- المساءلات الرسمية -->
@@ -2722,6 +2750,7 @@
     if (!out.waitApprovals || typeof out.waitApprovals !== "object" || Array.isArray(out.waitApprovals)) out.waitApprovals = {};
     if (!out.waitAckState || typeof out.waitAckState !== "object" || Array.isArray(out.waitAckState)) out.waitAckState = {};
     if (!Array.isArray(out.holidays)) out.holidays = [];
+    if (!out.shiftPlans || typeof out.shiftPlans !== "object" || Array.isArray(out.shiftPlans)) out.shiftPlans = {};
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -6480,7 +6509,7 @@ ${pagesHTML}
 <div class="pagefoot"></div>
 ${opts.fitPage ? '<script>(function(){function fit(){var p=document.querySelector(".page");if(!p)return;p.style.zoom="";p.style.maxWidth="none";var land=' + (opts.landscape ? 'true' : 'false') + ';var W=(land?277:190)*96/25.4,H=(land?196:283)*96/25.4;var w=p.scrollWidth,tb=p.querySelector("table.ms-table");if(tb&&tb.scrollWidth>w)w=tb.scrollWidth;var h=p.scrollHeight;var sp=18*96/25.4;var z=Math.min(1,W/w,(H-sp)/Math.max(1,h-sp));if(z<1){p.style.zoom=(z*0.97).toFixed(3);}else{p.style.maxWidth="";}}window.addEventListener("load",fit);window.addEventListener("beforeprint",fit);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);})();<\/script>' : ""}
 ${opts.fitWidth ? '<script>(function(){function fit(){var p=document.querySelector(".page");if(!p)return;p.style.zoom="";p.style.maxWidth="none";var W=' + (opts.landscape ? 277 : 190) + '*96/25.4;var w=p.scrollWidth;var tb=p.querySelector("table.ms-table");if(tb&&tb.scrollWidth>w)w=tb.scrollWidth;if(w>W){p.style.zoom=(W/w*0.98).toFixed(3);}else{p.style.maxWidth="";}}window.addEventListener("load",fit);window.addEventListener("beforeprint",fit);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);})();<\/script>' : ""}
-${opts.fitOnePage ? '<script>(function(){function fit(){var p=document.querySelector(".page");if(!p)return;p.style.zoom="";var land=' + (opts.landscape ? 'true' : 'false') + ';var H=(land?196:283)*96/25.4;var h=p.scrollHeight;if(h>H){p.style.zoom=(H/h*0.98).toFixed(3);}}window.addEventListener("load",fit);window.addEventListener("beforeprint",fit);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);})();<\/script>' : ""}
+${opts.fitOnePage ? '<script>(function(){function fit(){var land=' + (opts.landscape ? 'true' : 'false') + ';var H=(land?196:283)*96/25.4;document.querySelectorAll(".page").forEach(function(p){p.style.zoom="";var h=p.scrollHeight;if(h>H){p.style.zoom=(H/h*0.98).toFixed(3);}});}window.addEventListener("load",fit);window.addEventListener("beforeprint",fit);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);})();<\/script>' : ""}
 ${auto ? '<script>window.addEventListener("load", function () { var go = function () { setTimeout(function () { try { window.print(); } catch (e) {} }, 300); }; if (document.fonts && document.fonts.ready) document.fonts.ready.then(go); else go(); });<\/script>' : ""}
 </body>
 </html>`;
@@ -7500,7 +7529,7 @@ ${contentEl.innerHTML}
   /* مزامنة سجل حصص الانتظار تلقائياً مع حصص الانتظار المسجلة (غياب/استئذان) */
   // حصص الغائب التي تُركت بدون منتظر في «جدول الانتظار» — تظهر في الجداول بعلامة «-»
   function uncoveredRecs(date) {
-    return (data.waitUncovered || []).filter(u => !date || u.date === date)
+    return (data.waitUncovered || []).filter(u => !u.dropped && (!date || u.date === date))
       .filter(u => !data.coverageRecords.some(r => r.date === u.date && r.period === u.period && r.className === u.className))
       .map(u => ({ day: dayNameFromDate(u.date), date: u.date, period: u.period, className: u.className, absentTeacher: u.absentTeacher, subTeacher: "", rank: "", kind: u.kind }));
   }
@@ -8589,7 +8618,9 @@ ${contentEl.innerHTML}
     const day = dayNameFromDate(wt.date);
     if (!day || !wt.absent) return [];
     const ptime = wt.kind === "permission" ? wtPermTime(wt.date, wt.absent) : "";
+    const dropped = (data.waitUncovered || []).filter(u => u.dropped && u.date === wt.date && u.absentTeacher === wt.absent);
     return data.schedule.filter(s => s.day === day && s.teacher === wt.absent && (wt.kind !== "permission" || wtAfterPerm(Number(s.period), ptime)))
+      .filter(s => !dropped.some(u => u.period === Number(s.period) && u.className === s.className))
       .map(s => ({ period: Number(s.period), className: s.className }))
       .sort((a, b) => a.period - b.period || String(a.className).localeCompare(String(b.className), "ar"));
   }
@@ -8925,7 +8956,7 @@ ${contentEl.innerHTML}
     const slots = wtSlots();
     if (!slots.length) { showToast("لا توجد حصص لهذا المعلم"); return false; }
     if (!Array.isArray(data.waitUncovered)) data.waitUncovered = [];
-    data.waitUncovered = data.waitUncovered.filter(u => !(u.date === wt.date && u.absentTeacher === wt.absent));
+    data.waitUncovered = data.waitUncovered.filter(u => u.dropped || !(u.date === wt.date && u.absentTeacher === wt.absent));
     slots.forEach(sl => {
       const i = data.coverageRecords.findIndex(r => r.date === wt.date && r.period === sl.period && r.className === sl.className);
       if (i > -1) data.coverageRecords.splice(i, 1);
@@ -10345,6 +10376,7 @@ ${contentEl.innerHTML}
     document.getElementById("waitHubView").classList.toggle("active", view === "waitHub");
     document.getElementById("waitTableView").classList.toggle("active", view === "waitTable");
     document.getElementById("waitAckView").classList.toggle("active", view === "waitAck");
+    document.getElementById("shiftView").classList.toggle("active", view === "shift");
     document.getElementById("waitDesignView").classList.toggle("active", view === "waitDesign");
     document.getElementById("waitCountView").classList.toggle("active", view === "waitCount");
     document.getElementById("ackView").classList.toggle("active", view === "ack");
@@ -10539,6 +10571,191 @@ ${contentEl.innerHTML}
   document.getElementById("openWaitTable").addEventListener("click", wtOpen);
   document.getElementById("openWaitLog").addEventListener("click", () => { renderAssignmentLogList(); showView("assignmentLog"); });
   document.getElementById("openWaitCount").addEventListener("click", wcOpen);
+  /* ===== ترحيل الحصص: سدّ حصص الغائب بنقل الحصص الأخيرة وحذف آخر حصة للفصل ===== */
+  let shPlan = null;
+  function shCompute(date) {
+    const day = dayNameFromDate(date);
+    if (!day) return { day: null, items: [] };
+    const abs = new Set(wtAbsentees(date)), perm = wtPermitted(date);
+    const unavail = (t, p) => abs.has(t) || perm.some(x => x.teacher === t && wtAfterPerm(p, x.time));
+    const entries = data.schedule.filter(x => x.day === day).map(x => ({ period: Number(x.period), className: x.className, teacher: x.teacher }));
+    const state = {}, occ = {}, absentOf = {};
+    entries.forEach(e => {
+      (state[e.className] = state[e.className] || {});
+      if (unavail(e.teacher, e.period)) { state[e.className][e.period] = null; absentOf[e.className + "|" + e.period] = e.teacher; }
+      else { state[e.className][e.period] = e.teacher; (occ[e.teacher] = occ[e.teacher] || new Set()).add(e.period); }
+    });
+    const dayMax = Math.max(0, ...entries.map(e => e.period)); // آخر حصة في اليوم الدراسي
+    const items = [], locked = new Set(); // خلايا ثُبّتت بترحيل سابق فلا تُبدَّل
+    const last = st => Math.max(...Object.keys(st).map(Number));
+    Object.keys(state).sort((a, b) => a.localeCompare(b, "ar")).forEach(cls => {
+      const st = state[cls];
+      const pending = () => Object.keys(st).map(Number).filter(p => st[p] === null).sort((a, b) => a - b);
+      let guard = 0;
+      while (pending().length && guard++ < 20) {
+        const L = last(st);
+        if (st[L] === null && L !== dayMax) { // فراغ في آخر حصص الفصل لكنها ليست آخر حصة في اليوم ← لا تُحذف، يوضع منتظر
+          st[L] = "WAIT"; items.push({ cls, period: L, absent: absentOf[cls + "|" + L], type: "wait", moves: [] }); continue;
+        }
+        if (st[L] === null) { // الفراغ هو آخر حصة في اليوم ← تُحذف
+          const prev = Math.max(0, ...Object.keys(st).map(Number).filter(q => q < L));
+          items.push({ cls, period: L, absent: absentOf[cls + "|" + L], type: "drop", deleted: L, prev, moves: [] });
+          delete st[L]; continue;
+        }
+        const g = pending()[0];
+        // تفريغ المعلم t وقت الحصة gap بالتبديل مع معلم آخر في الفصل الذي يدرّسه t وقتها
+        const freeBySwap = (t, gap) => {
+          const D = Object.keys(state).find(c => c !== cls && state[c][gap] === t);
+          if (!D || locked.has(D + "|" + gap)) return null;
+          const sd = state[D];
+          const qs = Object.keys(sd).map(Number).filter(q => q !== gap && sd[q] && sd[q] !== "WAIT" && sd[q] !== t).sort((a, b) => Math.abs(a - gap) - Math.abs(b - gap));
+          for (const q of qs) {
+            const u = sd[q];
+            if (locked.has(D + "|" + q)) continue;
+            if (unavail(u, gap) || (occ[u] && occ[u].has(gap))) continue;
+            if (unavail(t, q) || occ[t].has(q)) continue;
+            sd[gap] = u; sd[q] = t; occ[u].delete(q); occ[u].add(gap); occ[t].delete(gap); occ[t].add(q);
+            return { type: "swap", cls: D, a: t, b: u, p: gap, q, undo: () => { sd[gap] = t; sd[q] = u; occ[u].delete(gap); occ[u].add(q); occ[t].delete(q); occ[t].add(gap); } };
+          }
+          return null;
+        };
+        const dfs = (gap, depth) => {
+          const qs = Object.keys(st).map(Number).filter(q => q > gap && st[q] && st[q] !== "WAIT").sort((a, b) => (b === L) - (a === L) || b - a);
+          for (const pass of [0, 1]) { // أولًا بدون تبديل، ثم مع التبديل
+            for (const q of qs) {
+              const t = st[q];
+              if (unavail(t, gap)) continue;
+              let sw = null;
+              if (occ[t] && occ[t].has(gap)) { if (!pass) continue; sw = freeBySwap(t, gap); if (!sw) continue; }
+              else if (pass) continue;
+              // تجربة النقل
+              st[gap] = t; st[q] = null; occ[t].delete(q); occ[t].add(gap);
+              const step = (sw ? [sw] : []).concat([{ type: "move", teacher: t, from: q, to: gap }]);
+              if (q === L) return step;
+              if (depth < 3) { const rest = dfs(q, depth + 1); if (rest) return step.concat(rest); }
+              st[q] = t; st[gap] = null; occ[t].delete(gap); occ[t].add(q);
+              if (sw) sw.undo();
+            }
+          }
+          return null;
+        };
+        const chain = L === dayMax ? dfs(g, 1) : null; // لا يُحذف إلا آخر حصة في اليوم الدراسي
+        if (chain) { chain.forEach(m => { delete m.undo; if (m.type === "swap") { locked.add(m.cls + "|" + m.p); locked.add(m.cls + "|" + m.q); } else locked.add(cls + "|" + m.to); }); delete st[L]; items.push({ cls, period: g, absent: absentOf[cls + "|" + g], type: "shift", moves: chain, deleted: L }); }
+        else { st[g] = "WAIT"; items.push({ cls, period: g, absent: absentOf[cls + "|" + g], type: "wait", moves: [] }); }
+      }
+    });
+    items.sort((a, b) => String(a.absent).localeCompare(String(b.absent), "ar") || a.period - b.period);
+    return { day, items };
+  }
+  const shPer = p => PERIODS[p - 1] || p;
+  // تسلسل النقلات بالفصول والحصص والمعلمين
+  function shSteps(it) {
+    let n = 0, first = true;
+    const out = [];
+    it.moves.forEach(m => {
+      if (m.type === "swap") {
+        out.push((++n) + ") فصل " + m.cls + ": الأستاذ " + m.b + " من الحصة " + shPer(m.q) + " إلى الحصة " + shPer(m.p));
+        out.push((++n) + ") فصل " + m.cls + ": الأستاذ " + m.a + " من الحصة " + shPer(m.p) + " إلى الحصة " + shPer(m.q));
+      } else {
+        out.push((++n) + ") فصل " + it.cls + ": الأستاذ " + m.teacher + " من الحصة " + shPer(m.from) + " إلى الحصة " + shPer(m.to) + (first ? " (مكان المعلم الغائب " + (it.absent || "") + ")" : ""));
+        first = false;
+      }
+    });
+    out.push((++n) + ") فصل " + it.cls + ": تُحذف الحصة " + shPer(it.deleted));
+    return out;
+  }
+  function shDesc(it) {
+    if (it.type === "drop") return ["🗑️ الحصة الأخيرة للمعلم الغائب — تُحذف، ولا يوضع لها منتظر أو بدل، ولا تظهر في الجدول المطبوع"];
+    if (it.type === "wait") return ["⚠️ تعذّر الترحيل — يوضع منتظر من جدول الانتظار"];
+    return shSteps(it);
+  }
+  function shRender() {
+    const date = document.getElementById("shDate").value, p = date ? wpDateParts(date) : null;
+    document.getElementById("shDateH").textContent = p ? (p.dayName || "") + " — " + p.hijri : "";
+    const list = document.getElementById("shList"), sum = document.getElementById("shSum"), act = document.getElementById("shActions");
+    document.getElementById("shApplied").style.display = "none";
+    shPlan = date ? Object.assign({ date }, shCompute(date)) : null;
+    if (!shPlan || !shPlan.day) { sum.innerHTML = ""; act.style.display = "none"; list.innerHTML = '<div class="empty-state">' + (date ? "اليوم المختار ليس يوم دوام" : "اختر التاريخ") + "</div>"; return; }
+    const it = shPlan.items;
+    if (!it.length) { sum.innerHTML = ""; act.style.display = "none"; list.innerHTML = '<div class="empty-state">لا يوجد معلمون غائبون أو مستأذنون في هذا اليوم في متابعة الدوام</div>'; return; }
+    const c = t => it.filter(x => x.type === t).length;
+    sum.innerHTML = '<span style="color:#146c3a">🔀 ترحيل: ' + c("shift") + '</span><span style="color:#174a59">🗑️ حذف آخر حصة: ' + c("drop") + '</span><span style="color:#8a5200">⚠️ تحتاج منتظر: ' + c("wait") + "</span>";
+    const groups = {}; it.forEach(x => (groups[x.absent] = groups[x.absent] || []).push(x));
+    list.innerHTML = Object.keys(groups).map(a => '<div class="ack-item" style="margin-top:8px;"><div class="hd"><b>المعلم الغائب: ' + acEsc(a) + "</b></div>" +
+      groups[a].map(x => '<div class="ws-st ' + (x.type === "wait" ? "wait" : "signed") + '" style="margin-top:6px;"><div style="font-weight:800;">الحصة ' + acEsc(shPer(x.period)) + " — فصل " + acEsc(x.cls) + "</div>" + shDesc(x).map(d => '<div style="font-weight:600;">' + acEsc(d) + "</div>").join("") + "</div>").join("") + "</div>").join("");
+    act.style.display = "";
+    const ap = (data.shiftPlans || {})[date];
+    if (ap) { const n = document.getElementById("shApplied"); n.style.display = ""; n.textContent = "✅ سبق اعتماد ترحيل هذا اليوم في " + ioStamp(ap.at); }
+  }
+  function shApply() {
+    if (!shPlan || !shPlan.items.length) return;
+    const date = shPlan.date;
+    shPlan.items.filter(x => x.type === "shift").forEach(x => {
+      const m = x.moves.find(y => y.type !== "swap") || x.moves[0];
+      data.coverageRecords = (data.coverageRecords || []).filter(r => !(r.date === date && r.period === x.period && r.className === x.cls));
+      data.coverageRecords.push({ id: "sh" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date, day: shPlan.day, period: x.period, className: x.cls, absentTeacher: x.absent, subTeacher: m.teacher, shiftFrom: m.from, note: "ترحيل من الحصة " + shPer(m.from) });
+    });
+    // الحصة الأخيرة المحذوفة: لا منتظر لها في جدول الانتظار
+    shPlan.items.filter(x => x.type === "drop").forEach(x => {
+      data.coverageRecords = (data.coverageRecords || []).filter(r => !(r.date === date && r.period === x.period && r.className === x.cls));
+      if (!Array.isArray(data.waitUncovered)) data.waitUncovered = [];
+      if (!data.waitUncovered.some(u => u.date === date && u.absentTeacher === x.absent && u.period === x.period && u.className === x.cls))
+        data.waitUncovered.push({ date, absentTeacher: x.absent, period: x.period, className: x.cls, dropped: true });
+    });
+    if (!data.shiftPlans || typeof data.shiftPlans !== "object") data.shiftPlans = {};
+    data.shiftPlans[date] = { at: Date.now(), items: shPlan.items };
+    saveData(); shRender(); showToast("تم اعتماد الترحيل — الحصص المرحّلة ظهرت في جدول الانتظار، والباقي يحتاج منتظرًا");
+  }
+  function shPrint() {
+    if (!shPlan || !shPlan.items.length) return;
+    const date = shPlan.date, p = wpDateParts(date), permSet = new Set(wtPermitted(date).map(x => x.teacher));
+    const groups = {}; shPlan.items.forEach(x => (groups[x.absent] = groups[x.absent] || []).push(x));
+    const pages = Object.keys(groups).map(a => {
+      const rs = [];
+      groups[a].forEach(x => {
+        if (x.type === "shift") {
+          let first = true;
+          x.moves.forEach(m => {
+            if (m.type === "swap") {
+              rs.push({ per: m.p, cls: m.cls, t: m.b, note: "تحريك: تبديل مع الأستاذ " + m.a + " (من الحصة " + shPer(m.q) + " إلى " + shPer(m.p) + ")" });
+              rs.push({ per: m.q, cls: m.cls, t: m.a, note: "تحريك: تبديل مع الأستاذ " + m.b + " (من الحصة " + shPer(m.p) + " إلى " + shPer(m.q) + ")" });
+            } else {
+              rs.push({ per: m.to, cls: x.cls, t: m.teacher, note: first ? "بدل الحصة " + shPer(m.from) : "تحريك: من الحصة " + shPer(m.from) + " إلى الحصة " + shPer(m.to) });
+              first = false;
+            }
+          });
+        }
+        // الحصة الأخيرة للغائب تُحذف ولا تظهر في الجدول
+        else if (x.type === "wait") { const c = (data.coverageRecords || []).find(r => r.date === date && r.period === x.period && r.className === x.cls); rs.push({ per: x.period, cls: x.cls, t: c && c.subTeacher ? c.subTeacher : "", note: "منتظر" }); }
+      });
+      rs.sort((u, v) => u.per - v.per || String(u.cls).localeCompare(String(v.cls), "ar"));
+      const kind = permSet.has(a) ? "permission" : "absence";
+      return `<section class="page">
+        ${wpBandHTML()}
+        <div class="when"><div><b>اليوم:</b> ${wpEsc(p.dayName)}</div><div><b>التاريخ:</b> ${wpEsc(p.hijri)}</div></div>
+        <div class="letter">
+          <p class="salam">السلام عليكم ورحمة الله وبركاته</p>
+          <p class="to">إخواني المعلمين</p>
+          <p class="body">نظرًا ${kindVerb(kind)} الزميل المعلم ( <b>${wpEsc(a)}</b> ) فقد تم تكليفكم بسد الحصص حسب الجدول التالي:</p>
+        </div>
+        <table class="grid">
+          <thead><tr><th class="c-p" style="width:11%">الحصة</th><th class="c-cls" style="width:8%">الفصل</th><th class="c-name" style="width:19%">المعلم</th><th class="c-sign" style="width:15%">التوقيع</th><th class="c-note" style="width:47%">الملاحظة</th></tr></thead>
+          <tbody>${rs.map(r => `<tr><td class="c-p">${wpEsc(shPer(r.per))}</td><td class="c-cls">${wpEsc(r.cls)}</td><td class="c-name">${wpEsc(r.t)}</td><td class="c-sign"></td><td class="c-note">${wpEsc(r.note)}</td></tr>`).join("")}</tbody>
+        </table>
+        ${(() => { const sh = groups[a].filter(x => x.type === "shift"); return sh.length ? `<div style="margin:12px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:8px 12px; font-size:13.5px; line-height:1.9; break-inside:avoid;"><div style="font-weight:800; color:#174a59; margin-bottom:2px;">تسلسل النقلات:</div>${sh.map(x => `<div style="margin-top:6px;"><b>حصة ${wpEsc(shPer(x.period))} — فصل ${wpEsc(x.cls)}:</b>${shSteps(x).map(st => `<div style="display:flex; justify-content:space-between; align-items:flex-end; gap:10px; border-bottom:1px dotted #9fb8b2; padding:3px 0;"><span>${wpEsc(st)}</span>${/الأستاذ/.test(st) ? '<span style="white-space:nowrap; color:#174a59; font-weight:700;">التوقيع: ....................</span>' : ""}</div>`).join("")}</div>`).join("")}</div>` : ""; })()}
+        <div class="sigs">
+          <div class="sig"><div class="t">وكيل الشؤون التعليمية</div><div class="n">موسى آل ضاحي</div></div>
+          <div class="sig"><div class="t">مدير المدرسة</div><div class="n">موسى آل عبيد</div></div>
+        </div>
+      </section>`;
+    }).join("");
+    wpOpenDoc(wpShellDoc("ترحيل الحصص - " + date, pages, { fitOnePage: true }), "ترحيل_الحصص_" + date);
+  }
+  document.getElementById("openShift").addEventListener("click", () => { const d = document.getElementById("shDate"); if (!d.value) d.value = todayISODate(); shRender(); showView("shift"); });
+  document.getElementById("shDate").addEventListener("change", shRender);
+  document.getElementById("shApply").addEventListener("click", shApply);
+  document.getElementById("shPrint").addEventListener("click", shPrint);
+
   ["wcTeacher", "wcFrom", "wcTo", "wcMode"].forEach(id => document.getElementById(id).addEventListener("change", wcRender));
   document.getElementById("wcPrintAll").addEventListener("click", () => { wcRender(); if (wc.printDoc) wc.printDoc(); });
   document.getElementById("wcClear").addEventListener("click", () => {
@@ -10947,7 +11164,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-08-11";
+window.APP_BUILD = "2026-11-14-8";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
