@@ -10761,7 +10761,8 @@ ${contentEl.innerHTML}
     if (!list.length) { showToast("لا يوجد معلمون تأثرت حصصهم بالترحيل أو الانتظار"); return; }
     const B = "border:1.5px solid #174a59; padding:7px 4px; text-align:center; font-size:14px;";
     const H = B + " background:#174a59; color:#fff; font-weight:700;";
-    const pers = Array.from({ length: max }, (_, i) => i + 1);
+    // بعد الترحيل تُحذف آخر حصة في اليوم الدراسي لجميع الفصول
+    const pers = Array.from({ length: Math.max(0, max - 1) }, (_, i) => i + 1);
     const rows = list.map(t => `<tr><td style="${B} font-weight:800; text-align:right; padding-right:8px; white-space:nowrap;">${wpEsc(t)}</td>${pers.map(per => {
       const cls = (grid[t] || {})[per], tag = (mark[t] || {})[per];
       return `<td style="${B}${tag === "غائب" || tag === "مستأذن" ? " background:#fdecea;" : tag ? " background:#fff4df;" : ""}">${cls ? `<b>${wpEsc(cls)}</b>` : ""}${tag ? `<div style="font-size:11px; color:#8a5200; font-weight:700;">${wpEsc(tag)}</div>` : ""}</td>`;
@@ -10769,7 +10770,7 @@ ${contentEl.innerHTML}
     const ttl = all === true ? "جدول اليوم لجميع المعلمين بعد الترحيل" : "جدول اليوم بعد الترحيل";
     const inner = `<table style="width:100%; border-collapse:collapse; margin-top:10px;">
         <tr><th style="${H} width:18%">المعلم</th>${pers.map(per => `<th style="${H}">${wpEsc(shPer(per))}</th>`).join("")}</tr>${rows}</table>
-      <div style="font-size:12.5px; margin-top:8px; color:#5b6660;">الخلايا الملوّنة: حصص تغيّرت بالترحيل أو التحريك أو التبديل أو الانتظار${all === true ? "، والحمراء حصص المعلم الغائب أو المستأذن" : ""}. الحصص المحذوفة من آخر اليوم لا تظهر.</div>
+      <div style="font-size:12.5px; margin-top:8px; color:#5b6660;">الخلايا الملوّنة: حصص تغيّرت بالترحيل أو التحريك أو التبديل أو الانتظار${all === true ? "، والحمراء حصص المعلم الغائب أو المستأذن" : ""}. حُذفت الحصة ${wpEsc(shPer(max))} (آخر حصة في اليوم) لجميع الفصول.</div>
       <div style="display:flex; justify-content:space-between; margin:28px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>`;
     wpOpenDoc(wpShellDoc(ttl, wpGenericPage(ttl, inner, date), { landscape: true, fitOnePage: true }), ttl.replace(/ /g, "_") + "_" + date);
   }
@@ -10796,6 +10797,7 @@ ${contentEl.innerHTML}
         else if (x.type === "manual") rs.push({ per: x.period, cls: x.cls, t: x.teacher, note: "منتظر" });
         else if (x.type === "wait") { const c = (data.coverageRecords || []).find(r => r.date === date && r.period === x.period && r.className === x.cls); rs.push({ per: x.period, cls: x.cls, t: c && c.subTeacher ? c.subTeacher : "", note: "منتظر" }); }
       });
+      for (let i = rs.length - 1; i >= 0; i--) if (shPlan.dayMax && rs[i].per >= shPlan.dayMax) rs.splice(i, 1); // آخر حصة في اليوم محذوفة
       rs.sort((u, v) => u.per - v.per || String(u.cls).localeCompare(String(v.cls), "ar"));
       const kind = permSet.has(a) ? "permission" : "absence";
       return `<section class="page">
@@ -11241,7 +11243,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-13";
+window.APP_BUILD = "2026-11-14-14";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
