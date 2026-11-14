@@ -645,6 +645,13 @@
   .hol-chip { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 7px; border-radius: 10px; border: 1px solid #9fd6b5; background: #e7f7ee; color: #146c3a; cursor: pointer; min-width: 64px; }
   .hol-chip b { font-size: 12px; } .hol-chip small { font-size: 10.5px; color: inherit; opacity: .85; } .hol-chip span { font-size: 11px; font-weight: 800; }
   .hol-chip.off { background: #fff4df; border-color: #ecc98a; color: #8a5200; }
+  #shEditTable table { border-collapse: collapse; min-width: 100%; font-size: 12.5px; }
+  #shEditTable th { background: #174a59; color: #fff; padding: 6px 4px; font-weight: 700; white-space: nowrap; }
+  #shEditTable td { border: 1px solid var(--line); padding: 4px; text-align: center; min-width: 62px; background: #fff; }
+  #shEditTable td.t { font-weight: 800; text-align: right; white-space: nowrap; background: var(--paper-2); }
+  #shEditTable td.chg { background: #fff4df; } #shEditTable td.abs { background: #fdecea; } #shEditTable td.ed { background: #e6f0ff; }
+  #shEditTable td small { display: block; font-size: 10px; color: #8a5200; font-weight: 700; }
+  #shEditTable select { font: inherit; font-size: 12px; padding: 3px; border-radius: 6px; border: 1px solid var(--line); background: #fff; max-width: 80px; }
   .ws-st { margin-top: 6px; font-size: 12.5px; font-weight: 800; padding: 6px 10px; border-radius: 10px; }
   .ws-st.wait { background: #fff4df; color: #8a5200; } .ws-st.signed { background: #e7f7ee; color: #146c3a; } .ws-st.refused { background: #fdecea; color: #9a2f23; }
   .wt-row select { flex: 1 1 180px; min-width: 0; }
@@ -1757,6 +1764,14 @@
       <button class="export-btn" id="shPrint">🖨️ طباعة الترحيل</button>
       <button class="export-btn" id="shPrintDay">🗓️ طباعة جدول اليوم للمعلمين بعد الترحيل</button>
       <button class="export-btn" id="shPrintDayAll">🗓️ طباعة جدول اليوم لجميع المعلمين بعد الترحيل</button>
+      <button class="export-btn" id="shEditOpen">✏️ تعديل جدول الترحيل</button>
+      <button class="export-btn" id="shPrintEdited">🖨️ طباعة جدول الترحيل بعد التعديل</button>
+    </div>
+    <div id="shEditWrap" style="display:none; margin-top:12px;">
+      <div class="detail-header" style="margin-bottom:6px;"><h2 style="font-size:17px;">جدول الترحيل لجميع المعلمين</h2><button class="export-btn" id="shEditToggle" style="padding:6px 12px;">✏️ تعديل</button></div>
+      <div class="sched-hint" style="text-align:right;">اضغط «تعديل» لتظهر في كل خانة قائمة بالفصول، ثم «حفظ». الخانات الملوّنة تغيّرت بالترحيل، والحمراء حصص الغائب.</div>
+      <div id="shEditTable" style="overflow-x:auto;"></div>
+      <div class="export-row" style="margin-top:8px;"><button class="export-btn" id="shEditSave" style="display:none;">💾 حفظ</button><button class="export-btn" id="shEditReset">↺ إعادة الجدول المحسوب</button></div>
     </div>
     <div class="sched-hint" id="shApplied" style="text-align:right; margin-top:6px; color:#146c3a; display:none;"></div>
   </div>
@@ -2754,6 +2769,7 @@
     if (!Array.isArray(out.holidays)) out.holidays = [];
     if (!out.shiftPlans || typeof out.shiftPlans !== "object" || Array.isArray(out.shiftPlans)) out.shiftPlans = {};
     if (!out.shiftManual || typeof out.shiftManual !== "object" || Array.isArray(out.shiftManual)) out.shiftManual = {};
+    if (!out.shiftEdits || typeof out.shiftEdits !== "object" || Array.isArray(out.shiftEdits)) out.shiftEdits = {};
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -10703,6 +10719,7 @@ ${contentEl.innerHTML}
         return '<div class="ws-st ' + (x.type === "wait" ? "wait" : "signed") + '" style="margin-top:6px;"><div style="font-weight:800;">الحصة ' + acEsc(shPer(x.period)) + " — فصل " + acEsc(x.cls) + "</div>" + shDesc(x).map(d => '<div style="font-weight:600;">' + acEsc(d) + "</div>").join("") + sel + "</div>";
       }).join("") + "</div>").join("");
     act.style.display = "";
+    if (document.getElementById("shEditWrap").style.display !== "none") { shEditing = false; shEditRender(); }
     const ap = (data.shiftPlans || {})[date];
     if (ap) { const n = document.getElementById("shApplied"); n.style.display = ""; n.textContent = "✅ سبق اعتماد ترحيل هذا اليوم في " + ioStamp(ap.at); }
   }
@@ -10730,8 +10747,8 @@ ${contentEl.innerHTML}
     saveData(); shRender(); showToast("تم اعتماد الترحيل — الحصص المرحّلة ظهرت في جدول الانتظار، والباقي يحتاج منتظرًا");
   }
   // جدول اليوم بعد الترحيل للمعلمين المتأثرين: العمود الأول المعلم ثم الحصص بالترتيب
-  function shPrintDay(all) {
-    if (!shPlan || !shPlan.items.length) return;
+  function shDayGrid(all) {
+    if (!shPlan || !shPlan.items.length) return null;
     const date = shPlan.date, fs = shPlan.finalState, max = shPlan.dayMax;
     const grid = {}, mark = {}, affected = new Set();
     const put = (t, per, cls, tag) => { if (!t) return; (grid[t] = grid[t] || {})[per] = cls; if (tag) (mark[t] = mark[t] || {})[per] = tag; };
@@ -10758,22 +10775,76 @@ ${contentEl.innerHTML}
       Object.keys(grid).forEach(t => affected.add(t));
     }
     const list = [...affected].filter(t => data.teachers.includes(t) || grid[t]).sort((a, b) => a.localeCompare(b, "ar"));
-    if (!list.length) { showToast("لا يوجد معلمون تأثرت حصصهم بالترحيل أو الانتظار"); return; }
-    const B = "border:1.5px solid #174a59; padding:7px 4px; text-align:center; font-size:14px;";
-    const H = B + " background:#174a59; color:#fff; font-weight:700;";
     // بعد الترحيل تُحذف آخر حصة في اليوم الدراسي لجميع الفصول
     const pers = Array.from({ length: Math.max(0, max - 1) }, (_, i) => i + 1);
+    return { date, max, list, grid, mark, pers };
+  }
+  function shPrintDay(all, edited) {
+    const G = shDayGrid(all); if (!G) return;
+    const { date, max, mark, pers } = G; let { list, grid } = G;
+    if (!list.length) { showToast("لا يوجد معلمون تأثرت حصصهم بالترحيل أو الانتظار"); return; }
+    if (edited) {
+      const ed = (data.shiftEdits || {})[date];
+      if (!ed) { showToast("لم يُحفظ تعديل لجدول الترحيل في هذا اليوم بعد"); return; }
+      const g2 = {}; list.forEach(t => { g2[t] = Object.assign({}, ed.grid[t] || {}); });
+      list.forEach(t => pers.forEach(per => { const a = (grid[t] || {})[per] || "", b = g2[t][per] || ""; if (a !== b) (mark[t] = mark[t] || {})[per] = "تعديل"; }));
+      grid = g2;
+    }
+    const B = "border:1.5px solid #174a59; padding:7px 4px; text-align:center; font-size:14px;";
+    const H = B + " background:#174a59; color:#fff; font-weight:700;";
     const rows = list.map(t => `<tr><td style="${B} font-weight:800; text-align:right; padding-right:8px; white-space:nowrap;">${wpEsc(t)}</td>${pers.map(per => {
       const cls = (grid[t] || {})[per], tag = (mark[t] || {})[per];
       return `<td style="${B}${tag === "غائب" || tag === "مستأذن" ? " background:#fdecea;" : tag ? " background:#fff4df;" : ""}">${cls ? `<b>${wpEsc(cls)}</b>` : ""}${tag ? `<div style="font-size:11px; color:#8a5200; font-weight:700;">${wpEsc(tag)}</div>` : ""}</td>`;
     }).join("")}</tr>`).join("");
-    const ttl = all === true ? "جدول اليوم لجميع المعلمين بعد الترحيل" : "جدول اليوم بعد الترحيل";
+    const ttl = edited ? "جدول الترحيل بعد التعديل" : all === true ? "جدول اليوم لجميع المعلمين بعد الترحيل" : "جدول اليوم بعد الترحيل";
     const inner = `<table style="width:100%; border-collapse:collapse; margin-top:10px;">
         <tr><th style="${H} width:18%">المعلم</th>${pers.map(per => `<th style="${H}">${wpEsc(shPer(per))}</th>`).join("")}</tr>${rows}</table>
-      <div style="font-size:12.5px; margin-top:8px; color:#5b6660;">الخلايا الملوّنة: حصص تغيّرت بالترحيل أو التحريك أو التبديل أو الانتظار${all === true ? "، والحمراء حصص المعلم الغائب أو المستأذن" : ""}. حُذفت الحصة ${wpEsc(shPer(max))} (آخر حصة في اليوم) لجميع الفصول.</div>
+      <div style="font-size:12.5px; margin-top:8px; color:#5b6660;">الخلايا الملوّنة: حصص تغيّرت بالترحيل أو التحريك أو التبديل أو الانتظار${edited ? " أو التعديل اليدوي" : ""}${all === true ? "، والحمراء حصص المعلم الغائب أو المستأذن" : ""}. حُذفت الحصة ${wpEsc(shPer(max))} (آخر حصة في اليوم) لجميع الفصول.</div>
       <div style="display:flex; justify-content:space-between; margin:28px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>`;
     wpOpenDoc(wpShellDoc(ttl, wpGenericPage(ttl, inner, date), { landscape: true, fitOnePage: true }), ttl.replace(/ /g, "_") + "_" + date);
   }
+  // ===== تعديل جدول الترحيل يدويًا =====
+  let shEditing = false;
+  function shEditRender() {
+    const G = shDayGrid(true), box = document.getElementById("shEditTable");
+    if (!G || !G.list.length) { box.innerHTML = '<div class="empty-state">لا يوجد جدول ترحيل لهذا اليوم</div>'; return; }
+    const ed = (data.shiftEdits || {})[G.date];
+    const cur = (t, per) => ed ? ((ed.grid[t] || {})[per] || "") : ((G.grid[t] || {})[per] || "");
+    box.innerHTML = '<table><thead><tr><th>المعلم</th>' + G.pers.map(p => "<th>" + acEsc(shPer(p)) + "</th>").join("") + "</tr></thead><tbody>" +
+      G.list.map(t => '<tr><td class="t">' + acEsc(t) + "</td>" + G.pers.map(per => {
+        const v = cur(t, per), orig = (G.grid[t] || {})[per] || "", tag = (G.mark[t] || {})[per] || "";
+        const cls = v !== orig ? "ed" : tag === "غائب" || tag === "مستأذن" ? "abs" : tag ? "chg" : "";
+        const inner = shEditing
+          ? '<select data-t="' + acEsc(t) + '" data-p="' + per + '"><option value="">اختيار</option>' + data.classes.map(c => '<option value="' + acEsc(c) + '"' + (c === v ? " selected" : "") + ">" + acEsc(c) + "</option>").join("") + "</select>"
+          : "<b>" + acEsc(v) + "</b>";
+        return '<td class="' + cls + '">' + inner + (v !== orig ? "<small>تعديل</small>" : tag ? "<small>" + acEsc(tag) + "</small>" : "") + "</td>";
+      }).join("") + "</tr>").join("") + "</tbody></table>";
+    document.getElementById("shEditSave").style.display = shEditing ? "" : "none";
+    document.getElementById("shEditToggle").textContent = shEditing ? "✖️ إلغاء التعديل" : "✏️ تعديل";
+  }
+  function shEditSave() {
+    const G = shDayGrid(true); if (!G) return;
+    const grid = {};
+    document.querySelectorAll("#shEditTable select").forEach(sel => { (grid[sel.dataset.t] = grid[sel.dataset.t] || {}); if (sel.value) grid[sel.dataset.t][sel.dataset.p] = sel.value; });
+    // تنبيه عند تكرار نفس الفصل في نفس الحصة
+    const dup = [];
+    G.pers.forEach(per => { const seen = {}; Object.keys(grid).forEach(t => { const c = grid[t][per]; if (!c) return; const tg = (G.mark[t] || {})[per]; if ((tg === "غائب" || tg === "مستأذن") && c === (G.grid[t] || {})[per]) return; if (seen[c]) dup.push(shPer(per) + ": " + c); seen[c] = 1; }); });
+    if (!data.shiftEdits || typeof data.shiftEdits !== "object") data.shiftEdits = {};
+    data.shiftEdits[G.date] = { grid, at: Date.now() };
+    saveData(); shEditing = false; shEditRender();
+    showToast(dup.length ? "حُفظ — تنبيه: فصل مكرر في نفس الحصة (" + dup.slice(0, 3).join("، ") + ")" : "تم حفظ جدول الترحيل بعد التعديل");
+  }
+  document.getElementById("shEditOpen").addEventListener("click", () => {
+    const w = document.getElementById("shEditWrap"); w.style.display = w.style.display === "none" ? "" : "none";
+    if (w.style.display === "") { shEditing = false; shEditRender(); w.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  });
+  document.getElementById("shEditToggle").addEventListener("click", () => { shEditing = !shEditing; shEditRender(); });
+  document.getElementById("shEditSave").addEventListener("click", shEditSave);
+  document.getElementById("shEditReset").addEventListener("click", () => {
+    if (!shPlan) return; if (data.shiftEdits) delete data.shiftEdits[shPlan.date];
+    saveData(); shEditing = false; shEditRender(); showToast("أُعيد الجدول المحسوب وأُلغيت التعديلات");
+  });
+  document.getElementById("shPrintEdited").addEventListener("click", () => shPrintDay(true, true));
   function shPrint() {
     if (!shPlan || !shPlan.items.length) return;
     const date = shPlan.date, p = wpDateParts(date), permSet = new Set(wtPermitted(date).map(x => x.teacher));
@@ -11243,7 +11314,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-14";
+window.APP_BUILD = "2026-11-14-15";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
