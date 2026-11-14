@@ -10828,7 +10828,7 @@ ${contentEl.innerHTML}
     const ttl = edited ? "جدول الترحيل بعد التعديل" : all === true ? "جدول اليوم لجميع المعلمين بعد الترحيل" : "جدول اليوم بعد الترحيل";
     const inner = `<table style="width:100%; border-collapse:collapse; margin-top:10px; table-layout:fixed;">
         <tr><th style="${H} width:20%">المعلم</th>${pers.map(per => `<th style="${H}">${wpEsc(shPer(per))}</th>`).join("")}</tr>${rows}</table>
-      <div style="font-size:12.5px; margin-top:8px; color:#5b6660;">الخلايا الملوّنة: حصص تغيّرت بالترحيل أو التحريك أو التبديل أو الانتظار${edited ? " أو التعديل اليدوي" : ""}${all === true ? "، والحمراء حصص المعلم الغائب أو المستأذن" : ""}. حُذفت الحصة ${wpEsc(shPer(max))} (آخر حصة في اليوم) لجميع الفصول.</div>
+      <div style="font-size:12.5px; margin-top:8px; color:#5b6660;">الخلايا الملوّنة: حصص تغيّرت بالترحيل أو التحريك أو التبديل أو الانتظار${edited ? " أو التعديل اليدوي" : ""}${all === true ? "، والحمراء حصص المعلم الغائب أو المستأذن" : ""}.</div>
       <div style="display:flex; justify-content:space-between; margin:28px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>`;
     wpOpenDoc(wpShellDoc(ttl, wpGenericPage(ttl, inner, date), { fitOnePage: true }), ttl.replace(/ /g, "_") + "_" + date);
   }
@@ -11358,7 +11358,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-18";
+window.APP_BUILD = "2026-11-14-19";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
