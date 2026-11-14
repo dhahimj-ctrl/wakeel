@@ -1737,12 +1737,27 @@
         <h2>حصر حصص الانتظار</h2>
         <div class="count">ما حضره كل معلم</div>
       </button>
-      <button class="tile coverage" id="openShift" style="grid-column:1/-1;">
+      <button class="tile coverage" id="openShift">
         <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M21 7H9a4 4 0 0 0-4 4v1"/><path d="M7 21l-4-4 4-4"/><path d="M3 17h12a4 4 0 0 0 4-4v-1"/></svg></div>
         <h2>ترحيل الحصص</h2>
         <div class="count">نقل الحصص الأخيرة لسد حصص الغائب</div>
       </button>
+      <button class="tile reports" id="openShiftArch">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M3 7h18v13H3z"/><path d="M3 7l2-4h14l2 4"/><path d="M10 12h4"/></svg></div>
+        <h2>الترحيلات المحفوظة</h2>
+        <div class="count" id="shArchCount">حسب تاريخ الغياب</div>
+      </button>
     </div>
+  </div>
+
+  <!-- الترحيلات المحفوظة -->
+  <div class="detail" id="shiftArchView">
+    <div class="back-row">
+      <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
+    </div>
+    <div class="detail-header"><h2>الترحيلات المحفوظة</h2></div>
+    <div class="sched-hint" style="text-align:right;">الترحيلات التي حُفظت بزر «💾 حفظ»، مرتبة حسب تاريخ الغياب (الأحدث أولًا).</div>
+    <div id="shArchList"></div>
   </div>
 
   <!-- ترحيل الحصص -->
@@ -1766,6 +1781,10 @@
       <button class="export-btn" id="shPrint">🖨️ طباعة الترحيل</button>
       <button class="export-btn" id="shPrintDay">🗓️ طباعة جدول اليوم للمعلمين بعد الترحيل</button>
       <button class="export-btn" id="shPrintDayAll">🗓️ طباعة جدول اليوم لجميع المعلمين بعد الترحيل</button>
+      <div style="display:flex; gap:6px; flex-basis:100%; flex-wrap:wrap; align-items:center;">
+        <select class="select-styled" id="shTSel" style="flex:1; min-width:170px; padding:6px 8px;"></select>
+        <button class="export-btn" id="shPrintTeacher">👤 طباعة جدول المعلم</button>
+      </div>
       <button class="export-btn" id="shEditOpen">✏️ تعديل جدول الترحيل</button>
       <button class="export-btn" id="shPrintEdited">🖨️ طباعة جدول الترحيل بعد التعديل</button>
     </div>
@@ -2772,6 +2791,7 @@
     if (!out.shiftPlans || typeof out.shiftPlans !== "object" || Array.isArray(out.shiftPlans)) out.shiftPlans = {};
     if (!out.shiftManual || typeof out.shiftManual !== "object" || Array.isArray(out.shiftManual)) out.shiftManual = {};
     if (!out.shiftEdits || typeof out.shiftEdits !== "object" || Array.isArray(out.shiftEdits)) out.shiftEdits = {};
+    if (!out.shiftArchive || typeof out.shiftArchive !== "object" || Array.isArray(out.shiftArchive)) out.shiftArchive = {};
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -10398,6 +10418,7 @@ ${contentEl.innerHTML}
     document.getElementById("waitTableView").classList.toggle("active", view === "waitTable");
     document.getElementById("waitAckView").classList.toggle("active", view === "waitAck");
     document.getElementById("shiftView").classList.toggle("active", view === "shift");
+    document.getElementById("shiftArchView").classList.toggle("active", view === "shiftArch");
     document.getElementById("waitDesignView").classList.toggle("active", view === "waitDesign");
     document.getElementById("waitCountView").classList.toggle("active", view === "waitCount");
     document.getElementById("ackView").classList.toggle("active", view === "ack");
@@ -10752,21 +10773,131 @@ ${contentEl.innerHTML}
       }).join("") + "</div>").join("");
     act.style.display = "";
     if (document.getElementById("shEditWrap").style.display !== "none") { shEditing = false; shEditRender(); }
+    shTSelFill();
     const ap = (data.shiftPlans || {})[date];
-    if (ap) { const n = document.getElementById("shApplied"); n.style.display = ""; n.innerHTML = "✅ سبق اعتماد ترحيل هذا اليوم في " + acEsc(ioStamp(ap.at)) + '<div style="margin-top:8px;"><button type="button" class="export-btn" id="shRedo" style="background:#fdecea; color:#b42318; border-color:#f3b8b3;">🗑️ حذف وإعادة الترحيل</button></div>'; }
+    if (ap) { const n = document.getElementById("shApplied"); n.style.display = ""; n.innerHTML = "✅ سبق اعتماد ترحيل هذا اليوم في " + acEsc(ioStamp(ap.at)) + '<div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;"><button type="button" class="export-btn" id="shRedo" style="background:#fdecea; color:#b42318; border-color:#f3b8b3;">🔄 حذف وإعادة الترحيل</button><button type="button" class="export-btn" id="shDel" style="background:#fdecea; color:#b42318; border-color:#f3b8b3;">🗑️ حذف</button><button type="button" class="export-btn" id="shSave">💾 حفظ</button></div>' + ((data.shiftArchive || {})[date] ? '<div style="margin-top:6px; color:#174a59;">📁 محفوظ في «الترحيلات المحفوظة» (' + acEsc(ioStamp(data.shiftArchive[date].at)) + ")</div>" : ""); }
   }
   // حذف الترحيل المعتمد لهذا اليوم وإعادة حسابه من جديد
   function shRedo(btn) {
     if (!shPlan) return;
-    if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "⚠️ اضغط مرة أخرى لتأكيد الحذف"; setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.textContent = "🗑️ حذف وإعادة الترحيل"; } }, 4000); return; }
-    const date = shPlan.date;
-    data.coverageRecords = (data.coverageRecords || []).filter(r => !(r.date === date && /^s[hm]/.test(String(r.id || ""))));
-    data.waitUncovered = (data.waitUncovered || []).filter(u => !(u.date === date && u.dropped));
-    ["shiftPlans", "shiftManual", "shiftEdits"].forEach(k => { if (data[k] && typeof data[k] === "object") delete data[k][date]; });
-    saveData(); shEditing = false; shRender();
+    if (!shConfirm(btn)) return;
+    shUnapply(shPlan.date, true);
     showToast("حُذف الترحيل المعتمد لهذا اليوم وأُعيد حسابه — راجعه ثم اضغط «اعتماد ونقل لجدول الانتظار» من جديد");
   }
-  document.getElementById("shApplied").addEventListener("click", e => { const b = e.target.closest("#shRedo"); if (b) shRedo(b); });
+  function shConfirm(btn) {
+    if (btn.dataset.confirm === "1") return true;
+    const old = btn.textContent; btn.dataset.confirm = "1"; btn.textContent = "⚠️ اضغط مرة أخرى للتأكيد";
+    setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.textContent = old; } }, 4000);
+    return false;
+  }
+  // إلغاء اعتماد الترحيل: حذف ما نُقل لجدول الانتظار (reset=true يلغي أيضًا التعديلات اليدوية ليُعاد الحساب من جديد)
+  function shUnapply(date, reset) {
+    data.coverageRecords = (data.coverageRecords || []).filter(r => !(r.date === date && /^s[hm]/.test(String(r.id || ""))));
+    data.waitUncovered = (data.waitUncovered || []).filter(u => !(u.date === date && u.dropped));
+    (reset ? ["shiftPlans", "shiftManual", "shiftEdits"] : ["shiftPlans"]).forEach(k => { if (data[k] && typeof data[k] === "object") delete data[k][date]; });
+    saveData(); shEditing = false; shRender();
+  }
+  function shSave() {
+    if (!shPlan || !shPlan.items.length) return;
+    if (!data.shiftArchive || typeof data.shiftArchive !== "object") data.shiftArchive = {};
+    const absent = [...new Set(shPlan.items.map(x => x.absent).filter(Boolean))];
+    data.shiftArchive[shPlan.date] = { at: Date.now(), date: shPlan.date, day: shPlan.day, dayMax: shPlan.dayMax, absent,
+      items: JSON.parse(JSON.stringify(shPlan.items)), finalState: JSON.parse(JSON.stringify(shPlan.finalState)) };
+    saveData(); shRender(); shArchCount(); showToast("💾 حُفظ الترحيل في «الترحيلات المحفوظة» بتاريخ الغياب");
+  }
+  document.getElementById("shApplied").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.id === "shRedo") shRedo(b);
+    else if (b.id === "shDel") { if (!shConfirm(b)) return; shUnapply(shPlan.date, false); showToast("حُذف الترحيل المعتمد لهذا اليوم من جدول الانتظار"); }
+    else if (b.id === "shSave") shSave();
+  });
+  // ===== الترحيلات المحفوظة =====
+  function shArchCount() { const n = Object.keys(data.shiftArchive || {}).length; const el = document.getElementById("shArchCount"); if (el) el.textContent = n ? n + " ترحيل محفوظ" : "حسب تاريخ الغياب"; }
+  function shWithPlan(snap, fn) {
+    const keep = shPlan;
+    shPlan = Object.assign({ freeAt: () => [], unavail: () => false }, snap);
+    try { fn(); } finally { shPlan = keep; }
+  }
+  function shArchRender() {
+    shArchCount();
+    const box = document.getElementById("shArchList"), A = data.shiftArchive || {};
+    const ds = Object.keys(A).sort((a, b) => b.localeCompare(a));
+    if (!ds.length) { box.innerHTML = '<div class="empty-state">لا توجد ترحيلات محفوظة — اعتمد الترحيل ثم اضغط «💾 حفظ»</div>'; return; }
+    box.innerHTML = ds.map(d => {
+      const x = A[d], p = wpDateParts(d), c = t => (x.items || []).filter(i => i.type === t).length;
+      return '<div class="ack-item" style="margin-top:8px;" data-d="' + acEsc(d) + '"><div class="hd" style="display:block;"><b>' + acEsc((p.dayName || "") + " — " + p.hijri) + '</b> <span style="color:#5b6660; font-size:12px;">(' + acEsc(p.greg || d) + ")</span></div>" +
+        '<div style="font-size:13px; margin-top:4px;">الغائب/المستأذن: <b>' + acEsc((x.absent || []).join("، ") || "—") + "</b></div>" +
+        '<div style="font-size:12.5px; color:#5b6660; margin-top:2px;">🔀 ترحيل: ' + c("shift") + " · ✍️ يدوي: " + c("manual") + " · ⚠️ منتظر: " + c("wait") + " · حُفظ " + acEsc(ioStamp(x.at)) + "</div>" +
+        '<div class="export-row" style="margin-top:8px;"><button class="export-btn" data-a="open">📂 فتح</button><button class="export-btn" data-a="print">🖨️ طباعة الترحيل</button><button class="export-btn" data-a="all">🗓️ جدول جميع المعلمين</button><button class="export-btn" data-a="teachers">👤 جداول المعلمين</button><button class="export-btn" data-a="del" style="color:#b42318;">🗑️ حذف</button></div></div>';
+    }).join("");
+  }
+  document.getElementById("shArchList").addEventListener("click", e => {
+    const b = e.target.closest("button[data-a]"); if (!b) return;
+    const d = b.closest("[data-d]").dataset.d, x = (data.shiftArchive || {})[d]; if (!x) return;
+    const a = b.dataset.a;
+    if (a === "open") { document.getElementById("shDate").value = d; shRender(); showView("shift"); }
+    else if (a === "print") shWithPlan(x, shPrint);
+    else if (a === "all") shWithPlan(x, () => shPrintDay(true));
+    else if (a === "teachers") shWithPlan(x, () => shPrintTeacher(""));
+    else if (a === "del") { if (!shConfirm(b)) return; delete data.shiftArchive[d]; saveData(); shArchRender(); showToast("حُذف الترحيل المحفوظ"); }
+  });
+  document.getElementById("openShiftArch").addEventListener("click", () => { shArchRender(); showView("shiftArch"); });
+  setTimeout(shArchCount, 0);
+  // ===== طباعة جدول المعلم المتأثر بالترحيل =====
+  function shFinalGrid() {
+    const G = shDayGrid(true); if (!G) return null;
+    const ed = (data.shiftEdits || {})[G.date];
+    if (ed) {
+      const g2 = {}; G.list.forEach(t => { g2[t] = Object.assign({}, ed.grid[t] || {}); });
+      G.list.forEach(t => G.pers.forEach(per => { const a = (G.grid[t] || {})[per] || "", b = g2[t][per] || ""; if (a !== b) (G.mark[t] = G.mark[t] || {})[per] = "تعديل"; }));
+      G.grid = g2;
+    }
+    const aff = shDayGrid(false);
+    G.affected = aff ? aff.list.filter(t => G.list.includes(t)) : [];
+    return G;
+  }
+  function shTSelFill() {
+    const sel = document.getElementById("shTSel"); if (!sel) return;
+    const G = shPlan && shPlan.items && shPlan.items.length ? shFinalGrid() : null, cur = sel.value;
+    const L = G ? G.affected : [];
+    sel.innerHTML = '<option value="">جميع المعلمين المتأثرين (كل معلم في صفحة)</option>' + L.map(t => '<option value="' + acEsc(t) + '">' + acEsc(t) + "</option>").join("");
+    if (L.includes(cur)) sel.value = cur;
+  }
+  function shPrintTeacher(who) {
+    const G = shFinalGrid(); if (!G) return;
+    const list = who ? [who] : G.affected;
+    if (!list.length) { showToast("لا يوجد معلمون تأثرت حصصهم بالترحيل أو الانتظار"); return; }
+    // ستة جداول في الصفحة أسفل بعضها، وفوق كل جدول اسم المعلم واليوم والتاريخ، والباقي في الصفحات التالية
+    const B = "border:1px solid #174a59; padding:4px 2px; text-align:center; font-size:12px;";
+    const H = B + " background:#174a59; color:#fff; font-weight:700;";
+    const RH = B + " background:#e3eef1; color:#174a59; font-weight:800; width:13%;";
+    const ttl = "جدول المعلم بعد الترحيل";
+    const dp = wpDateParts(G.date);
+    const card = t => {
+      const cells = G.pers.map(per => ({ cls: (G.grid[t] || {})[per] || "", tag: (G.mark[t] || {})[per] || "" }));
+      return `<div style="border:1.5px dashed #7a9aa3; border-radius:8px; padding:6px 8px 7px; margin-bottom:9px; break-inside:avoid;">
+          <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; font-size:13px; margin-bottom:4px;">
+            <div style="font-size:14px; font-weight:800; color:#174a59;">المعلم: ${wpEsc(t)}</div>
+            <div><b style="color:#174a59;">اليوم:</b> ${wpEsc(dp.dayName || "—")} &nbsp; <b style="color:#174a59;">التاريخ:</b> ${wpEsc(dp.hijri)}</div>
+          </div>
+          <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+            <tr><th style="${H} width:13%">الحصة</th>${G.pers.map(per => `<th style="${H}">${wpEsc(shPer(per))}</th>`).join("")}</tr>
+            <tr><td style="${RH}">الفصل</td>${cells.map(c => `<td style="${B}${c.tag ? " background:#fff4df;" : ""}"><b>${wpEsc(c.cls)}</b></td>`).join("")}</tr>
+            <tr><td style="${RH}">الملاحظة</td>${cells.map(c => `<td style="${B} font-size:11px; color:#8a5200; font-weight:700;">${wpEsc(c.tag)}</td>`).join("")}</tr>
+          </table>
+          <div style="font-size:12px; margin-top:5px;"><b style="color:#174a59;">توقيع المعلم:</b> ..............................</div>
+        </div>`;
+    };
+    const chunks = []; for (let i = 0; i < list.length; i += 6) chunks.push(list.slice(i, i + 6));
+    const pages = chunks.map(ch => `<section class="page gen">
+      ${wpBandHTML()}
+      <h2>${wpEsc(ttl)}</h2>
+      ${ch.map(card).join("")}
+      <div style="display:flex; justify-content:space-between; margin:12px 20px 0; font-size:14px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>
+    </section>`).join("");
+    wpOpenDoc(wpShellDoc(ttl, pages, { fitOnePage: true }), "جدول_المعلم_" + (who || "الجميع") + "_" + G.date);
+  }
+  document.getElementById("shPrintTeacher").addEventListener("click", () => shPrintTeacher(document.getElementById("shTSel").value));
   function shApply() {
     if (!shPlan || !shPlan.items.length) return;
     const date = shPlan.date;
@@ -11373,7 +11504,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-21";
+window.APP_BUILD = "2026-11-14-24";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
