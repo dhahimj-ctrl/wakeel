@@ -10713,6 +10713,19 @@ ${contentEl.innerHTML}
     const fs = shPlan.finalState || {};
     return Object.keys(fs).find(c => c !== exceptCls && fs[c] && fs[c][per] === t) || "";
   }
+  // تعارض في جدول تعديل الترحيل: المعلم لديه حصة في الخانة واختير منتظرًا لفصل آخر في نفس الحصة
+  function shWaitConflict(t, per, v) {
+    if (!shPlan || !v) return "";
+    const w = shPlan.items.find(x => x.period === per && x.cls !== v && (x.type === "manual" && x.teacher === t));
+    if (w) return w.cls;
+    const fs = shPlan.finalState || {};
+    return Object.keys(fs).find(c => c !== v && fs[c] && fs[c][per] === t && shPlan.items.some(x => x.period === per && x.cls === c && x.type === "manual")) || "";
+  }
+  function shRkHtml(rk, t, per, v) {
+    if (!rk) return "";
+    const w = shWaitConflict(t, per, v);
+    return '<small class="rk' + (w ? " busy" : "") + '">' + rk.label + (w ? " ⚠️ لديه حصة واختير منتظرًا لفصل " + acEsc(w) : "") + "</small>";
+  }
   function shRender() {
     const date = document.getElementById("shDate").value, p = date ? wpDateParts(date) : null;
     document.getElementById("shDateH").textContent = p ? (p.dayName || "") + " — " + p.hijri : "";
@@ -10806,18 +10819,18 @@ ${contentEl.innerHTML}
       list.forEach(t => pers.forEach(per => { const a = (grid[t] || {})[per] || "", b = g2[t][per] || ""; if (a !== b) (mark[t] = mark[t] || {})[per] = "تعديل"; }));
       grid = g2;
     }
-    const B = "border:1.5px solid #174a59; padding:7px 4px; text-align:center; font-size:14px;";
+    const B = "border:1.5px solid #174a59; padding:5px 3px; text-align:center; font-size:13px;";
     const H = B + " background:#174a59; color:#fff; font-weight:700;";
     const rows = list.map(t => `<tr><td style="${B} font-weight:800; text-align:right; padding-right:8px; white-space:nowrap;">${wpEsc(t)}</td>${pers.map(per => {
       const cls = (grid[t] || {})[per], tag = (mark[t] || {})[per];
       return `<td style="${B}${tag === "غائب" || tag === "مستأذن" ? " background:#fdecea;" : tag ? " background:#fff4df;" : ""}">${cls ? `<b>${wpEsc(cls)}</b>` : ""}${tag ? `<div style="font-size:11px; color:#8a5200; font-weight:700;">${wpEsc(tag)}</div>` : ""}</td>`;
     }).join("")}</tr>`).join("");
     const ttl = edited ? "جدول الترحيل بعد التعديل" : all === true ? "جدول اليوم لجميع المعلمين بعد الترحيل" : "جدول اليوم بعد الترحيل";
-    const inner = `<table style="width:100%; border-collapse:collapse; margin-top:10px;">
-        <tr><th style="${H} width:18%">المعلم</th>${pers.map(per => `<th style="${H}">${wpEsc(shPer(per))}</th>`).join("")}</tr>${rows}</table>
+    const inner = `<table style="width:100%; border-collapse:collapse; margin-top:10px; table-layout:fixed;">
+        <tr><th style="${H} width:20%">المعلم</th>${pers.map(per => `<th style="${H}">${wpEsc(shPer(per))}</th>`).join("")}</tr>${rows}</table>
       <div style="font-size:12.5px; margin-top:8px; color:#5b6660;">الخلايا الملوّنة: حصص تغيّرت بالترحيل أو التحريك أو التبديل أو الانتظار${edited ? " أو التعديل اليدوي" : ""}${all === true ? "، والحمراء حصص المعلم الغائب أو المستأذن" : ""}. حُذفت الحصة ${wpEsc(shPer(max))} (آخر حصة في اليوم) لجميع الفصول.</div>
       <div style="display:flex; justify-content:space-between; margin:28px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>`;
-    wpOpenDoc(wpShellDoc(ttl, wpGenericPage(ttl, inner, date), { landscape: true, fitOnePage: true }), ttl.replace(/ /g, "_") + "_" + date);
+    wpOpenDoc(wpShellDoc(ttl, wpGenericPage(ttl, inner, date), { fitOnePage: true }), ttl.replace(/ /g, "_") + "_" + date);
   }
   // ===== تعديل جدول الترحيل يدويًا =====
   let shEditing = false;
@@ -10831,7 +10844,7 @@ ${contentEl.innerHTML}
         const v = cur(t, per), orig = (G.grid[t] || {})[per] || "", tag = (G.mark[t] || {})[per] || "";
         const cls = v !== orig ? "ed" : tag === "غائب" || tag === "مستأذن" ? "abs" : tag ? "chg" : "";
         const rk = shRanks(per).find(d => d.t === t);
-        const rkHtml = rk ? '<small class="rk' + (v ? " busy" : "") + '">' + rk.label + (v ? " ⚠️ لديه حصة بعد الترحيل" : "") + "</small>" : "";
+        const rkHtml = shRkHtml(rk, t, per, v);
         const inner = shEditing
           ? '<select data-t="' + acEsc(t) + '" data-p="' + per + '"><option value="">اختيار</option>' + data.classes.map(c => '<option value="' + acEsc(c) + '"' + (c === v ? " selected" : "") + ">" + acEsc(c) + "</option>").join("") + "</select>"
           : "<b>" + acEsc(v) + "</b>";
@@ -10861,8 +10874,9 @@ ${contentEl.innerHTML}
     const sel = e.target.closest("select[data-t]"); if (!sel) return;
     const t = sel.dataset.t, per = Number(sel.dataset.p), rk = shRanks(per).find(d => d.t === t);
     const td = sel.closest("td"), old = td.querySelector("small.rk"); if (old) old.remove();
-    if (rk) td.insertAdjacentHTML("beforeend", '<small class="rk' + (sel.value ? " busy" : "") + '">' + rk.label + (sel.value ? " ⚠️ لديه حصة بعد الترحيل" : "") + "</small>");
-    if (rk && sel.value) showToast("⚠️ تنبيه: الأستاذ " + t + " (" + rk.label + ") أصبحت لديه حصة بعد الترحيل في الحصة " + shPer(per) + " (فصل " + sel.value + ")");
+    if (rk) td.insertAdjacentHTML("beforeend", shRkHtml(rk, t, per, sel.value));
+    const w = shWaitConflict(t, per, sel.value);
+    if (w) showToast("⚠️ تنبيه: الأستاذ " + t + (rk ? " (" + rk.label + ")" : "") + " لديه حصة في فصل " + sel.value + " واختير منتظرًا لفصل " + w + " في نفس الحصة " + shPer(per));
   });
   document.getElementById("shEditSave").addEventListener("click", shEditSave);
   document.getElementById("shEditReset").addEventListener("click", () => {
@@ -11344,7 +11358,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-16";
+window.APP_BUILD = "2026-11-14-18";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
