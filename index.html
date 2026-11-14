@@ -10633,18 +10633,20 @@ ${contentEl.innerHTML}
         }
         const g = pending()[0];
         // تفريغ المعلم t وقت الحصة gap بالتبديل مع معلم آخر في الفصل الذي يدرّسه t وقتها
-        const freeBySwap = (t, gap) => {
+        // يمكن أن يكون التفريغ على مستويين: إن كان المعلم البديل u مشغولًا وقتها يُفرَّغ هو أيضًا بتبديل في فصل آخر
+        const freeBySwap = (t, gap, lvl = 1, seen = []) => {
           const D = Object.keys(state).find(c => c !== cls && state[c][gap] === t);
-          if (!D || locked.has(D + "|" + gap)) return null;
+          if (!D || locked.has(D + "|" + gap) || seen.includes(D)) return null;
           const sd = state[D];
           const qs = Object.keys(sd).map(Number).filter(q => q !== gap && sd[q] && sd[q] !== "WAIT" && sd[q] !== t).sort((a, b) => Math.abs(a - gap) - Math.abs(b - gap));
           for (const q of qs) {
             const u = sd[q];
             if (locked.has(D + "|" + q)) continue;
-            if (unavail(u, gap) || (occ[u] && occ[u].has(gap))) continue;
-            if (unavail(t, q) || occ[t].has(q)) continue;
+            if (unavail(u, gap) || unavail(t, q) || occ[t].has(q)) continue;
+            let pre = [];
+            if (occ[u] && occ[u].has(gap)) { if (lvl >= 2) continue; pre = freeBySwap(u, gap, lvl + 1, seen.concat([D])); if (!pre) continue; }
             sd[gap] = u; sd[q] = t; occ[u].delete(q); occ[u].add(gap); occ[t].delete(gap); occ[t].add(q);
-            return { type: "swap", cls: D, a: t, b: u, p: gap, q, undo: () => { sd[gap] = t; sd[q] = u; occ[u].delete(gap); occ[u].add(q); occ[t].delete(q); occ[t].add(gap); } };
+            return pre.concat([{ type: "swap", cls: D, a: t, b: u, p: gap, q, undo: () => { sd[gap] = t; sd[q] = u; occ[u].delete(gap); occ[u].add(q); occ[t].delete(q); occ[t].add(gap); } }]);
           }
           return null;
         };
@@ -10659,11 +10661,12 @@ ${contentEl.innerHTML}
               else if (pass) continue;
               // تجربة النقل
               st[gap] = t; st[q] = null; occ[t].delete(q); occ[t].add(gap);
-              const step = (sw ? [sw] : []).concat([{ type: "move", teacher: t, from: q, to: gap }]);
+              const step = (sw || []).concat([{ type: "move", teacher: t, from: q, to: gap }]);
               if (q === L) return step;
-              if (depth < 3) { const rest = dfs(q, depth + 1); if (rest) return step.concat(rest); }
+              // تنقلات متعددة داخل الفصل حتى آخر حصة (الحصص تتقدم دائمًا فلا يتكرر البحث)
+              if (depth < 8) { const rest = dfs(q, depth + 1); if (rest) return step.concat(rest); }
               st[q] = t; st[gap] = null; occ[t].delete(gap); occ[t].add(q);
-              if (sw) sw.undo();
+              if (sw) sw.slice().reverse().forEach(x => x.undo());
             }
           }
           return null;
@@ -11358,7 +11361,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-19";
+window.APP_BUILD = "2026-11-14-20";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
