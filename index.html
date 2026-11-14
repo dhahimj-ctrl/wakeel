@@ -651,6 +651,8 @@
   #shEditTable td.t { font-weight: 800; text-align: right; white-space: nowrap; background: var(--paper-2); }
   #shEditTable td.chg { background: #fff4df; } #shEditTable td.abs { background: #fdecea; } #shEditTable td.ed { background: #e6f0ff; }
   #shEditTable td small { display: block; font-size: 10px; color: #8a5200; font-weight: 700; }
+  #shEditTable td small.rk { color: #174a59; background: #e3f1f4; border-radius: 6px; margin-top: 2px; padding: 1px 3px; }
+  #shEditTable td small.rk.busy { color: #b42318; background: #fdecea; }
   #shEditTable select { font: inherit; font-size: 12px; padding: 3px; border-radius: 6px; border: 1px solid var(--line); background: #fff; max-width: 80px; }
   .ws-st { margin-top: 6px; font-size: 12.5px; font-weight: 800; padding: 6px 10px; border-radius: 10px; }
   .ws-st.wait { background: #fff4df; color: #8a5200; } .ws-st.signed { background: #e7f7ee; color: #146c3a; } .ws-st.refused { background: #fdecea; color: #9a2f23; }
@@ -10675,7 +10677,7 @@ ${contentEl.innerHTML}
     // المعلمون المتاحون في كل حصة بعد الخطة (للتعديل اليدوي)
     const freeAt = p => data.teachers.filter(t => !unavail(t, p) && !(occ[t] && occ[t].has(p))).sort((a, b) => a.localeCompare(b, "ar"));
     const finalState = {}; Object.keys(state).forEach(c => { finalState[c] = Object.assign({}, state[c]); });
-    return { day, items, freeAt, finalState, dayMax };
+    return { day, items, freeAt, finalState, dayMax, unavail };
   }
   const shPer = p => PERIODS[p - 1] || p;
   // تسلسل النقلات بالفصول والحصص والمعلمين
@@ -10699,6 +10701,18 @@ ${contentEl.innerHTML}
     if (it.type === "manual") return ["✍️ تعديل يدوي: الأستاذ " + it.teacher + " منتظر"];
     return shSteps(it);
   }
+  // المنتظرون المعيّنون للحصة: منتظر1، منتظر2، منتظر3
+  function shRanks(per) {
+    if (!shPlan || !shPlan.day) return [];
+    const d = getDesignation(shPlan.day, per);
+    return [d.first, d.second, d.third].map((t, i) => ({ t, label: "منتظر" + (i + 1) })).filter(x => x.t && data.teachers.includes(x.t));
+  }
+  // هل أصبحت لدى المعلم حصة في هذه الحصة بعد الترحيل؟ (يرجع الفصل)
+  function shBusyAfter(t, per, exceptCls) {
+    if (!shPlan) return "";
+    const fs = shPlan.finalState || {};
+    return Object.keys(fs).find(c => c !== exceptCls && fs[c] && fs[c][per] === t) || "";
+  }
   function shRender() {
     const date = document.getElementById("shDate").value, p = date ? wpDateParts(date) : null;
     document.getElementById("shDateH").textContent = p ? (p.dayName || "") + " — " + p.hijri : "";
@@ -10714,8 +10728,10 @@ ${contentEl.innerHTML}
     list.innerHTML = Object.keys(groups).map(a => '<div class="ack-item" style="margin-top:8px;"><div class="hd"><b>المعلم الغائب: ' + acEsc(a) + "</b></div>" +
       groups[a].map(x => {
         const k = x.cls + "|" + x.period, cur = x.type === "manual" ? x.teacher : "";
-        const opts = [...new Set([cur, ...shPlan.freeAt(x.period)].filter(Boolean))];
-        const sel = x.type === "drop" ? "" : '<div style="margin-top:6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;"><span style="font-size:12px; font-weight:700;">تعديل يدوي (منتظر):</span><select class="select-styled sh-man" data-k="' + acEsc(k) + '" style="flex:1; min-width:150px; padding:5px 8px; font-size:12.5px;"><option value="">' + (cur ? "— إلغاء التعديل اليدوي —" : "— تلقائي —") + "</option>" + opts.map(t => '<option value="' + acEsc(t) + '"' + (t === cur ? " selected" : "") + ">" + acEsc(t) + "</option>").join("") + "</select></div>";
+        const des = shRanks(x.period).filter(d => d.t === cur || !shPlan.unavail(d.t, x.period));
+        const others = [...new Set([cur, ...shPlan.freeAt(x.period)].filter(Boolean))].filter(t => !des.some(d => d.t === t));
+        const opt = (t, label) => { const busy = t !== cur && shBusyAfter(t, x.period, x.cls); return '<option value="' + acEsc(t) + '"' + (t === cur ? " selected" : "") + ">" + (label ? label + " — " : "") + acEsc(t) + (busy ? " ⚠️ (لديه حصة بعد الترحيل)" : "") + "</option>"; };
+        const sel = x.type === "drop" ? "" : '<div style="margin-top:6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;"><span style="font-size:12px; font-weight:700;">تعديل يدوي (منتظر):</span><select class="select-styled sh-man" data-k="' + acEsc(k) + '" style="flex:1; min-width:150px; padding:5px 8px; font-size:12.5px;"><option value="">اختيار</option>' + des.map(d => opt(d.t, d.label)).join("") + others.map(t => opt(t, "")).join("") + "</select></div>";
         return '<div class="ws-st ' + (x.type === "wait" ? "wait" : "signed") + '" style="margin-top:6px;"><div style="font-weight:800;">الحصة ' + acEsc(shPer(x.period)) + " — فصل " + acEsc(x.cls) + "</div>" + shDesc(x).map(d => '<div style="font-weight:600;">' + acEsc(d) + "</div>").join("") + sel + "</div>";
       }).join("") + "</div>").join("");
     act.style.display = "";
@@ -10814,10 +10830,12 @@ ${contentEl.innerHTML}
       G.list.map(t => '<tr><td class="t">' + acEsc(t) + "</td>" + G.pers.map(per => {
         const v = cur(t, per), orig = (G.grid[t] || {})[per] || "", tag = (G.mark[t] || {})[per] || "";
         const cls = v !== orig ? "ed" : tag === "غائب" || tag === "مستأذن" ? "abs" : tag ? "chg" : "";
+        const rk = shRanks(per).find(d => d.t === t);
+        const rkHtml = rk ? '<small class="rk' + (v ? " busy" : "") + '">' + rk.label + (v ? " ⚠️ لديه حصة بعد الترحيل" : "") + "</small>" : "";
         const inner = shEditing
           ? '<select data-t="' + acEsc(t) + '" data-p="' + per + '"><option value="">اختيار</option>' + data.classes.map(c => '<option value="' + acEsc(c) + '"' + (c === v ? " selected" : "") + ">" + acEsc(c) + "</option>").join("") + "</select>"
           : "<b>" + acEsc(v) + "</b>";
-        return '<td class="' + cls + '">' + inner + (v !== orig ? "<small>تعديل</small>" : tag ? "<small>" + acEsc(tag) + "</small>" : "") + "</td>";
+        return '<td class="' + cls + '">' + inner + (v !== orig ? "<small>تعديل</small>" : tag ? "<small>" + acEsc(tag) + "</small>" : "") + rkHtml + "</td>";
       }).join("") + "</tr>").join("") + "</tbody></table>";
     document.getElementById("shEditSave").style.display = shEditing ? "" : "none";
     document.getElementById("shEditToggle").textContent = shEditing ? "✖️ إلغاء التعديل" : "✏️ تعديل";
@@ -10839,6 +10857,13 @@ ${contentEl.innerHTML}
     if (w.style.display === "") { shEditing = false; shEditRender(); w.scrollIntoView({ behavior: "smooth", block: "start" }); }
   });
   document.getElementById("shEditToggle").addEventListener("click", () => { shEditing = !shEditing; shEditRender(); });
+  document.getElementById("shEditTable").addEventListener("change", e => {
+    const sel = e.target.closest("select[data-t]"); if (!sel) return;
+    const t = sel.dataset.t, per = Number(sel.dataset.p), rk = shRanks(per).find(d => d.t === t);
+    const td = sel.closest("td"), old = td.querySelector("small.rk"); if (old) old.remove();
+    if (rk) td.insertAdjacentHTML("beforeend", '<small class="rk' + (sel.value ? " busy" : "") + '">' + rk.label + (sel.value ? " ⚠️ لديه حصة بعد الترحيل" : "") + "</small>");
+    if (rk && sel.value) showToast("⚠️ تنبيه: الأستاذ " + t + " (" + rk.label + ") أصبحت لديه حصة بعد الترحيل في الحصة " + shPer(per) + " (فصل " + sel.value + ")");
+  });
   document.getElementById("shEditSave").addEventListener("click", shEditSave);
   document.getElementById("shEditReset").addEventListener("click", () => {
     if (!shPlan) return; if (data.shiftEdits) delete data.shiftEdits[shPlan.date];
@@ -10898,8 +10923,13 @@ ${contentEl.innerHTML}
     const sel = e.target.closest("select.sh-man"); if (!sel || !shPlan) return;
     if (!data.shiftManual || typeof data.shiftManual !== "object") data.shiftManual = {};
     const m = data.shiftManual[shPlan.date] = data.shiftManual[shPlan.date] || {};
+    const [kc, kp] = sel.dataset.k.split("|"), per = Number(kp);
+    const busy = sel.value ? shBusyAfter(sel.value, per, kc) : "";
+    const rk = sel.value ? shRanks(per).find(d => d.t === sel.value) : null;
     if (sel.value) m[sel.dataset.k] = sel.value; else delete m[sel.dataset.k];
-    saveData(); shRender(); showToast(sel.value ? "عُيّن الأستاذ " + sel.value + " منتظرًا" : "أُلغي التعديل اليدوي");
+    saveData(); shRender();
+    if (busy) showToast("⚠️ تنبيه: الأستاذ " + sel.value + (rk ? " (" + rk.label + ")" : "") + " أصبحت لديه حصة بعد الترحيل في الحصة " + shPer(per) + " (فصل " + busy + ")");
+    else showToast(sel.value ? "عُيّن الأستاذ " + sel.value + (rk ? " (" + rk.label + ")" : "") + " منتظرًا" : "أُلغي التعديل اليدوي");
   });
   document.getElementById("shApply").addEventListener("click", shApply);
   document.getElementById("shPrint").addEventListener("click", shPrint);
@@ -11314,7 +11344,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-15";
+window.APP_BUILD = "2026-11-14-16";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
