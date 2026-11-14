@@ -10753,8 +10753,20 @@ ${contentEl.innerHTML}
     act.style.display = "";
     if (document.getElementById("shEditWrap").style.display !== "none") { shEditing = false; shEditRender(); }
     const ap = (data.shiftPlans || {})[date];
-    if (ap) { const n = document.getElementById("shApplied"); n.style.display = ""; n.textContent = "✅ سبق اعتماد ترحيل هذا اليوم في " + ioStamp(ap.at); }
+    if (ap) { const n = document.getElementById("shApplied"); n.style.display = ""; n.innerHTML = "✅ سبق اعتماد ترحيل هذا اليوم في " + acEsc(ioStamp(ap.at)) + '<div style="margin-top:8px;"><button type="button" class="export-btn" id="shRedo" style="background:#fdecea; color:#b42318; border-color:#f3b8b3;">🗑️ حذف وإعادة الترحيل</button></div>'; }
   }
+  // حذف الترحيل المعتمد لهذا اليوم وإعادة حسابه من جديد
+  function shRedo(btn) {
+    if (!shPlan) return;
+    if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "⚠️ اضغط مرة أخرى لتأكيد الحذف"; setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.textContent = "🗑️ حذف وإعادة الترحيل"; } }, 4000); return; }
+    const date = shPlan.date;
+    data.coverageRecords = (data.coverageRecords || []).filter(r => !(r.date === date && /^s[hm]/.test(String(r.id || ""))));
+    data.waitUncovered = (data.waitUncovered || []).filter(u => !(u.date === date && u.dropped));
+    ["shiftPlans", "shiftManual", "shiftEdits"].forEach(k => { if (data[k] && typeof data[k] === "object") delete data[k][date]; });
+    saveData(); shEditing = false; shRender();
+    showToast("حُذف الترحيل المعتمد لهذا اليوم وأُعيد حسابه — راجعه ثم اضغط «اعتماد ونقل لجدول الانتظار» من جديد");
+  }
+  document.getElementById("shApplied").addEventListener("click", e => { const b = e.target.closest("#shRedo"); if (b) shRedo(b); });
   function shApply() {
     if (!shPlan || !shPlan.items.length) return;
     const date = shPlan.date;
@@ -11361,7 +11373,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-20";
+window.APP_BUILD = "2026-11-14-21";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
