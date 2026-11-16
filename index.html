@@ -557,6 +557,10 @@
   .ack-form .ack-opt input { width: 20px !important; height: 20px; min-width: 20px; flex: none; margin: 0; padding: 0; accent-color: #1F7A6D; }
   .ack-form .ack-opt:has(input:checked) { border-color: #1F7A6D; background: #eef7f5; }
   .ack-form textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 10px; border-radius: 12px; border: 1.5px solid var(--line); background: #fff; margin-bottom: 10px; resize: vertical; }
+  .ack-pad { margin: 0 0 12px; padding: 10px; border: 1.5px dashed #1F7A6D; border-radius: 12px; background: #eef7f5; }
+  .ack-pad-h { font-weight: 800; font-size: 15px; margin-bottom: 6px; color: #174a59; }
+  .ack-pad canvas { display: block; width: 100%; height: 150px; background: #fff; border: 1px solid #b9d3cd; border-radius: 10px; touch-action: none; cursor: crosshair; }
+  .ack-form .ack-pad .ack-pad-clear { width: auto !important; margin-top: 6px; padding: 6px 14px !important; font-size: 13px !important; background: #fff !important; color: #9a2f23 !important; border: 1px solid #e5b3ad !important; }
   .ack-sign { display: flex !important; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; margin: 0 0 12px; padding: 10px 12px; border: 1.5px dashed #1F7A6D; border-radius: 12px; background: #eef7f5; cursor: pointer; }
   .ack-form .ack-sign input { width: 24px !important; height: 24px; min-width: 24px; flex: none; margin: 0; padding: 0; accent-color: #1F7A6D; }
   .ack-form .ack-sign { justify-content: flex-start; white-space: nowrap; }
@@ -1750,6 +1754,25 @@
     </div>
   </div>
 
+  <!-- معاينة الترحيل -->
+  <div id="shPvModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(10,30,36,.6); padding:10px;">
+    <div style="background:#fff; border-radius:14px; height:100%; display:flex; flex-direction:column; overflow:hidden; max-width:900px; margin:0 auto;">
+      <div style="display:flex; gap:6px; align-items:center; padding:8px 10px; background:#174a59; color:#fff; flex-wrap:wrap;">
+        <b style="font-size:15px;">👁️ معاينة الجداول</b>
+        <select id="shPvSel" class="select-styled" style="flex:1; min-width:160px; padding:5px 8px; font-size:13px;">
+          <option value="all">جدول جميع المعلمين بعد الترحيل</option>
+          <option value="edited">جدول الترحيل بعد التعديل</option>
+          <option value="day">جدول المعلمين المتأثرين</option>
+          <option value="teachers">جداول المعلمين (ستة في الصفحة)</option>
+          <option value="shift">ورقة الترحيل</option>
+        </select>
+        <button type="button" id="shPvPrint" class="export-btn" style="padding:5px 10px;">🖨️ طباعة</button>
+        <button type="button" id="shPvClose" class="export-btn" style="padding:5px 10px; background:#fff; color:#174a59;">✖️ إغلاق</button>
+      </div>
+      <iframe id="shPvFrame" style="flex:1; width:100%; border:0; background:#eef3f4;"></iframe>
+    </div>
+  </div>
+
   <!-- الترحيلات المحفوظة -->
   <div class="detail" id="shiftArchView">
     <div class="back-row">
@@ -1777,6 +1800,7 @@
     <div id="shSum" class="la-sum" style="margin-top:10px;"></div>
     <div id="shList"></div>
     <div class="export-row" id="shActions" style="margin-top:10px; display:none;">
+      <button class="export-btn" id="shPreview" style="flex-basis:100%; background:#e3f1f4; color:#174a59; border-color:#9cc3cc;">👁️ معاينة الجداول</button>
       <button class="export-btn" id="shApply">✅ اعتماد ونقل لجدول الانتظار</button>
       <button class="export-btn" id="shPrint">🖨️ طباعة الترحيل</button>
       <button class="export-btn" id="shPrintDay">🗓️ طباعة جدول اليوم للمعلمين بعد الترحيل</button>
@@ -1789,7 +1813,7 @@
       <button class="export-btn" id="shPrintEdited">🖨️ طباعة جدول الترحيل بعد التعديل</button>
     </div>
     <div id="shEditWrap" style="display:none; margin-top:12px;">
-      <div class="detail-header" style="margin-bottom:6px;"><h2 style="font-size:17px;">جدول الترحيل لجميع المعلمين</h2><button class="export-btn" id="shEditToggle" style="padding:6px 12px;">✏️ تعديل</button></div>
+      <div class="detail-header" style="margin-bottom:6px;"><h2 style="font-size:17px;">جدول الترحيل لجميع المعلمين</h2><div style="display:flex; gap:6px;"><button class="export-btn" id="shEditPreview" style="padding:6px 12px; background:#e3f1f4; color:#174a59; border-color:#9cc3cc;">👁️ معاينة الجداول</button><button class="export-btn" id="shEditToggle" style="padding:6px 12px;">✏️ تعديل</button></div></div>
       <div class="sched-hint" style="text-align:right;">اضغط «تعديل» لتظهر في كل خانة قائمة بالفصول، ثم «حفظ». الخانات الملوّنة تغيّرت بالترحيل، والحمراء حصص الغائب.</div>
       <div id="shEditTable" style="overflow-x:auto;"></div>
       <div class="export-row" style="margin-top:8px;"><button class="export-btn" id="shEditSave" style="display:none;">💾 حفظ</button><button class="export-btn" id="shEditReset">↺ إعادة الجدول المحسوب</button></div>
@@ -2483,7 +2507,7 @@
             '<label class="ack-opt"><input type="radio" name="ackOpt" value=""><span>بدون اختيار</span></label></div>' : "") +
           '<label for="ackReply">' + (ropts.length ? "إفادة إضافية (اختياري)" : "إفادة المعلم") + '</label>' +
           '<textarea id="ackReply" rows="' + (ropts.length ? 3 : 5) + '" maxlength="2800" placeholder="اكتب إفادتك هنا…"></textarea>' +
-          '<label class="ack-sign"><input type="checkbox" id="ackSigned"><span>✍️ التوقيع</span></label>' +
+          '<div class="ack-pad"><div class="ack-pad-h">✍️ التوقيع — وقّع بإصبعك داخل المربع</div><canvas id="ackPad"></canvas><button type="button" id="ackPadClear" class="ack-pad-clear">🧽 مسح التوقيع</button></div>' +
           '<label for="ackCivil">أدخل رقم السجل المدني للتأكيد</label>' +
           '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
           '<button id="ackBtn">📤 إرسال الإفادة</button><div class="ack-msg" id="ackMsg"></div></div>'
@@ -2495,6 +2519,7 @@
           '<div class="ack-msg" id="ackMsg"></div><button id="ackBtn" hidden></button></div>'
         : '<div class="ack-form"><label for="ackCivil">' + (mode === "sign" ? "أدخل رقم السجل المدني ثم اختر «تم العلم والتوقيع» أو «تم العلم — بدون توقيع»" : "أدخل رقم السجل المدني لتأكيد اطلاعك على الإشعار") + '</label>' +
           '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
+          (mode === "sign" ? '<div class="ack-pad"><div class="ack-pad-h">✍️ التوقيع — وقّع بإصبعك داخل المربع</div><canvas id="ackPad"></canvas><button type="button" id="ackPadClear" class="ack-pad-clear">🧽 مسح التوقيع</button></div>' : "") +
           '<button id="ackBtn">' + (mode === "sign" ? "✍️ تم العلم والتوقيع" : "✅ أؤكد اطلاعي على الإشعار") + '</button>' +
           (mode === "sign" ? '<button id="ackBtnNo" class="ack-no-sign">👁️ تم العلم — بدون توقيع</button>' : "") +
           '<div class="ack-msg" id="ackMsg"></div></div>') +
@@ -2509,20 +2534,50 @@
       } catch (e) { alert("تعذر فتح الملف"); }
     }));
     const msg = (t, ok) => { const m = document.getElementById("ackMsg"); m.textContent = t; m.className = "ack-msg " + (ok ? "ok" : "err"); };
+    // لوحة التوقيع باليد
+    const pad = (() => {
+      const cv = document.getElementById("ackPad"); if (!cv) return null;
+      let drawn = false, last = null, ctx, locked = false;
+      const setup = () => {
+        const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+        cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+        ctx = cv.getContext("2d"); ctx.scale(dpr, dpr); ctx.lineCap = ctx.lineJoin = "round"; ctx.lineWidth = 2.6; ctx.strokeStyle = "#0b2a6b";
+        drawn = false;
+      };
+      setup();
+      const pt = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+      cv.addEventListener("pointerdown", e => { if (locked) return; e.preventDefault(); cv.setPointerCapture(e.pointerId); last = pt(e); ctx.beginPath(); ctx.arc(last.x, last.y, 1.2, 0, 7); ctx.fillStyle = "#0b2a6b"; ctx.fill(); drawn = true; });
+      cv.addEventListener("pointermove", e => { if (!last || locked) return; e.preventDefault(); const p = pt(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; drawn = true; });
+      const up = () => { last = null; }; cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up); cv.addEventListener("pointerleave", up);
+      document.getElementById("ackPadClear").addEventListener("click", () => { if (!locked) setup(); });
+      return {
+        has: () => drawn,
+        lock: () => { locked = true; document.getElementById("ackPadClear").disabled = true; },
+        // صورة مصغّرة (PNG) للتوقيع لحفظها مع الرد
+        data: () => { if (!drawn) return ""; const o = document.createElement("canvas"); o.width = 300; o.height = Math.round(300 * cv.height / cv.width); const c = o.getContext("2d"); c.drawImage(cv, 0, 0, o.width, o.height); return o.toDataURL("image/png"); }
+      };
+    })();
+    // إرسال الرد؛ إن رفضت القواعد حقل التوقيع (قبل تحديثها) يُعاد الإرسال بدون الصورة
+    const postAck = async (h, extra) => {
+      const mk = withSig => { const f = Object.assign({ noticeId: { stringValue: id }, h: { stringValue: h }, at: { timestampValue: new Date().toISOString() } }, extra); if (!withSig) delete f.sig; return JSON.stringify({ fields: f }); };
+      const url = base + "acks?documentId=" + encodeURIComponent(id + "_" + h) + "&key=" + cfg.apiKey;
+      let res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: mk(true) });
+      if (res.status === 403 && extra.sig) res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: mk(false) });
+      return res;
+    };
     if (mode === "sign") {
       const send = async signed => {
         const civil = ackNormCivil(document.getElementById("ackCivil").value);
         if (!/^\d{10}$/.test(civil)) { msg("أدخل رقم السجل المدني كاملاً (10 أرقام)"); return; }
+        if (signed && pad && !pad.has()) { msg("وقّع بإصبعك داخل مربع التوقيع أولاً"); return; }
         const b1 = document.getElementById("ackBtn"), b2 = document.getElementById("ackBtnNo");
         b1.disabled = b2.disabled = true; msg("جاري التسجيل…", true);
         try {
           const h = await ackHash(civil, id);
           if (!hashes[h]) { msg("رقم السجل المدني غير مسجل لهذا التنبيه — تأكد من الرقم أو راجع إدارة المدرسة"); b1.disabled = b2.disabled = false; return; }
-          const res = await fetch(base + "acks?documentId=" + encodeURIComponent(id + "_" + h) + "&key=" + cfg.apiKey, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fields: { noticeId: { stringValue: id }, h: { stringValue: h }, at: { timestampValue: new Date().toISOString() }, signed: { booleanValue: signed } } })
-          });
-          if (res.ok) { msg("شكراً " + (hashes[h].stringValue || "") + " — تم تسجيل: " + (signed ? "تم العلم والتوقيع ✓" : "تم العلم ولم يوقّع"), signed); document.getElementById("ackCivil").disabled = true; return; }
+          const sig = signed && pad ? pad.data() : "";
+          const res = await postAck(h, Object.assign({ signed: { booleanValue: signed } }, sig ? { sig: { stringValue: sig } } : {}));
+          if (res.ok) { if (pad) pad.lock(); msg("شكراً " + (hashes[h].stringValue || "") + " — تم تسجيل: " + (signed ? "تم العلم والتوقيع ✓" : "تم العلم ولم يوقّع"), signed); document.getElementById("ackCivil").disabled = true; return; }
           if (res.status === 409) { msg("سبق تسجيل ردّك على هذا التنبيه", true); return; }
           msg(res.status === 403 ? "تعذر التسجيل (403) — أبلغ إدارة المدرسة" : "تعذر التسجيل (" + res.status + ") — حاول لاحقاً");
         } catch (e) { msg("تعذر الاتصال — تحقق من الإنترنت وحاول مرة أخرى"); }
@@ -2538,21 +2593,19 @@
         const optEl = document.querySelector('input[name="ackOpt"]:checked');
         const opt = optEl && optEl.value !== "" ? ropts[Number(optEl.value)] : "";
         const txt = document.getElementById("ackReply").value.trim();
-        const reply = [opt, txt].filter(Boolean).join("\n"), signed = document.getElementById("ackSigned").checked;
+        const reply = [opt, txt].filter(Boolean).join("\n"), signed = !!(pad && pad.has());
         if (!reply) { msg(ropts.length ? "اختر سبب الغياب أو اكتب إفادتك" : "اكتب إفادتك أولاً"); return; }
         if (!/^\d{10}$/.test(civil)) { msg("أدخل رقم السجل المدني كاملاً (10 أرقام)"); return; }
         const btn = document.getElementById("ackBtn"); btn.disabled = true; msg("جاري الإرسال…", true);
         try {
           const h = await ackHash(civil, id);
           if (!hashes[h]) { msg("رقم السجل المدني غير مسجل لهذه المساءلة — تأكد من الرقم أو راجع إدارة المدرسة"); btn.disabled = false; return; }
-          const res = await fetch(base + "acks?documentId=" + encodeURIComponent(id + "_" + h) + "&key=" + cfg.apiKey, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fields: { noticeId: { stringValue: id }, h: { stringValue: h }, at: { timestampValue: new Date().toISOString() }, reply: { stringValue: reply }, signed: { booleanValue: signed } } })
-          });
+          const sig = signed ? pad.data() : "";
+          const res = await postAck(h, Object.assign({ reply: { stringValue: reply }, signed: { booleanValue: signed } }, sig ? { sig: { stringValue: sig } } : {}));
           if (res.ok) {
             msg("شكراً " + (hashes[h].stringValue || "") + " — تم إرسال إفادتك" + (signed ? " وتوقيعها ✓" : " (بدون توقيع)"), true);
             document.querySelectorAll('input[name="ackOpt"]').forEach(x => x.disabled = true);
-            document.getElementById("ackReply").disabled = true; document.getElementById("ackSigned").disabled = true; document.getElementById("ackCivil").disabled = true; return;
+            document.getElementById("ackReply").disabled = true; if (pad) pad.lock(); document.getElementById("ackCivil").disabled = true; return;
           }
           if (res.status === 409) { msg("سبق إرسال إفادتك على هذه المساءلة — لا يمكن إرسالها مرة أخرى", true); return; }
           msg(res.status === 403 ? "تعذر الإرسال (403) — أبلغ إدارة المدرسة بتحديث إعدادات المنصة" : "تعذر الإرسال (" + res.status + ") — حاول لاحقاً");
@@ -6596,7 +6649,9 @@ ${auto ? '<script>window.addEventListener("load", function () { var go = functio
       ${innerHTML}
     </section>`;
   }
+  let wpCapture = null; // عند المعاينة داخل الصفحة تُلتقط الطباعة بدل فتح نافذة
   function wpOpenDoc(html, fileBase) {
+    if (wpCapture) { wpCapture(html); return; }
     const w = window.open("", "_blank");
     if (!w) {
       saveFile((fileBase || "للطباعة") + ".html", html);
@@ -9602,7 +9657,7 @@ ${contentEl.innerHTML}
         <div style="font-weight:700; color:#174a59; margin-bottom:4px;">إفادة المعلم:</div>
         ${rp ? '<div style="white-space:pre-line; line-height:2; font-size:15.5px; min-height:60px; border-bottom:1.5px dotted #174a59; padding-bottom:4px;">' + wpEsc(rp.teacherReply || "") + "</div>" : line + line + line}
         <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:15px;">
-          <div>الاسم: ${v.teacher ? wpEsc(v.teacher) : "...................................."}</div><div>التوقيع: ${rp ? (rp.teacherSigned ? '<b style="color:#146c3a;">موقّع ✓</b>' : '<b style="color:#9a2f23;">لم يوقّع المعلم</b>') : "...................."}</div><div>التاريخ: ${rp && rp.replyAt ? wpEsc(wpDateParts(rp.replyAt.slice(0, 10)).hijri || "") : "......./......./......."}</div>
+          <div>الاسم: ${v.teacher ? wpEsc(v.teacher) : "...................................."}</div><div>التوقيع: ${rp ? (rp.teacherSigned ? (rp.teacherSig ? '<img src="' + rp.teacherSig + '" alt="توقيع" style="height:48px; vertical-align:middle;">' : '<b style="color:#146c3a;">موقّع ✓</b>') : '<b style="color:#9a2f23;">لم يوقّع المعلم</b>') : "...................."}</div><div>التاريخ: ${rp && rp.replyAt ? wpEsc(wpDateParts(rp.replyAt.slice(0, 10)).hijri || "") : "......./......./......."}</div>
         </div>
       </div>
       <div style="margin:14px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:10px 14px; break-inside:avoid;">
@@ -9830,7 +9885,7 @@ ${contentEl.innerHTML}
         <tr><th style="${H} width:7%">م</th><th style="${H} width:13%">اليوم</th><th style="${H} width:22%">التاريخ الهجري</th><th style="${H} width:17%">التاريخ الميلادي</th><th style="${H} width:13%">دقائق التأخير</th><th style="${H}">ملاحظات</th></tr>
         ${rows.length ? rows.map((r, i) => { const p = wpDateParts(r.date); return `<tr><td style="${B}">${i + 1}</td><td style="${B}">${wpEsc(p.dayName || "")}</td><td style="${B}">${wpEsc(p.hijri || "")}</td><td style="${B}">${wpEsc(ioGreg(r.date))}</td><td style="${B} font-weight:700;">${Number(r.minutes) || 0}</td><td style="${B}">${wpEsc(r.note || "")}</td></tr>`; }).join("") : `<tr><td colspan="6" style="${B}">—</td></tr>`}
         <tr><td colspan="4" style="${H}">المجموع</td><td style="${B} font-weight:800; background:#eef5f3;">${tot}</td><td style="${B} font-weight:800; background:#eef5f3;">${wpEsc(alFmtHM(tot))}</td></tr></table>`;
-    const sig = !conf ? "...................." : noSign ? '<b style="color:#9a5b00;">تم العلم ولم يوقّع</b>' : '<b style="color:#146c3a;">تم العلم والتوقيع ✓</b>';
+    const sig = !conf ? "...................." : noSign ? '<b style="color:#9a5b00;">تم العلم ولم يوقّع</b>' : rec.teacherSig ? '<img src="' + rec.teacherSig + '" alt="توقيع" style="height:48px; vertical-align:middle;">' : '<b style="color:#146c3a;">تم العلم والتوقيع ✓</b>';
     const sigDate = conf && conf !== "?" ? wpEsc(wpDateParts(new Date(conf).toISOString().slice(0, 10)).hijri || "") : "......./......./.......";
     const inner = `${t1}${t2}
       <div style="font-size:16.5px; line-height:2.1; white-space:pre-line; margin:4px 6px 0; font-weight:600;">${wpEsc(v.body || "")}</div>
@@ -10243,7 +10298,7 @@ ${contentEl.innerHTML}
           snap.forEach(d => { const a = d.data(), t = byHash[a.h], at = toIsoAny(a.at) || "?";
             if (t && !n.acks[t]) n.acks[t] = at;
             const r = owner[id];
-            if (r && (a.reply != null || a.signed != null) && (!r.replyAt || at >= r.replyAt)) { r.teacherReply = a.reply || ""; r.teacherSigned = !!a.signed; r.replyAt = at; }
+            if (r && (a.reply != null || a.signed != null) && (!r.replyAt || at >= r.replyAt)) { r.teacherReply = a.reply || ""; r.teacherSigned = !!a.signed; r.teacherSig = typeof a.sig === "string" && /^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(a.sig) ? a.sig : ""; r.replyAt = at; }
           });
         } catch (e) { fail = e; console.error("ackFetch", id, e); }
       }
@@ -10287,7 +10342,7 @@ ${contentEl.innerHTML}
         '<div class="la-step ' + (s.conf ? (isLH(r.type) && r.replyAt && r.teacherSigned === false ? "wait" : "ok") : "wait") + '"><b>👁️ الاطلاع والتأكيد</b>' + (s.conf ? (isLH(r.type) ? (r.replyAt && r.teacherSigned === false ? "تم العلم ولم يوقّع<br>" : "تم العلم والتوقيع<br>") : "") + acEsc(laFmt(s.conf)) : "بانتظار المعلم") + "</div>" +
         '<div class="la-step ' + (s.appr ? "ok" : "") + '"><b>🏁 الاعتماد</b><label><input type="checkbox" data-appr' + (s.appr ? " checked" : "") + (s.conf ? "" : " disabled") + "> " + (s.appr ? "معتمد" : "اعتماد") + "</label>" + (s.appr && r.approvedAt ? "<br>" + acEsc(ioStamp(r.approvedAt)) : "") + "</div>" +
       "</div>" +
-      (r.replyAt ? '<div class="io-reply"><b>إفادة المعلم:</b> ' + acEsc(r.teacherReply || "") + '<div style="margin-top:4px; font-weight:800; color:' + (r.teacherSigned ? "#146c3a" : "#9a2f23") + ';">' + (r.teacherSigned ? "✍️ موقّع ✓" : "لم يوقّع المعلم") + "</div></div>" : "") +
+      (r.replyAt ? '<div class="io-reply"><b>إفادة المعلم:</b> ' + acEsc(r.teacherReply || "") + '<div style="margin-top:4px; font-weight:800; color:' + (r.teacherSigned ? "#146c3a" : "#9a2f23") + ';">' + (r.teacherSigned ? "✍️ موقّع ✓" : "لم يوقّع المعلم") + "</div>" + (r.teacherSig ? '<img src="' + r.teacherSig + '" alt="توقيع المعلم" style="height:60px; margin-top:6px; background:#fff; border:1px solid #d6e2df; border-radius:8px; padding:2px;">' : "") + "</div>" : (r.teacherSig ? '<div class="io-reply"><b>توقيع المعلم:</b><br><img src="' + r.teacherSig + '" alt="توقيع المعلم" style="height:60px; margin-top:6px; background:#fff; border:1px solid #d6e2df; border-radius:8px; padding:2px;"></div>' : "")) +
       '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="resend">📱 إعادة إرسال الرابط</button><button class="export-btn" data-act="print">🖨️ طباعة</button></div></div>').join("");
   }
   document.getElementById("laList").addEventListener("change", e => {
@@ -10843,6 +10898,46 @@ ${contentEl.innerHTML}
   });
   document.getElementById("openShiftArch").addEventListener("click", () => { shArchRender(); showView("shiftArch"); });
   setTimeout(shArchCount, 0);
+  // ===== معاينة الترحيل داخل الصفحة =====
+  function shPvRun(kind) {
+    let html = "";
+    wpCapture = h => { html = h; };
+    try {
+      if (kind === "shift") shPrint();
+      else if (kind === "day") shPrintDay(false);
+      else if (kind === "all") shPrintDay(true);
+      else if (kind === "edited") shPrintDay(true, true);
+      else if (kind === "teachers") shPrintTeacher(document.getElementById("shTSel").value);
+    } finally { wpCapture = null; }
+    return html;
+  }
+  function shPvShow() {
+    const kind = document.getElementById("shPvSel").value, html = shPvRun(kind), fr = document.getElementById("shPvFrame");
+    fr.srcdoc = html ? html : '<div dir="rtl" style="font-family:sans-serif; padding:30px; text-align:center; color:#5b6660;">لا يوجد ما يُعرض في هذا الخيار' + (kind === "edited" ? " — احفظ تعديلًا على جدول الترحيل أولًا" : "") + "</div>";
+    fr.onload = () => {
+      try {
+        const d = fr.contentDocument, cw = fr.clientWidth;
+        d.querySelectorAll(".bar, .no-print").forEach(x => x.style.display = "none");
+        // تُعرض الورقة بعرض A4 ثم تُصغَّر لتناسب الشاشة كي تظهر كما ستُطبع
+        d.body.style.minWidth = "800px";
+        const w = Math.max(800, d.documentElement.scrollWidth);
+        if (w > cw) d.body.style.zoom = ((cw - 4) / w).toFixed(3);
+      } catch (e) {}
+    };
+  }
+  function shPvOpen() {
+    if (!shPlan || !shPlan.items.length) { showToast("لا يوجد ترحيل لهذا اليوم"); return; }
+    document.getElementById("shPvSel").value = (data.shiftEdits || {})[shPlan.date] ? "edited" : "all";
+    document.getElementById("shPvModal").style.display = "block"; shPvShow();
+  }
+  document.getElementById("shPreview").addEventListener("click", shPvOpen);
+  document.getElementById("shEditPreview").addEventListener("click", shPvOpen);
+  document.getElementById("shPvSel").addEventListener("change", shPvShow);
+  document.getElementById("shPvClose").addEventListener("click", () => { document.getElementById("shPvModal").style.display = "none"; document.getElementById("shPvFrame").srcdoc = ""; });
+  document.getElementById("shPvPrint").addEventListener("click", () => {
+    const k = document.getElementById("shPvSel").value;
+    if (k === "shift") shPrint(); else if (k === "day") shPrintDay(false); else if (k === "all") shPrintDay(true); else if (k === "edited") shPrintDay(true, true); else shPrintTeacher(document.getElementById("shTSel").value);
+  });
   // ===== طباعة جدول المعلم المتأثر بالترحيل =====
   function shFinalGrid() {
     const G = shDayGrid(true); if (!G) return null;
@@ -11504,7 +11599,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-14-24";
+window.APP_BUILD = "2026-11-16-3";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
