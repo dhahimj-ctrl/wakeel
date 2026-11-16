@@ -574,6 +574,16 @@
   .ef-item .ft { flex: 1; min-width: 0; } .ef-item .ft b { display: block; font-size: 13.5px; word-break: break-word; } .ef-item .ft small { color: #66736f; font-size: 11.5px; }
   .ef-item button { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 5px 8px; font: inherit; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
   .ef-item button.del { color: #b42318; }
+  .er-seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .er-seg button { flex: 1; min-width: 90px; padding: 8px 6px; border: 1.5px solid #9cc3cc; background: #fff; color: #174a59; border-radius: 10px; font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; }
+  .er-seg button.on { background: #174a59; color: #fff; border-color: #174a59; }
+  .er-src { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  .er-src th { background: #174a59; color: #fff; padding: 6px 4px; white-space: nowrap; }
+  .er-src td { border: 1px solid var(--line); padding: 5px 4px; text-align: center; background: #fff; }
+  .er-src td .er-ed { font: inherit; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 3px; background: #fffdf7; min-width: 80px; width: 100%; }
+  .er-sub { font-weight: 800; color: #174a59; margin: 12px 0 6px; padding-right: 8px; border-right: 4px solid #1F7A6D; font-size: 14.5px; } .er-sub span { color: #66736f; font-weight: 600; }
+  .er-src td.st-present { color: #146c3a; font-weight: 700; }
+  .er-src td.st-absent { color: #b42318; font-weight: 700; } .er-src td.st-late { color: #9a5b00; font-weight: 700; }
   .er-table { border-collapse: collapse; min-width: 100%; font-size: 13px; }
   .er-table th { background: #174a59; color: #fff; padding: 6px 4px; white-space: nowrap; font-weight: 700; }
   .er-table td { border: 1px solid var(--line); padding: 3px; background: #fff; }
@@ -1371,10 +1381,20 @@
     <div class="detail-header"><h2>🗂️ السجلات الإلكترونية</h2></div>
     <div class="er-grid" id="erPlatform" hidden></div>
     <div class="er-sec" style="display:flex; justify-content:space-between; align-items:center;"><span>📑 سجلات وكيل الشؤون التعليمية</span><span class="count-pill" id="erRegCount">0</span></div>
-    <div class="sched-hint" style="text-align:right;">سجلات تُعبّأ إلكترونيًا وتُطبع بالترويسة الرسمية. اختر نوع السجل ثم «إنشاء».</div>
+    <div class="sched-hint" style="text-align:right;">اختر السجل من القائمة: سجلات تُجلب تلقائيًا من المنصة، أو سجلات تُعبّأ يدويًا وتُطبع بالترويسة.</div>
     <div style="display:flex; gap:6px; flex-wrap:wrap; margin:8px 0;">
       <select class="select-styled" id="erNewType" style="flex:1; min-width:180px;"></select>
-      <button class="export-btn" id="erNewBtn">➕ إنشاء سجل</button>
+      <button class="export-btn" id="erNewBtn" style="display:none;">➕ إنشاء سجل</button>
+    </div>
+    <div id="erSrcBox" style="display:none; margin-bottom:10px;">
+      <div class="er-seg" id="erSeg"></div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin:8px 0;">
+        <label style="flex:1; min-width:130px; font-size:12px; font-weight:700;">من (ميلادي)<input type="date" id="erFrom" class="date-input" style="width:100%;"><small id="erFromH" style="display:block; color:#66736f; font-weight:400;"></small></label>
+        <label style="flex:1; min-width:130px; font-size:12px; font-weight:700;">إلى (ميلادي)<input type="date" id="erTo" class="date-input" style="width:100%;"><small id="erToH" style="display:block; color:#66736f; font-weight:400;"></small></label>
+        <label style="flex:1; min-width:140px; font-size:12px; font-weight:700;">المعلم<select id="erTeacher" class="select-styled" style="width:100%;"></select></label>
+      </div>
+      <div id="erSrcTable" style="overflow-x:auto;"></div>
+      <div class="export-row" style="margin-top:8px;"><button class="export-btn" id="erSrcPrint">🖨️ طباعة السجل</button></div>
     </div>
     <div id="erCustomBox" style="display:none; margin-bottom:8px;">
       <input type="text" id="erCustomTitle" class="date-input" placeholder="عنوان السجل" style="width:100%; margin-bottom:6px;">
@@ -4874,7 +4894,7 @@
     if (status === "early_leave" && time) diffMinutes = computeEarlyDiff(time);
     const record = { date, teacher, status, time: time || "", diffMinutes };
     if (status === "" || status === "present") { if (idx > -1) data.workAttendance.splice(idx, 1); } // حاضر هو الافتراضي فلا يُخزَّن
-    else if (idx > -1) data.workAttendance[idx] = record;
+    else if (idx > -1) { const o = data.workAttendance[idx]; if (o.status === status) { if (o.excuse) record.excuse = o.excuse; if (o.note) record.note = o.note; } data.workAttendance[idx] = record; }
     else data.workAttendance.push(record);
     saveData();
   }
@@ -10497,7 +10517,11 @@ ${contentEl.innerHTML}
   function erOpen() {
     document.getElementById("erPlatform").innerHTML = ER_PLATFORM.map((x, i) => { const n = x[4] ? x[4]() : null; return '<button class="er-tile" data-i="' + i + '"><span class="ei">' + x[0] + "</span><span><b>" + acEsc(x[1]) + "</b><small>" + acEsc(x[2]) + (n != null ? " · " + n : "") + "</small></span></button>"; }).join("");
     const sel = document.getElementById("erNewType");
-    if (!sel.options.length) sel.innerHTML = '<option value="">اختر نوع السجل</option>' + ER_TYPES.map(x => '<option value="' + x.k + '">' + acEsc(x.t) + "</option>").join("");
+    if (!sel.options.length) sel.innerHTML = '<option value="">اختر</option><optgroup label="من المنصة">' + Object.keys(ER_SRC).map(k => '<option value="src:' + k + '">' + acEsc(ER_SRC[k].t) + "</option>").join("") + '</optgroup><optgroup label="تقارير المنصة (تُفتح صفحتها)">' + Object.keys(ER_GO).map(k => '<option value="go:' + k + '">' + acEsc(ER_GO[k][0]) + "</option>").join("") + '</optgroup><optgroup label="سجلات تُعبّأ يدويًا">' + ER_TYPES.map(x => '<option value="' + x.k + '">' + acEsc(x.t) + "</option>").join("") + "</optgroup>";
+    const ts = document.getElementById("erTeacher"), tv = ts.value;
+    ts.innerHTML = '<option value="">الكل</option>' + data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar")).map(t => '<option value="' + acEsc(t) + '">' + acEsc(t) + "</option>").join("");
+    if (data.teachers.includes(tv)) ts.value = tv;
+    if (sel.value.startsWith("src:")) erSrcRender();
     erList(); showView("erec"); window.scrollTo(0, 0); efLoad();
   }
   function erList() {
@@ -10506,7 +10530,135 @@ ${contentEl.innerHTML}
     document.getElementById("erRegList").innerHTML = L.length ? L.map(r => '<div class="er-reg" data-id="' + acEsc(r.id) + '"><div><b>📑 ' + acEsc(r.title) + "</b><small>" + r.rows.length + " سطر · آخر تعديل " + acEsc(ioStamp(r.at)) + "</small></div><span>◀</span></div>").join("") : '<div class="empty-state">لا توجد سجلات بعد</div>';
   }
   document.getElementById("erPlatform").addEventListener("click", e => { const b = e.target.closest(".er-tile"); if (b) { ER_PLATFORM[Number(b.dataset.i)][3](); window.scrollTo(0, 0); } });
-  document.getElementById("erNewType").addEventListener("change", e => { document.getElementById("erCustomBox").style.display = e.target.value === "custom" ? "" : "none"; });
+  document.getElementById("erNewType").addEventListener("change", e => {
+    const v = e.target.value, src = v.startsWith("src:");
+    if (v.startsWith("go:")) { e.target.value = ""; document.getElementById("erSrcBox").style.display = "none"; document.getElementById("erNewBtn").style.display = "none"; ER_GO[v.slice(3)][1](); window.scrollTo(0, 0); return; }
+    document.getElementById("erCustomBox").style.display = v === "custom" ? "" : "none";
+    document.getElementById("erNewBtn").style.display = v && !src ? "" : "none";
+    document.getElementById("erSrcBox").style.display = src ? "" : "none";
+    if (src) { erSeg = "all"; erSrcRender(); }
+  });
+  // ===== سجلات تُجلب من المنصة =====
+  const erH = d => d ? wpDateParts(d).hijri : "—";
+  const erIso = ms => { if (!ms) return ""; const d = new Date(ms); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  const erDay = r => r.day || (r.date ? dayNameFromDate(r.date) : "") || "—";
+  const erG = d => { if (!d) return "—"; const [y, m, dd] = d.split("-"); return +dd + "/" + +m + "/" + y + " م"; };
+  const C_DAY = ["اليوم", erDay], C_DATE = ["التاريخ الهجري", r => erH(r.date)], C_GREG = ["التاريخ الميلادي", r => erG(r.date)], C_T = ["المعلم", r => r.teacher, { tch: 1 }], C_SEC = ["القسم", r => r.sec, { sec: 1 }];
+  const C_ST = ["الحالة", r => statusLabel(r.status), { st: 1 }], C_DET = ["التفاصيل", r => r.detail || "—"];
+  const erWork = (sts, names) => getMonitorTypeRecords("work").filter(r => sts.includes(r.status)).map(r => Object.assign({ sec: names[r.status] }, r));
+  const erSent = r => { const l = linkState(r); return l.appr ? "معتمدة ✓" : l.conf ? "اطّلع المعلم" : l.sent ? "أُرسل الرابط" : "—"; };
+  const ER_SRC = {
+    att: { t: "سجل الغياب والتأخر", from: "متابعة الدوام", segs: [["status", "حالة الحضور"], ["late", "المتأخرون"], ["absent", "الغائبون"], ["all", "الكل"]],
+      segTitle: { status: "حالة الحضور لجميع المعلمين", late: "المتأخرون", absent: "الغائبون" },
+      cols: [C_DAY, C_DATE, C_GREG, C_T, C_ST, ["مقدار التأخر", r => r.status === "late" ? (r.lateMin ? r.lateMin + " دقيقة" : "—") : "", { noAbs: 1 }],
+        ["العذر", r => r.record && ["absent", "late"].includes(r.status) ? (r.record.excuse === "yes" ? "بعذر" : r.record.excuse === "no" ? "بدون عذر" : "") : "", { edit: "excuse" }],
+        ["ملاحظات", r => r.record && ["absent", "late"].includes(r.status) ? (r.record.note || "") : "", { edit: "note" }]],
+      rows: (seg, ctx) => {
+        const recs = getMonitorTypeRecords("work").map(r => Object.assign({}, r, { lateMin: r.status === "late" ? ((r.record && r.record.time) ? computeLateDiff(r.record.time) : (r.record && r.record.diffMinutes) || 0) : 0 }));
+        if (seg !== "status") return recs.filter(r => r.status === seg);
+        // جميع المعلمين: «حاضر» هو الافتراضي ويُستكمل لكل معلم في أيام الدوام
+        const have = {}; recs.forEach(r => { have[r.date + "|" + r.teacher] = r; });
+        let dates = [];
+        if (ctx.f || ctx.t) {
+          const today = todayISODate(), a = ctx.f || ctx.t, b = ctx.t || ctx.f, end = b < today ? b : today;
+          for (const d = new Date(a + "T12:00:00"); d <= new Date(end + "T12:00:00"); d.setDate(d.getDate() + 1)) { const iso = erIso(d.getTime()); if (dayNameFromDate(iso) && !isHoliday(iso)) dates.push(iso); }
+        } else dates = [...new Set(recs.map(r => r.date))].filter(d => d && dayNameFromDate(d) && !isHoliday(d));
+        const out = [];
+        dates.forEach(d => data.teachers.forEach(t => out.push(have[d + "|" + t] || { date: d, day: dayNameFromDate(d), teacher: t, status: "present", detail: "" })));
+        return out;
+      } },
+    perm: { t: "سجل الاستئذان والانصراف المبكر", from: "متابعة الدوام", segs: [["permission", "الاستئذان"], ["early_leave", "الانصراف المبكر"], ["all", "الكل"]],
+      cols: [C_DAY, C_DATE, C_GREG, C_T, C_SEC, C_ST, C_DET],
+      rows: seg => erWork(seg === "all" ? ["permission", "early_leave"] : [seg], { permission: "الاستئذان", early_leave: "الانصراف المبكر" }) },
+    duty: { t: "سجل المناوبة والإشراف", from: "المناوبة والطابور", segs: [["recess", "مناوبة الفسحة"], ["endOfDay", "مناوبة نهاية الدوام"], ["lineup", "متابعة الطابور"], ["all", "الكل"]],
+      cols: [C_DAY, C_DATE, C_GREG, C_T, C_SEC, C_ST, C_DET],
+      rows: seg => { const out = [], N = { recess: "مناوبة الفسحة", endOfDay: "مناوبة نهاية الدوام", lineup: "الطابور" }; ["recess", "endOfDay", "lineup"].filter(x => seg === "all" || seg === x).forEach(x => getMonitorTypeRecords(x).filter(r => r.status && r.status !== "present").forEach(r => out.push(Object.assign({ sec: N[x] }, r)))); return out; } },
+    lessons: { t: "سجل متابعة الحصص", from: "سجل متابعة الحصص", segs: [["absent", "الغياب عن الحصة"], ["late", "التأخر عن الحصة"], ["permission", "مستأذن"], ["all", "الكل"]],
+      cols: [C_DAY, C_DATE, C_GREG, C_T, ["الحصة", r => shPer(Number(r.period)) || r.period], ["الفصل", r => r.className || "—"], C_ST],
+      rows: seg => (data.attendance || []).filter(r => r.status && r.status !== "present" && (seg === "all" || r.status === seg)).map(r => Object.assign({ sec: statusLabel(r.status) }, r)) },
+    wait: { t: "سجل حصص الانتظار", from: "سجل الانتظار",
+      cols: [C_DAY, C_DATE, C_GREG, ["الحصة", r => shPer(Number(r.period)) || r.period], ["الفصل", r => r.className || "—"], ["المعلم الغائب", r => r.absentTeacher || "—"], ["المنتظر", r => r.subTeacher || "—"], ["ملاحظة", r => r.note || r.rank || "—"]],
+      rows: () => (data.coverageRecords || []).filter(r => r.subTeacher).map(r => Object.assign({ tset: [r.subTeacher, r.absentTeacher] }, r)) },
+    waitCount: { t: "حصر حصص الانتظار", from: "سجل الانتظار", noDate: 1,
+      cols: [["المعلم", r => r.teacher], ["عدد حصص الانتظار", r => String(r.n)]],
+      rows: () => (data.coverageRecords || []).filter(r => r.subTeacher).map(r => Object.assign({}, r, { teacher: r.subTeacher })),
+      agg: rows => { const m = {}; rows.forEach(r => { m[r.teacher] = (m[r.teacher] || 0) + 1; }); return Object.keys(m).map(t => ({ teacher: t, n: m[t] })).sort((a, b) => b.n - a.n || a.teacher.localeCompare(b.teacher, "ar")); } },
+    shifts: { t: "سجل ترحيل الحصص", from: "الترحيلات المحفوظة",
+      cols: [C_DAY, C_DATE, C_GREG, ["الغائب/المستأذن", r => (r.absent || []).join("، ") || "—"], ["حصص مرحّلة", r => String((r.items || []).filter(i => i.type === "shift").length)], ["انتظار يدوي", r => String((r.items || []).filter(i => i.type === "manual").length)], ["تحتاج منتظر", r => String((r.items || []).filter(i => i.type === "wait").length)]],
+      rows: () => Object.values(data.shiftArchive || {}).map(r => Object.assign({ tset: r.absent || [] }, r)) },
+    inq: { t: "سجل المسائلات", from: "المسائلات المحفوظة",
+      cols: [C_DATE, C_GREG, C_T, ["المساءلة", r => r.title || "—"], ["الرابط", erSent], ["الطباعة", r => r.printedAt ? "طُبعت" : "—"], ["التسليم", r => r.delivered ? "سُلّمت" : "—"]],
+      rows: () => (data.officialInq || []).map(r => Object.assign({}, r, { date: r.dateIso || erIso(r.createdAt) })) },
+    alerts: { t: "سجل التنبيهات", from: "التنبيهات المحفوظة",
+      cols: [C_DATE, C_GREG, C_T, ["التنبيه", r => r.title || "—"], ["الرابط", erSent], ["الطباعة", r => r.printedAt ? "طُبع" : "—"], ["التسليم", r => r.delivered ? "سُلّم" : "—"]],
+      rows: () => (data.officialAlerts || []).map(r => Object.assign({}, r, { date: r.dateIso || (/^\d{4}-\d\d-\d\d$/.test(r.date || "") ? r.date : "") || erIso(r.createdAt) })) }
+  };
+  const ER_GO = { monRep: ["تقارير المتابعة", () => document.getElementById("openMonitorReports").click()], comp: ["التقرير الشامل", () => document.getElementById("openComprehensive").click()], ack: ["متابعة الاطلاع", () => ackOpenView()] };
+  let erSeg = "all";
+  function erSrcRows(segArg) {
+    const k = document.getElementById("erNewType").value.slice(4), S = ER_SRC[k], tf = document.getElementById("erTeacher").value;
+    let f = document.getElementById("erFrom").value, t = document.getElementById("erTo").value;
+    if (f && t && t < f) [f, t] = [t, f];
+    const seg = segArg || erSeg;
+    let rows = S.rows(seg, { f, t }).filter(r => (!tf || (r.tset ? r.tset.includes(tf) : r.teacher === tf)) && (!r.date || ((!f || r.date >= f) && (!t || r.date <= t) && !isHoliday(r.date))) && (!(f || t) || r.date));
+    rows.sort((a, b) => (a.date || "").localeCompare(b.date || "") || (a.period || 0) - (b.period || 0) || String(a.teacher || "").localeCompare(String(b.teacher || ""), "ar"));
+    if (S.agg) rows = S.agg(rows);
+    const cols = S.cols.filter(c => !(c[2] && c[2].tch && tf && !S.agg) && !(c[2] && c[2].sec) && !(c[2] && c[2].noAbs && seg === "absent"));
+    return { S, rows, f, t, tf, cols };
+  }
+  // الأقسام المعروضة: قسم واحد، أو عند «الكل» جدول منفصل لكل قسم أسفل بعضها
+  function erSections() {
+    const S = ER_SRC[document.getElementById("erNewType").value.slice(4)];
+    const segs = !S.segs ? [null] : erSeg === "all" ? S.segs.filter(x => x[0] !== "all").map(x => x[0]) : [erSeg];
+    return segs.map(sg => Object.assign({ seg: sg, name: sg ? ((S.segTitle || {})[sg] || (S.segs.find(x => x[0] === sg) || [, ""])[1]) : "" }, erSrcRows(sg || undefined)));
+  }
+  function erSrcRender() {
+    const k = document.getElementById("erNewType").value.slice(4), S = ER_SRC[k]; if (!S) return;
+    const seg = document.getElementById("erSeg");
+    seg.style.display = S.segs ? "" : "none";
+    seg.innerHTML = (S.segs || []).map(x => '<button type="button" data-s="' + x[0] + '"' + (x[0] === erSeg ? ' class="on"' : "") + ">" + acEsc(x[1]) + "</button>").join("");
+    ["erFrom", "erTo"].forEach(id => { const v = document.getElementById(id).value, p = v ? wpDateParts(v) : null; document.getElementById(id + "H").textContent = p ? (p.dayName || "") + " — " + p.hijri : ""; });
+    const secs = erSections(), multi = secs.length > 1;
+    document.getElementById("erSrcTable").innerHTML = '<div class="sched-hint" style="text-align:right;">المصدر: ' + acEsc(S.from) + "</div>" + secs.map(x =>
+      (multi || x.name ? '<div class="er-sub">' + acEsc(x.name || S.t) + ' <span>(' + x.rows.length + ")</span></div>" : '<div class="sched-hint" style="text-align:right;">عدد السجلات: <b>' + x.rows.length + "</b></div>") +
+      (!x.rows.length ? '<div class="empty-state" style="padding:12px;">لا توجد سجلات</div>' :
+      '<table class="er-src"><thead><tr><th>م</th>' + x.cols.map(c => "<th>" + acEsc(c[0]) + "</th>").join("") + "</tr></thead><tbody>" +
+      x.rows.map((r, i) => "<tr><td>" + (i + 1) + "</td>" + x.cols.map(c => "<td" + (c[2] && c[2].st ? ' class="st-' + acEsc(r.status) + '"' : "") + ">" + erCell(c, r) + "</td>").join("") + "</tr>").join("") + "</tbody></table>")).join("");
+  }
+  // خانات قابلة للتعديل: العذر والملاحظات تُحفظ في سجل الدوام نفسه
+  function erCell(c, r) {
+    const ed = c[2] && c[2].edit;
+    if (!ed) return acEsc(c[1](r));
+    if (!(r.record && ["absent", "late"].includes(r.status))) return "";
+    const key = acEsc(r.record.date + "|" + r.record.teacher);
+    if (ed === "excuse") { const v = r.record.excuse || ""; return '<select class="er-ed" data-k="' + key + '" data-f="excuse"><option value="">اختر</option><option value="yes"' + (v === "yes" ? " selected" : "") + '>بعذر</option><option value="no"' + (v === "no" ? " selected" : "") + ">بدون عذر</option></select>"; }
+    return '<input type="text" class="er-ed" data-k="' + key + '" data-f="note" value="' + acEsc(r.record.note || "") + '" placeholder="…">';
+  }
+  document.getElementById("erSrcTable").addEventListener("change", e => {
+    const el = e.target.closest(".er-ed"); if (!el) return;
+    const [d, t] = el.dataset.k.split("|"), rec = data.workAttendance.find(r => r.date === d && r.teacher === t); if (!rec) return;
+    const v = el.value.trim(); if (v) rec[el.dataset.f] = v; else delete rec[el.dataset.f];
+    saveData(); erSrcRender(); showToast("تم الحفظ");
+  });
+  document.getElementById("erSeg").addEventListener("click", e => { const b = e.target.closest("button[data-s]"); if (!b) return; erSeg = b.dataset.s; erSrcRender(); });
+  ["erFrom", "erTo", "erTeacher"].forEach(id => document.getElementById(id).addEventListener("change", erSrcRender));
+  document.getElementById("erSrcPrint").addEventListener("click", () => {
+    const k = document.getElementById("erNewType").value.slice(4); if (!ER_SRC[k]) return;
+    const secs = erSections(), { S, f, t, tf } = secs[0], multi = secs.length > 1;
+    if (!secs.some(x => x.rows.length)) { showToast("لا توجد سجلات للطباعة"); return; }
+    const title = S.t + (!multi && secs[0].name ? " — " + secs[0].name : "");
+    const B = "border:1.5px solid #174a59; padding:6px 4px; text-align:center; font-size:13px;", H = B + " background:#174a59; color:#fff; font-weight:700;";
+    const range = (f || t) ? `<div style="text-align:center; font-size:14.5px; margin:-4px 0 8px;"><b style="color:#174a59;">الفترة:</b> من ${wpEsc(f ? wpDateParts(f).hijri : "البداية")} إلى ${wpEsc(t ? wpDateParts(t).hijri : "اليوم")}</div>` : "";
+    const who = tf ? `<div style="text-align:center; font-size:15px; font-weight:800; color:#174a59; margin-bottom:6px;">المعلم: ${wpEsc(tf)}</div>` : "";
+    const stc = st => st === "absent" ? "#b42318" : st === "present" ? "#146c3a" : "#9a5b00";
+    const inner = range + who + secs.map(x => (multi ? `<h3 style="color:#174a59; font-size:16px; margin:14px 0 6px; border-right:4px solid #1F7A6D; padding-right:8px;">${wpEsc(x.name)} (${x.rows.length})</h3>` : "") +
+      (!x.rows.length ? `<div style="text-align:center; color:#66736f; padding:8px; border:1px dashed #b9c9c6;">لا توجد سجلات</div>` : `<table style="width:100%; border-collapse:collapse;">
+      <tr><th style="${H} width:5%">م</th>${x.cols.map(c => `<th style="${H}">${wpEsc(c[0])}</th>`).join("")}</tr>
+      ${x.rows.map((r, i) => `<tr><td style="${B}">${i + 1}</td>${x.cols.map(c => `<td style="${B}${c[2] && c[2].st ? " font-weight:700; color:" + stc(r.status) + ";" : ""}">${wpEsc(c[1](r))}</td>`).join("")}</tr>`).join("")}
+    </table>`) + (multi ? "" : `<div style="text-align:center; margin-top:8px; font-size:13.5px;">عدد السجلات: <b>${x.rows.length}</b></div>`)).join("") + `
+    <div style="display:flex; justify-content:space-between; margin:24px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>`;
+    wpOpenDoc(wpShellDoc(title, wpGenericPage(title, inner), { landscape: secs[0].cols.length > 9 }), title.replace(/ /g, "_"));
+  });
   document.getElementById("erNewBtn").addEventListener("click", () => {
     const k = document.getElementById("erNewType").value; if (!k) { showToast("اختر نوع السجل أولاً"); return; }
     const ty = ER_TYPES.find(x => x.k === k); let title = ty.t, cols = ty.c.map(c => ({ l: c[0], t: c[1] }));
@@ -11877,7 +12029,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-16-6";
+window.APP_BUILD = "2026-11-17-4";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
