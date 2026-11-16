@@ -593,6 +593,7 @@
   .er-intro-view table, .er-intro-ed table { border-collapse: collapse; max-width: 100%; }
   .er-intro-view td, .er-intro-view th, .er-intro-ed td, .er-intro-ed th { border: 1px solid #9aa9a6; padding: 4px; }
   .er-intro-view img, .er-intro-ed img { max-width: 100%; height: auto; }
+  .er-intro-paper { display: block; width: 100%; border: 1px solid #c9d6d3; border-radius: 6px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.08); min-height: 200px; }
   .er-intro-ed { min-height: 130px; border: 1.5px dashed #1F7A6D; border-radius: 10px; padding: 8px; background: #fffef9; margin-top: 6px; overflow-x: auto; outline: none; line-height: 1.8; }
   .er-intro-ed:empty::before { content: attr(data-ph); color: #8a9692; }
   .er-day { border: 1.5px solid #c9dcd8; border-radius: 12px; padding: 8px; margin: 10px 0; background: #fbfdfc; }
@@ -10587,9 +10588,27 @@ ${contentEl.innerHTML}
     const out = root.innerHTML.trim();
     return root.textContent.trim() || root.querySelector("img,table") ? out : "";
   }
-  function erIntroWire(pre, get, set) {
+  // عرض التعريف على الشاشة كصفحة أولى مطابقة للطباعة (بالترويسة)
+  function erIntroPaper(box, title, h) {
+    box.innerHTML = "";
+    if (!h) return;
+    const fr = document.createElement("iframe");
+    fr.className = "er-intro-paper"; fr.setAttribute("title", "تعريف السجل");
+    fr.srcdoc = wpShellDoc(title, erIntroPage(title, h), {});
+    fr.onload = () => {
+      try {
+        const d = fr.contentDocument; d.querySelectorAll(".bar, .no-print").forEach(x => x.style.display = "none");
+        d.body.style.minWidth = "800px"; d.body.style.margin = "0";
+        const w = Math.max(800, d.documentElement.scrollWidth), cw = fr.clientWidth || box.clientWidth, z = Math.min(1, (cw - 2) / w);
+        d.body.style.zoom = z.toFixed(3);
+        fr.style.height = Math.ceil(d.documentElement.scrollHeight * (d.body.style.zoom ? 1 : 1)) + 8 + "px";
+      } catch (e) {}
+    };
+    box.appendChild(fr);
+  }
+  function erIntroWire(pre, get, set, titleFn) {
     const $ = id => document.getElementById(pre + id);
-    const show = () => { const h = get() || ""; $("IntroView").innerHTML = h; $("IntroView").style.display = ""; $("IntroEditBox").style.display = "none"; $("IntroEdit").style.display = ""; $("IntroEdit").textContent = h ? "✏️ تعديل" : "➕ كتابة / لصق"; };
+    const show = () => { const h = get() || ""; erIntroPaper($("IntroView"), titleFn(), h); $("IntroView").style.display = ""; $("IntroEditBox").style.display = "none"; $("IntroEdit").style.display = ""; $("IntroEdit").textContent = h ? "✏️ تعديل" : "➕ كتابة / لصق"; };
     $("IntroEdit").addEventListener("click", () => { $("IntroEd").innerHTML = get() || ""; $("IntroView").style.display = "none"; $("IntroEditBox").style.display = ""; $("IntroEdit").style.display = "none"; $("IntroEd").focus(); });
     $("IntroCancel").addEventListener("click", show);
     $("IntroSave").addEventListener("click", () => { const h = erClean($("IntroEd").innerHTML); if (h.length > 400000) { showToast("التعريف كبير جدًا — قلّل الصور"); return; } set(h); saveData(); show(); showToast(h ? "تم حفظ التعريف — يظهر في بداية السجل" : "لا يوجد تعريف"); });
@@ -10597,8 +10616,8 @@ ${contentEl.innerHTML}
     return show;
   }
   const erIntroKey = () => document.getElementById("erNewType").value;
-  const erSIntroShow = erIntroWire("erS", () => (data.erIntro || {})[erIntroKey()] || "", h => { if (!data.erIntro || typeof data.erIntro !== "object") data.erIntro = {}; if (h) data.erIntro[erIntroKey()] = h; else delete data.erIntro[erIntroKey()]; });
-  const erMIntroShow = erIntroWire("erM", () => (erCur && erCur.intro) || "", h => { if (!erCur) return; if (h) erCur.intro = h; else delete erCur.intro; erCur.at = Date.now(); });
+  const erSIntroShow = erIntroWire("erS", () => (data.erIntro || {})[erIntroKey()] || "", h => { if (!data.erIntro || typeof data.erIntro !== "object") data.erIntro = {}; if (h) data.erIntro[erIntroKey()] = h; else delete data.erIntro[erIntroKey()]; }, () => { const S = ER_SRC[erIntroKey().slice(4)]; return S ? S.t : "السجل"; });
+  const erMIntroShow = erIntroWire("erM", () => (erCur && erCur.intro) || "", h => { if (!erCur) return; if (h) erCur.intro = h; else delete erCur.intro; erCur.at = Date.now(); }, () => (erCur && erCur.title) || "السجل");
   // صفحة التعريف الأولى (مرة واحدة في بداية السجل)
   const erIntroPage = (title, html) => html ? `<section class="page gen">${wpBandHTML()}<h2>${wpEsc(title)}</h2><style>.er-intro-print table{border-collapse:collapse;max-width:100%}.er-intro-print th,.er-intro-print td{color:inherit;background:transparent;border:1px solid #777;padding:4px 6px;text-align:inherit;font-size:inherit}.er-intro-print th{font-weight:700}.er-intro-print img{max-width:100%;height:auto}</style><div class="er-intro-print" style="font-size:14.5px; line-height:1.9;">${html}</div></section>` : "";
   // ===== تصدير PDF وWord =====
@@ -12158,7 +12177,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-17-7";
+window.APP_BUILD = "2026-11-17-8";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
