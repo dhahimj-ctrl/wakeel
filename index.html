@@ -581,6 +581,22 @@
   .er-src th { background: #174a59; color: #fff; padding: 6px 4px; white-space: nowrap; }
   .er-src td { border: 1px solid var(--line); padding: 5px 4px; text-align: center; background: #fff; }
   .er-src td .er-ed { font: inherit; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 3px; background: #fffdf7; min-width: 80px; width: 100%; }
+  .er-box { border: 1.5px solid #9cc3cc; border-radius: 14px; padding: 10px; background: #f7fbfb; }
+  .er-box-h { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; color: #174a59; font-size: 15.5px; }
+  .er-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+  .er-acts .export-btn { padding: 6px 10px; font-size: 13px; }
+  .er-intro-h .export-btn { flex: none !important; width: auto !important; }
+  .er-intro { border: 1.5px solid #c9dcd8; border-radius: 12px; background: #fff; padding: 8px 10px; margin-bottom: 10px; }
+  .er-intro-h { display: flex; justify-content: space-between; align-items: center; gap: 6px; color: #174a59; }
+  .er-intro-view { margin-top: 6px; overflow-x: auto; font-size: 14px; line-height: 1.8; }
+  .er-intro-view:empty::before { content: "لا يوجد تعريف بعد"; color: #8a9692; font-size: 12.5px; }
+  .er-intro-view table, .er-intro-ed table { border-collapse: collapse; max-width: 100%; }
+  .er-intro-view td, .er-intro-view th, .er-intro-ed td, .er-intro-ed th { border: 1px solid #9aa9a6; padding: 4px; }
+  .er-intro-view img, .er-intro-ed img { max-width: 100%; height: auto; }
+  .er-intro-ed { min-height: 130px; border: 1.5px dashed #1F7A6D; border-radius: 10px; padding: 8px; background: #fffef9; margin-top: 6px; overflow-x: auto; outline: none; line-height: 1.8; }
+  .er-intro-ed:empty::before { content: attr(data-ph); color: #8a9692; }
+  .er-day { border: 1.5px solid #c9dcd8; border-radius: 12px; padding: 8px; margin: 10px 0; background: #fbfdfc; }
+  .er-day-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; background: #174a59; color: #fff; border-radius: 8px; padding: 7px 10px; font-size: 13.5px; margin-bottom: 4px; }
   .er-sub { font-weight: 800; color: #174a59; margin: 12px 0 6px; padding-right: 8px; border-right: 4px solid #1F7A6D; font-size: 14.5px; } .er-sub span { color: #66736f; font-weight: 600; }
   .er-src td.st-present { color: #146c3a; font-weight: 700; }
   .er-src td.st-absent { color: #b42318; font-weight: 700; } .er-src td.st-late { color: #9a5b00; font-weight: 700; }
@@ -1386,7 +1402,18 @@
       <select class="select-styled" id="erNewType" style="flex:1; min-width:180px;"></select>
       <button class="export-btn" id="erNewBtn" style="display:none;">➕ إنشاء سجل</button>
     </div>
-    <div id="erSrcBox" style="display:none; margin-bottom:10px;">
+    <div id="erSrcBox" class="er-box" style="display:none; margin-bottom:10px;">
+      <div class="er-box-h"><b id="erSrcTitle">السجل</b>
+        <div class="er-acts"><button type="button" class="export-btn" data-act="print">🖨️ طباعة</button><button type="button" class="export-btn" data-act="pdf">📄 PDF</button><button type="button" class="export-btn" data-act="word">📝 Word</button></div>
+      </div>
+      <div class="er-intro" id="erSIntro">
+        <div class="er-intro-h"><b>📝 تعريف بالسجل</b><button type="button" class="export-btn" id="erSIntroEdit" style="padding:5px 10px;">➕ كتابة / لصق</button></div>
+        <div class="er-intro-view" id="erSIntroView"></div>
+        <div id="erSIntroEditBox" style="display:none;">
+          <div class="er-intro-ed" id="erSIntroEd" contenteditable="true" data-ph="اكتب هنا أو الصق تعريف السجل — يُحفظ بنفس تنسيق المصدر حتى الجداول"></div>
+          <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;"><button type="button" class="export-btn" id="erSIntroSave">💾 حفظ</button><button type="button" class="export-btn" id="erSIntroCancel">✖️ إلغاء</button><button type="button" class="export-btn" id="erSIntroClear" style="color:#b42318;">🗑️ مسح التعريف</button></div>
+        </div>
+      </div>
       <div class="er-seg" id="erSeg"></div>
       <div style="display:flex; gap:6px; flex-wrap:wrap; margin:8px 0;">
         <label style="flex:1; min-width:130px; font-size:12px; font-weight:700;">من (ميلادي)<input type="date" id="erFrom" class="date-input" style="width:100%;"><small id="erFromH" style="display:block; color:#66736f; font-weight:400;"></small></label>
@@ -1394,7 +1421,7 @@
         <label style="flex:1; min-width:140px; font-size:12px; font-weight:700;">المعلم<select id="erTeacher" class="select-styled" style="width:100%;"></select></label>
       </div>
       <div id="erSrcTable" style="overflow-x:auto;"></div>
-      <div class="export-row" style="margin-top:8px;"><button class="export-btn" id="erSrcPrint">🖨️ طباعة السجل</button></div>
+      <div class="export-row" style="margin-top:8px;"><button class="export-btn" id="erSrcPrint">🖨️ طباعة السجل</button><button class="export-btn" id="erSrcPdf">📄 تصدير PDF</button><button class="export-btn" id="erSrcWord">📝 تصدير Word</button></div>
     </div>
     <div id="erCustomBox" style="display:none; margin-bottom:8px;">
       <input type="text" id="erCustomTitle" class="date-input" placeholder="عنوان السجل" style="width:100%; margin-bottom:6px;">
@@ -1425,12 +1452,23 @@
       <button class="back-btn" id="erBack"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>السجلات الإلكترونية</button>
     </div>
     <div class="detail-header"><h2 id="erRegTitle">سجل</h2></div>
+    <div class="er-acts" id="erMActs" style="margin-bottom:8px;"><button type="button" class="export-btn" data-act="print">🖨️ طباعة</button><button type="button" class="export-btn" data-act="pdf">📄 PDF</button><button type="button" class="export-btn" data-act="word">📝 Word</button></div>
     <input type="text" id="erRegName" class="date-input" style="width:100%; margin-bottom:8px; font-weight:700;" placeholder="عنوان السجل">
+    <div class="er-intro" id="erMIntro">
+        <div class="er-intro-h"><b>📝 تعريف بالسجل</b><button type="button" class="export-btn" id="erMIntroEdit" style="padding:5px 10px;">➕ كتابة / لصق</button></div>
+        <div class="er-intro-view" id="erMIntroView"></div>
+        <div id="erMIntroEditBox" style="display:none;">
+          <div class="er-intro-ed" id="erMIntroEd" contenteditable="true" data-ph="اكتب هنا أو الصق تعريف السجل — يُحفظ بنفس تنسيق المصدر حتى الجداول"></div>
+          <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;"><button type="button" class="export-btn" id="erMIntroSave">💾 حفظ</button><button type="button" class="export-btn" id="erMIntroCancel">✖️ إلغاء</button><button type="button" class="export-btn" id="erMIntroClear" style="color:#b42318;">🗑️ مسح التعريف</button></div>
+        </div>
+      </div>
     <div style="overflow-x:auto;"><table class="er-table" id="erTable"></table></div>
     <div class="export-row" style="margin-top:10px;">
       <button class="export-btn" id="erAddRow">➕ إضافة سطر</button>
       <button class="export-btn" id="erPrint">🖨️ طباعة السجل</button>
       <button class="export-btn" id="erPrintBlank">📄 طباعة نموذج فارغ</button>
+      <button class="export-btn" id="erPdf">📄 تصدير PDF</button>
+      <button class="export-btn" id="erWord">📝 تصدير Word</button>
       <button class="export-btn" id="erDelReg" style="color:#b42318;">🗑️ حذف السجل</button>
     </div>
     <div class="sched-hint" style="text-align:right;">يُحفظ ما تكتبه تلقائيًا.</div>
@@ -2944,6 +2982,7 @@
     if (!out.shiftEdits || typeof out.shiftEdits !== "object" || Array.isArray(out.shiftEdits)) out.shiftEdits = {};
     if (!out.shiftArchive || typeof out.shiftArchive !== "object" || Array.isArray(out.shiftArchive)) out.shiftArchive = {};
     if (!Array.isArray(out.officialRegs)) out.officialRegs = [];
+    if (!out.erIntro || typeof out.erIntro !== "object" || Array.isArray(out.erIntro)) out.erIntro = {};
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -10521,7 +10560,7 @@ ${contentEl.innerHTML}
     const ts = document.getElementById("erTeacher"), tv = ts.value;
     ts.innerHTML = '<option value="">الكل</option>' + data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar")).map(t => '<option value="' + acEsc(t) + '">' + acEsc(t) + "</option>").join("");
     if (data.teachers.includes(tv)) ts.value = tv;
-    if (sel.value.startsWith("src:")) erSrcRender();
+    if (sel.value.startsWith("src:")) { erSIntroShow(); erSrcRender(); }
     erList(); showView("erec"); window.scrollTo(0, 0); efLoad();
   }
   function erList() {
@@ -10536,14 +10575,75 @@ ${contentEl.innerHTML}
     document.getElementById("erCustomBox").style.display = v === "custom" ? "" : "none";
     document.getElementById("erNewBtn").style.display = v && !src ? "" : "none";
     document.getElementById("erSrcBox").style.display = src ? "" : "none";
-    if (src) { erSeg = "all"; erSrcRender(); }
+    if (src) { erSeg = "all"; erSIntroShow(); erSrcRender(); }
   });
+  // ===== تعريف السجل (نص منسق يُلصق كما هو) =====
+  function erClean(html) {
+    const doc = new DOMParser().parseFromString("<div>" + (html || "") + "</div>", "text/html"), root = doc.body.firstChild;
+    root.querySelectorAll("script,style,iframe,object,embed,link,meta,title,form,input,button,textarea,select,svg,math").forEach(n => n.remove());
+    root.querySelectorAll("*").forEach(n => { [...n.attributes].forEach(a => { const nm = a.name.toLowerCase(), v = String(a.value || ""); if (nm.startsWith("on") || ((nm === "href" || nm === "src") && /^\s*(javascript|vbscript):/i.test(v)) || (nm === "src" && !/^(data:image\/|https:)/i.test(v)) || nm === "contenteditable" || nm === "class" || nm === "id") n.removeAttribute(a.name); }); });
+    // إزالة تعليقات وورد
+    const walker = doc.createTreeWalker(root, NodeFilter.SHOW_COMMENT); const cm = []; while (walker.nextNode()) cm.push(walker.currentNode); cm.forEach(c => c.remove());
+    const out = root.innerHTML.trim();
+    return root.textContent.trim() || root.querySelector("img,table") ? out : "";
+  }
+  function erIntroWire(pre, get, set) {
+    const $ = id => document.getElementById(pre + id);
+    const show = () => { const h = get() || ""; $("IntroView").innerHTML = h; $("IntroView").style.display = ""; $("IntroEditBox").style.display = "none"; $("IntroEdit").style.display = ""; $("IntroEdit").textContent = h ? "✏️ تعديل" : "➕ كتابة / لصق"; };
+    $("IntroEdit").addEventListener("click", () => { $("IntroEd").innerHTML = get() || ""; $("IntroView").style.display = "none"; $("IntroEditBox").style.display = ""; $("IntroEdit").style.display = "none"; $("IntroEd").focus(); });
+    $("IntroCancel").addEventListener("click", show);
+    $("IntroSave").addEventListener("click", () => { const h = erClean($("IntroEd").innerHTML); if (h.length > 400000) { showToast("التعريف كبير جدًا — قلّل الصور"); return; } set(h); saveData(); show(); showToast(h ? "تم حفظ التعريف — يظهر في بداية السجل" : "لا يوجد تعريف"); });
+    $("IntroClear").addEventListener("click", () => { $("IntroEd").innerHTML = ""; });
+    return show;
+  }
+  const erIntroKey = () => document.getElementById("erNewType").value;
+  const erSIntroShow = erIntroWire("erS", () => (data.erIntro || {})[erIntroKey()] || "", h => { if (!data.erIntro || typeof data.erIntro !== "object") data.erIntro = {}; if (h) data.erIntro[erIntroKey()] = h; else delete data.erIntro[erIntroKey()]; });
+  const erMIntroShow = erIntroWire("erM", () => (erCur && erCur.intro) || "", h => { if (!erCur) return; if (h) erCur.intro = h; else delete erCur.intro; erCur.at = Date.now(); });
+  // صفحة التعريف الأولى (مرة واحدة في بداية السجل)
+  const erIntroPage = (title, html) => html ? `<section class="page gen">${wpBandHTML()}<h2>${wpEsc(title)}</h2><style>.er-intro-print table{border-collapse:collapse;max-width:100%}.er-intro-print th,.er-intro-print td{color:inherit;background:transparent;border:1px solid #777;padding:4px 6px;text-align:inherit;font-size:inherit}.er-intro-print th{font-weight:700}.er-intro-print img{max-width:100%;height:auto}</style><div class="er-intro-print" style="font-size:14.5px; line-height:1.9;">${html}</div></section>` : "";
+  // ===== تصدير PDF وWord =====
+  const ER_PDF_LIB = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+  function erLoadPdfLib() {
+    if (window.html2pdf) return Promise.resolve();
+    return new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = ER_PDF_LIB; sc.onload = () => window.html2pdf ? res() : rej(); sc.onerror = rej; document.head.appendChild(sc); });
+  }
+  async function erExport(kind, title, pages, landscape) {
+    const fname = title.replace(/[\\/:*?"<>|]/g, "").replace(/ /g, "_");
+    if (kind === "word") {
+      const head = `<div style="text-align:center; border-bottom:2px solid #174a59; padding-bottom:6px; margin-bottom:8px;"><div style="font-size:12pt;">المملكة العربية السعودية — وزارة التعليم</div><div style="font-size:11pt;">الإدارة العامة للتعليم بالمنطقة الشرقية</div><div style="font-size:13pt; font-weight:bold; color:#174a59;">مدرسة عطاء بن أبي رباح المتوسطة</div></div>`;
+      let body = pages.split(wpBandHTML()).join(head);
+      let first = true;
+      body = body.replace(/<section class="page gen">/g, () => { const r = first ? "<div>" : '<div style="page-break-before:always;">'; first = false; return r; }).replace(/<\/section>/g, "</div>");
+      const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${wpEsc(title)}</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>@page Section1 { size: ${landscape ? "841.9pt 595.3pt; mso-page-orientation: landscape" : "595.3pt 841.9pt"}; margin: 1.6cm 1.4cm; } div.Section1 { page: Section1; }
+body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; font-size: 13pt; direction: rtl; } h2 { text-align: center; color: #174a59; font-size: 16pt; } table { border-collapse: collapse; width: 100%; } td, th { border: 1px solid #174a59; padding: 4pt; }</style></head>
+<body dir="rtl"><div class="Section1">${body}</div></body></html>`;
+      saveFile(fname + ".doc", new Blob(["﻿", html], { type: "application/msword" }));
+      return;
+    }
+    showToast("جاري تجهيز ملف PDF…");
+    try { await erLoadPdfLib(); } catch (e) {
+      showToast("تعذّر تحميل أداة PDF — ستُفتح الطباعة، اختر «حفظ PDF»");
+      wpOpenDoc(wpShellDoc(title, pages, { landscape }), fname); return;
+    }
+    const host = document.createElement("div");
+    host.style.cssText = "position:fixed; left:-10000px; top:0; width:" + (landscape ? "277mm" : "190mm") + "; background:#fff; direction:rtl;";
+    host.innerHTML = "<style>" + WP_CSS.replace("__ORIENT__", landscape ? "landscape" : "portrait") + " .pagefoot{display:none!important} .page{max-width:none!important}</style>" + pages;
+    document.body.appendChild(host);
+    try {
+      await window.html2pdf().set({ margin: [8, 10, 10, 10], filename: fname + ".pdf", image: { type: "jpeg", quality: 0.95 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+        jsPDF: { unit: "mm", format: "a4", orientation: landscape ? "landscape" : "portrait" }, pagebreak: { mode: ["css", "avoid-all"], before: ".page + .page" } }).from(host).save();
+      showToast("✅ تم تصدير PDF");
+    } catch (e) { console.error("pdf", e); showToast("تعذّر تصدير PDF"); }
+    host.remove();
+  }
   // ===== سجلات تُجلب من المنصة =====
   const erH = d => d ? wpDateParts(d).hijri : "—";
   const erIso = ms => { if (!ms) return ""; const d = new Date(ms); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
   const erDay = r => r.day || (r.date ? dayNameFromDate(r.date) : "") || "—";
   const erG = d => { if (!d) return "—"; const [y, m, dd] = d.split("-"); return +dd + "/" + +m + "/" + y + " م"; };
-  const C_DAY = ["اليوم", erDay], C_DATE = ["التاريخ الهجري", r => erH(r.date)], C_GREG = ["التاريخ الميلادي", r => erG(r.date)], C_T = ["المعلم", r => r.teacher, { tch: 1 }], C_SEC = ["القسم", r => r.sec, { sec: 1 }];
+  const C_DAY = ["اليوم", erDay, { dt: 1 }], C_DATE = ["التاريخ الهجري", r => erH(r.date), { dt: 1 }], C_GREG = ["التاريخ الميلادي", r => erG(r.date), { dt: 1 }], C_T = ["المعلم", r => r.teacher, { tch: 1 }], C_SEC = ["القسم", r => r.sec, { sec: 1 }];
   const C_ST = ["الحالة", r => statusLabel(r.status), { st: 1 }], C_DET = ["التفاصيل", r => r.detail || "—"];
   const erWork = (sts, names) => getMonitorTypeRecords("work").filter(r => sts.includes(r.status)).map(r => Object.assign({ sec: names[r.status] }, r));
   const erSent = r => { const l = linkState(r); return l.appr ? "معتمدة ✓" : l.conf ? "اطّلع المعلم" : l.sent ? "أُرسل الرابط" : "—"; };
@@ -10612,18 +10712,32 @@ ${contentEl.innerHTML}
     const segs = !S.segs ? [null] : erSeg === "all" ? S.segs.filter(x => x[0] !== "all").map(x => x[0]) : [erSeg];
     return segs.map(sg => Object.assign({ seg: sg, name: sg ? ((S.segTitle || {})[sg] || (S.segs.find(x => x[0] === sg) || [, ""])[1]) : "" }, erSrcRows(sg || undefined)));
   }
+  // تقسيم السجلات حسب اليوم: كل يوم مستقل، واليوم والتاريخ أعلى الجدول بدل الأعمدة
+  function erByDay(secs) {
+    const dated = secs[0].cols.some(c => c[2] && c[2].dt);
+    if (!dated) return [{ date: "", secs }];
+    const days = [...new Set(secs.flatMap(x => x.rows.map(r => r.date)).filter(Boolean))].sort();
+    return days.map(d => ({ date: d, secs: secs.map(x => Object.assign({}, x, { rows: x.rows.filter(r => r.date === d), cols: x.cols.filter(c => !(c[2] && c[2].dt)) })) }));
+  }
+  const erDayHead = d => { const p = wpDateParts(d); return { day: p.dayName || dayNameFromDate(d) || "—", hijri: p.hijri, greg: erG(d) }; };
   function erSrcRender() {
     const k = document.getElementById("erNewType").value.slice(4), S = ER_SRC[k]; if (!S) return;
+    document.getElementById("erSrcTitle").textContent = "📑 " + S.t;
     const seg = document.getElementById("erSeg");
     seg.style.display = S.segs ? "" : "none";
     seg.innerHTML = (S.segs || []).map(x => '<button type="button" data-s="' + x[0] + '"' + (x[0] === erSeg ? ' class="on"' : "") + ">" + acEsc(x[1]) + "</button>").join("");
     ["erFrom", "erTo"].forEach(id => { const v = document.getElementById(id).value, p = v ? wpDateParts(v) : null; document.getElementById(id + "H").textContent = p ? (p.dayName || "") + " — " + p.hijri : ""; });
-    const secs = erSections(), multi = secs.length > 1;
-    document.getElementById("erSrcTable").innerHTML = '<div class="sched-hint" style="text-align:right;">المصدر: ' + acEsc(S.from) + "</div>" + secs.map(x =>
-      (multi || x.name ? '<div class="er-sub">' + acEsc(x.name || S.t) + ' <span>(' + x.rows.length + ")</span></div>" : '<div class="sched-hint" style="text-align:right;">عدد السجلات: <b>' + x.rows.length + "</b></div>") +
-      (!x.rows.length ? '<div class="empty-state" style="padding:12px;">لا توجد سجلات</div>' :
-      '<table class="er-src"><thead><tr><th>م</th>' + x.cols.map(c => "<th>" + acEsc(c[0]) + "</th>").join("") + "</tr></thead><tbody>" +
-      x.rows.map((r, i) => "<tr><td>" + (i + 1) + "</td>" + x.cols.map(c => "<td" + (c[2] && c[2].st ? ' class="st-' + acEsc(r.status) + '"' : "") + ">" + erCell(c, r) + "</td>").join("") + "</tr>").join("") + "</tbody></table>")).join("");
+    const secs = erSections(), multi = secs.length > 1, groups = erByDay(secs);
+    const box = document.getElementById("erSrcTable");
+    if (!secs.some(x => x.rows.length)) { box.innerHTML = '<div class="empty-state">لا توجد سجلات مطابقة في ' + acEsc(S.from) + "</div>"; return; }
+    box.innerHTML = '<div class="sched-hint" style="text-align:right;">المصدر: ' + acEsc(S.from) + (groups[0].date ? " — عدد الأيام: <b>" + groups.length + "</b>" : "") + "</div>" + groups.map(g => {
+      const h = g.date ? erDayHead(g.date) : null;
+      return '<div class="er-day">' + (h ? '<div class="er-day-h"><span><b>اليوم:</b> ' + acEsc(h.day) + "</span><span><b>التاريخ:</b> " + acEsc(h.hijri) + "</span><span>" + acEsc(h.greg) + "</span></div>" : "") +
+        g.secs.map(x => (multi ? '<div class="er-sub">' + acEsc(x.name) + " <span>(" + x.rows.length + ")</span></div>" : "") +
+          (!x.rows.length ? '<div class="empty-state" style="padding:8px;">لا يوجد</div>' :
+          '<table class="er-src"><thead><tr><th>م</th>' + x.cols.map(c => "<th>" + acEsc(c[0]) + "</th>").join("") + "</tr></thead><tbody>" +
+          x.rows.map((r, i) => "<tr><td>" + (i + 1) + "</td>" + x.cols.map(c => "<td" + (c[2] && c[2].st ? ' class="st-' + acEsc(r.status) + '"' : "") + ">" + erCell(c, r) + "</td>").join("") + "</tr>").join("") + "</tbody></table>")).join("") + "</div>";
+    }).join("");
   }
   // خانات قابلة للتعديل: العذر والملاحظات تُحفظ في سجل الدوام نفسه
   function erCell(c, r) {
@@ -10642,23 +10756,34 @@ ${contentEl.innerHTML}
   });
   document.getElementById("erSeg").addEventListener("click", e => { const b = e.target.closest("button[data-s]"); if (!b) return; erSeg = b.dataset.s; erSrcRender(); });
   ["erFrom", "erTo", "erTeacher"].forEach(id => document.getElementById(id).addEventListener("change", erSrcRender));
-  document.getElementById("erSrcPrint").addEventListener("click", () => {
-    const k = document.getElementById("erNewType").value.slice(4); if (!ER_SRC[k]) return;
+  function erSrcBuild() {
+    const k = document.getElementById("erNewType").value.slice(4); if (!ER_SRC[k]) return null;
     const secs = erSections(), { S, f, t, tf } = secs[0], multi = secs.length > 1;
-    if (!secs.some(x => x.rows.length)) { showToast("لا توجد سجلات للطباعة"); return; }
+    if (!secs.some(x => x.rows.length)) { showToast("لا توجد سجلات للطباعة"); return null; }
     const title = S.t + (!multi && secs[0].name ? " — " + secs[0].name : "");
     const B = "border:1.5px solid #174a59; padding:6px 4px; text-align:center; font-size:13px;", H = B + " background:#174a59; color:#fff; font-weight:700;";
     const range = (f || t) ? `<div style="text-align:center; font-size:14.5px; margin:-4px 0 8px;"><b style="color:#174a59;">الفترة:</b> من ${wpEsc(f ? wpDateParts(f).hijri : "البداية")} إلى ${wpEsc(t ? wpDateParts(t).hijri : "اليوم")}</div>` : "";
     const who = tf ? `<div style="text-align:center; font-size:15px; font-weight:800; color:#174a59; margin-bottom:6px;">المعلم: ${wpEsc(tf)}</div>` : "";
     const stc = st => st === "absent" ? "#b42318" : st === "present" ? "#146c3a" : "#9a5b00";
-    const inner = range + who + secs.map(x => (multi ? `<h3 style="color:#174a59; font-size:16px; margin:14px 0 6px; border-right:4px solid #1F7A6D; padding-right:8px;">${wpEsc(x.name)} (${x.rows.length})</h3>` : "") +
-      (!x.rows.length ? `<div style="text-align:center; color:#66736f; padding:8px; border:1px dashed #b9c9c6;">لا توجد سجلات</div>` : `<table style="width:100%; border-collapse:collapse;">
-      <tr><th style="${H} width:5%">م</th>${x.cols.map(c => `<th style="${H}">${wpEsc(c[0])}</th>`).join("")}</tr>
+    const sign = `<div style="display:flex; justify-content:space-between; margin:22px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>`;
+    const tables = g => g.secs.map(x => (multi ? `<h3 style="color:#174a59; font-size:15.5px; margin:12px 0 6px; border-right:4px solid #1F7A6D; padding-right:8px;">${wpEsc(x.name)} (${x.rows.length})</h3>` : "") +
+      (!x.rows.length ? `<div style="text-align:center; color:#66736f; padding:7px; border:1px dashed #b9c9c6;">لا يوجد</div>` : `<table style="width:100%; border-collapse:collapse;">
+      <tr><th style="${H} width:6%">م</th>${x.cols.map(c => `<th style="${H}">${wpEsc(c[0])}</th>`).join("")}</tr>
       ${x.rows.map((r, i) => `<tr><td style="${B}">${i + 1}</td>${x.cols.map(c => `<td style="${B}${c[2] && c[2].st ? " font-weight:700; color:" + stc(r.status) + ";" : ""}">${wpEsc(c[1](r))}</td>`).join("")}</tr>`).join("")}
-    </table>`) + (multi ? "" : `<div style="text-align:center; margin-top:8px; font-size:13.5px;">عدد السجلات: <b>${x.rows.length}</b></div>`)).join("") + `
-    <div style="display:flex; justify-content:space-between; margin:24px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>`;
-    wpOpenDoc(wpShellDoc(title, wpGenericPage(title, inner), { landscape: secs[0].cols.length > 9 }), title.replace(/ /g, "_"));
-  });
+    </table>`)).join("");
+    // كل يوم في صفحة مستقلة كالسجل الورقي: اليوم والتاريخ أعلى الجدول
+    const pages = erByDay(secs).map(g => {
+      const h = g.date ? erDayHead(g.date) : null;
+      const when = h ? `<div style="display:flex; justify-content:space-between; gap:10px; border:1.5px solid #174a59; border-radius:8px; padding:7px 12px; margin:4px 0 10px; font-size:15px; background:#f3f8f9;"><div><b style="color:#174a59;">اليوم:</b> ${wpEsc(h.day)}</div><div><b style="color:#174a59;">التاريخ:</b> ${wpEsc(h.hijri)}</div><div><b style="color:#174a59;">الموافق:</b> ${wpEsc(h.greg)}</div></div>` : (range);
+      return `<section class="page gen">${wpBandHTML()}<h2>${wpEsc(title)}</h2>${when}${who}${tables(g)}${sign}</section>`;
+    }).join("");
+    return { title, pages: erIntroPage(title, (data.erIntro || {})[erIntroKey()] || "") + pages, landscape: secs[0].cols.length > 11 };
+  }
+  document.getElementById("erSrcPrint").addEventListener("click", () => { const d = erSrcBuild(); if (d) wpOpenDoc(wpShellDoc(d.title, d.pages, { landscape: d.landscape }), d.title.replace(/ /g, "_")); });
+  document.getElementById("erSrcPdf").addEventListener("click", () => { const d = erSrcBuild(); if (d) erExport("pdf", d.title, d.pages, d.landscape); });
+  document.getElementById("erSrcWord").addEventListener("click", () => { const d = erSrcBuild(); if (d) erExport("word", d.title, d.pages, d.landscape); });
+  document.querySelector("#erSrcBox .er-acts").addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; document.getElementById({ print: "erSrcPrint", pdf: "erSrcPdf", word: "erSrcWord" }[b.dataset.act]).click(); });
+  document.getElementById("erMActs").addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; document.getElementById({ print: "erPrint", pdf: "erPdf", word: "erWord" }[b.dataset.act]).click(); });
   document.getElementById("erNewBtn").addEventListener("click", () => {
     const k = document.getElementById("erNewType").value; if (!k) { showToast("اختر نوع السجل أولاً"); return; }
     const ty = ER_TYPES.find(x => x.k === k); let title = ty.t, cols = ty.c.map(c => ({ l: c[0], t: c[1] }));
@@ -10676,7 +10801,7 @@ ${contentEl.innerHTML}
     erCur = erRegs().find(r => r.id === id); if (!erCur) return;
     document.getElementById("erRegTitle").textContent = "📑 " + erCur.title;
     document.getElementById("erRegName").value = erCur.title;
-    erTable(); showView("erReg"); window.scrollTo(0, 0);
+    erTable(); erMIntroShow(); showView("erReg"); window.scrollTo(0, 0);
   }
   function erTable() {
     const r = erCur, tch = data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar"));
@@ -10707,7 +10832,7 @@ ${contentEl.innerHTML}
     b.dataset.confirm = ""; b.textContent = "🗑️ حذف السجل";
     data.officialRegs = erRegs().filter(r => r.id !== erCur.id); erCur = null; saveData(); showToast("حُذف السجل"); erOpen();
   });
-  function erPrint(blank) {
+  function erPrint(blank, mode) {
     const r = erCur; if (!r) return;
     const rows = blank ? Array.from({ length: 15 }, () => ({})) : r.rows.filter(x => Object.values(x).some(v => String(v || "").trim()));
     if (!rows.length) { showToast("السجل فارغ — اكتب سطرًا واحدًا على الأقل أو اطبع نموذجًا فارغًا"); return; }
@@ -10720,8 +10845,12 @@ ${contentEl.innerHTML}
         ${rows.map((x, i) => `<tr><td style="${B}">${i + 1}</td>${r.cols.map((c, j) => `<td style="${B}">${cell(c, x[j])}</td>`).join("")}</tr>`).join("")}
       </table>
       <div style="display:flex; justify-content:space-between; margin:26px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>`;
-    wpOpenDoc(wpShellDoc(r.title, wpGenericPage(r.title, inner), { landscape: land }), r.title.replace(/ /g, "_"));
+    const pages = (blank ? "" : erIntroPage(r.title, r.intro || "")) + wpGenericPage(r.title, inner);
+    if (mode === "pdf" || mode === "word") { erExport(mode, r.title, pages, land); return; }
+    wpOpenDoc(wpShellDoc(r.title, pages, { landscape: land }), r.title.replace(/ /g, "_"));
   }
+  document.getElementById("erPdf").addEventListener("click", () => erPrint(false, "pdf"));
+  document.getElementById("erWord").addEventListener("click", () => erPrint(false, "word"));
   document.getElementById("erPrint").addEventListener("click", () => erPrint(false));
   document.getElementById("erPrintBlank").addEventListener("click", () => erPrint(true));
   /* ===== الملفات المرفوعة (وورد/PDF/إكسل) في سحابة المنصة ===== */
@@ -12029,7 +12158,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-17-4";
+window.APP_BUILD = "2026-11-17-7";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
