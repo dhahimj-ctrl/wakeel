@@ -557,6 +557,30 @@
   .ack-form .ack-opt input { width: 20px !important; height: 20px; min-width: 20px; flex: none; margin: 0; padding: 0; accent-color: #1F7A6D; }
   .ack-form .ack-opt:has(input:checked) { border-color: #1F7A6D; background: #eef7f5; }
   .ack-form textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 10px; border-radius: 12px; border: 1.5px solid var(--line); background: #fff; margin-bottom: 10px; resize: vertical; }
+  .er-sec { font-weight: 800; color: #174a59; font-size: 16px; margin: 14px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #d8e6e3; }
+  .er-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .er-tile { display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-align: right; font: inherit; cursor: pointer; }
+  .er-tile .ei { font-size: 22px; flex: none; }
+  .er-tile b { display: block; font-size: 13.5px; color: #1d2b2a; }
+  .er-tile small { display: block; font-size: 11.5px; color: #66736f; margin-top: 2px; }
+  .er-reg { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 10px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: pointer; }
+  .er-reg b { color: #174a59; } .er-reg small { color: #66736f; display: block; font-size: 12px; margin-top: 2px; }
+  .ef-up { border: 1.5px dashed #9cc3cc; border-radius: 12px; padding: 10px; background: #f3f9fa; display: flex; flex-direction: column; gap: 8px; }
+  .ef-pick { display: block; border: 1px solid var(--line); background: #fff; border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; font-weight: 700; color: #174a59; }
+  .ef-pick input { display: none; }
+  .ef-cat { font-weight: 800; color: #174a59; margin: 10px 0 4px; font-size: 14px; }
+  .ef-item { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 8px; margin-top: 6px; }
+  .ef-item .fi { font-size: 24px; flex: none; }
+  .ef-item .ft { flex: 1; min-width: 0; } .ef-item .ft b { display: block; font-size: 13.5px; word-break: break-word; } .ef-item .ft small { color: #66736f; font-size: 11.5px; }
+  .ef-item button { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 5px 8px; font: inherit; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+  .ef-item button.del { color: #b42318; }
+  .er-table { border-collapse: collapse; min-width: 100%; font-size: 13px; }
+  .er-table th { background: #174a59; color: #fff; padding: 6px 4px; white-space: nowrap; font-weight: 700; }
+  .er-table td { border: 1px solid var(--line); padding: 3px; background: #fff; }
+  .er-table td input, .er-table td select { width: 100%; min-width: 110px; font: inherit; font-size: 13px; border: 0; padding: 5px 4px; background: transparent; }
+  .er-table td.n { text-align: center; font-weight: 700; width: 32px; background: var(--paper-2); }
+  .er-table td.sg { color: #9aa5a2; text-align: center; font-size: 12px; min-width: 80px; }
+  .er-table button { border: 0; background: none; color: #b42318; font-size: 16px; cursor: pointer; }
   .ack-pad { margin: 0 0 12px; padding: 10px; border: 1.5px dashed #1F7A6D; border-radius: 12px; background: #eef7f5; }
   .ack-pad-h { font-weight: 800; font-size: 15px; margin-bottom: 6px; color: #174a59; }
   .ack-pad canvas { display: block; width: 100%; height: 150px; background: #fff; border: 1px solid #b9d3cd; border-radius: 10px; touch-action: none; cursor: crosshair; }
@@ -878,6 +902,7 @@
       <button data-go="inq"><span class="qi" style="--c:#C0392B">⚠️</span>المسائلات</button>
       <button data-go="alert"><span class="qi" style="--c:#D35400">🔔</span>التنبيهات</button>
       <button data-go="taklif"><span class="qi" style="--c:#B5651D">📝</span>إنشاء تكليف</button>
+      <button data-go="erec"><span class="qi" style="--c:#1F6F8B">🗂️</span>السجلات الإلكترونية</button>
     </div>
   </div>
 
@@ -1338,6 +1363,59 @@
   </div>
 
   <!-- Reports hub -->
+  <!-- السجلات الإلكترونية -->
+  <div class="detail" id="erecView">
+    <div class="back-row">
+      <button class="back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
+    </div>
+    <div class="detail-header"><h2>🗂️ السجلات الإلكترونية</h2></div>
+    <div class="er-grid" id="erPlatform" hidden></div>
+    <div class="er-sec" style="display:flex; justify-content:space-between; align-items:center;"><span>📑 سجلات وكيل الشؤون التعليمية</span><span class="count-pill" id="erRegCount">0</span></div>
+    <div class="sched-hint" style="text-align:right;">سجلات تُعبّأ إلكترونيًا وتُطبع بالترويسة الرسمية. اختر نوع السجل ثم «إنشاء».</div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; margin:8px 0;">
+      <select class="select-styled" id="erNewType" style="flex:1; min-width:180px;"></select>
+      <button class="export-btn" id="erNewBtn">➕ إنشاء سجل</button>
+    </div>
+    <div id="erCustomBox" style="display:none; margin-bottom:8px;">
+      <input type="text" id="erCustomTitle" class="date-input" placeholder="عنوان السجل" style="width:100%; margin-bottom:6px;">
+      <input type="text" id="erCustomCols" class="date-input" placeholder="الأعمدة مفصولة بفاصلة: التاريخ، المعلم، البيان، التوقيع" style="width:100%;">
+      <div class="sched-hint" style="text-align:right;">عمود اسمه «التاريخ» يصبح خانة تاريخ، و«المعلم» قائمة بالمعلمين، و«التوقيع» يبقى فارغًا للتوقيع عند الطباعة.</div>
+    </div>
+    <div id="erRegList"></div>
+
+    <div class="er-sec" style="display:flex; justify-content:space-between; align-items:center;"><span>📎 الملفات المرفوعة (وورد · PDF · إكسل)</span><span class="count-pill" id="efCount">0</span></div>
+    <div class="sched-hint" style="text-align:right;">تُحفظ الملفات في سحابة المنصة الخاصة بك (يلزم تسجيل الدخول)، بحد أقصى 15 ميجابايت للملف.</div>
+    <div class="ef-up">
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <select class="select-styled" id="efCat" style="flex:1; min-width:140px;">
+          <option>عام</option><option>تعاميم وخطابات</option><option>خطط</option><option>تقارير</option><option>محاضر واجتماعات</option><option>جداول</option><option>نماذج</option><option>أخرى</option>
+        </select>
+        <input type="text" id="efTitle" class="date-input" placeholder="وصف الملف (اختياري)" style="flex:2; min-width:160px;">
+      </div>
+      <label class="ef-pick"><input type="file" id="efFile" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple><span id="efPickTx">📂 اختر ملفًا أو أكثر (Word / PDF / Excel)</span></label>
+      <button class="export-btn" id="efUpload" style="width:100%;">⬆️ رفع الملفات</button>
+      <div id="efProg" class="sched-hint" style="text-align:right; display:none;"></div>
+    </div>
+    <input type="text" id="efSearch" class="date-input" placeholder="🔎 بحث في الملفات" style="width:100%; margin:8px 0 4px;">
+    <div id="efList"><div class="empty-state">—</div></div>
+  </div>
+
+  <div class="detail" id="erRegView">
+    <div class="back-row">
+      <button class="back-btn" id="erBack"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>السجلات الإلكترونية</button>
+    </div>
+    <div class="detail-header"><h2 id="erRegTitle">سجل</h2></div>
+    <input type="text" id="erRegName" class="date-input" style="width:100%; margin-bottom:8px; font-weight:700;" placeholder="عنوان السجل">
+    <div style="overflow-x:auto;"><table class="er-table" id="erTable"></table></div>
+    <div class="export-row" style="margin-top:10px;">
+      <button class="export-btn" id="erAddRow">➕ إضافة سطر</button>
+      <button class="export-btn" id="erPrint">🖨️ طباعة السجل</button>
+      <button class="export-btn" id="erPrintBlank">📄 طباعة نموذج فارغ</button>
+      <button class="export-btn" id="erDelReg" style="color:#b42318;">🗑️ حذف السجل</button>
+    </div>
+    <div class="sched-hint" style="text-align:right;">يُحفظ ما تكتبه تلقائيًا.</div>
+  </div>
+
   <div class="detail" id="reportsHubView">
     <div class="back-row">
       <button class="back-btn" data-back="home"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
@@ -2845,6 +2923,7 @@
     if (!out.shiftManual || typeof out.shiftManual !== "object" || Array.isArray(out.shiftManual)) out.shiftManual = {};
     if (!out.shiftEdits || typeof out.shiftEdits !== "object" || Array.isArray(out.shiftEdits)) out.shiftEdits = {};
     if (!out.shiftArchive || typeof out.shiftArchive !== "object" || Array.isArray(out.shiftArchive)) out.shiftArchive = {};
+    if (!Array.isArray(out.officialRegs)) out.officialRegs = [];
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -10381,6 +10460,202 @@ ${contentEl.innerHTML}
     if (ioEl("ioAttachDoc").checked) { const d = docAttachment("inq", r); if (d) files.unshift(d); }
     linkSend("inq", r, files);
   });
+  /* ===== السجلات الإلكترونية ===== */
+  const ER_PLATFORM = [
+    ["📕", "سجل الغياب", "غياب المعلمين", () => document.getElementById("openAbsenceLog").click()],
+    ["⏰", "سجل التأخير", "تأخر المعلمين", () => document.getElementById("openLateLog").click()],
+    ["🚪", "سجل الاستئذان", "استئذان المعلمين", () => document.getElementById("openPermissionLog").click()],
+    ["🏫", "سجل متابعة الحصص", "دخول المعلمين للحصص", () => document.getElementById("openClassAttendanceLog").click()],
+    ["🕘", "متابعة الدوام", "الحضور والانصراف", () => document.getElementById("openWorkTile").click()],
+    ["🚩", "متابعة الطابور", "حضور الطابور", () => document.getElementById("openLineupTile").click()],
+    ["☕", "مناوبة الفسحة", "سجل المناوبين", () => document.getElementById("openRecessTile").click()],
+    ["🔚", "مناوبة نهاية الدوام", "سجل المناوبين", () => document.getElementById("openEndTile").click()],
+    ["⏱️", "جداول الانتظار المحفوظة", "حسب التاريخ", () => document.getElementById("openWaitLog").click()],
+    ["🔢", "حصر حصص الانتظار", "لكل معلم", () => document.getElementById("openWaitCount").click()],
+    ["🔀", "الترحيلات المحفوظة", "حسب تاريخ الغياب", () => document.getElementById("openShiftArch").click(), () => Object.keys(data.shiftArchive || {}).length],
+    ["⚠️", "المسائلات المحفوظة", "مجلد لكل معلم", () => document.getElementById("openInqSaved").click(), () => (data.officialInq || []).length],
+    ["🔔", "التنبيهات المحفوظة", "مجلد لكل معلم", () => { alOpen(); setTimeout(() => { const h = document.getElementById("alSavedHead"); if (h) h.scrollIntoView({ block: "start" }); }, 80); }, () => (data.officialAlerts || []).length],
+    ["📋", "متابعة الاطلاع", "الإشعارات المرسلة", () => ackOpenView()],
+    ["📊", "تقارير المتابعة", "الطابور والمناوبات والدوام", () => document.getElementById("openMonitorReports").click()],
+    ["🧾", "التقرير الشامل", "كل السجلات في تقرير", () => document.getElementById("openComprehensive").click()]
+  ];
+  const ER_TX = "text", ER_DT = "date", ER_TE = "teacher", ER_SG = "sign";
+  const ER_TYPES = [
+    { k: "visits", t: "سجل الزيارات الصفية", c: [["التاريخ", ER_DT], ["المعلم", ER_TE], ["المادة", ER_TX], ["الفصل", ER_TX], ["الحصة", ER_TX], ["ملاحظات الزيارة", ER_TX], ["توقيع المعلم", ER_SG]] },
+    { k: "meetings", t: "سجل الاجتماعات", c: [["التاريخ", ER_DT], ["نوع الاجتماع", ER_TX], ["الموضوع", ER_TX], ["الحضور", ER_TX], ["التوصيات", ER_TX], ["التوقيع", ER_SG]] },
+    { k: "plans", t: "سجل استلام الخطط والتحضير", c: [["التاريخ", ER_DT], ["المعلم", ER_TE], ["المادة", ER_TX], ["البيان", ER_TX], ["الحالة", ER_TX], ["توقيع المعلم", ER_SG]] },
+    { k: "training", t: "سجل الدورات والتطوير المهني", c: [["المعلم", ER_TE], ["اسم الدورة/البرنامج", ER_TX], ["الجهة المنفذة", ER_TX], ["التاريخ", ER_DT], ["المدة", ER_TX], ["ملاحظات", ER_TX]] },
+    { k: "handover", t: "سجل الاستلام والتسليم", c: [["التاريخ", ER_DT], ["البيان", ER_TX], ["العدد", ER_TX], ["المستلم", ER_TE], ["ملاحظات", ER_TX], ["توقيع المستلم", ER_SG]] },
+    { k: "inout", t: "سجل الصادر والوارد", c: [["الرقم", ER_TX], ["التاريخ", ER_DT], ["صادر/وارد", ER_TX], ["الجهة", ER_TX], ["الموضوع", ER_TX], ["ملاحظات", ER_TX]] },
+    { k: "exams", t: "سجل متابعة الاختبارات والتقويم", c: [["التاريخ", ER_DT], ["المعلم", ER_TE], ["المادة", ER_TX], ["الفصل", ER_TX], ["نوع التقويم", ER_TX], ["ملاحظات", ER_TX]] },
+    { k: "initiatives", t: "سجل المبادرات والأنشطة", c: [["التاريخ", ER_DT], ["المبادرة/النشاط", ER_TX], ["المنفذ", ER_TE], ["المستفيدون", ER_TX], ["الأثر", ER_TX]] },
+    { k: "remedial", t: "سجل الخطط العلاجية", c: [["المعلم", ER_TE], ["المادة", ER_TX], ["الفصل", ER_TX], ["عدد الطلاب", ER_TX], ["الإجراء العلاجي", ER_TX], ["تاريخ التنفيذ", ER_DT], ["النتيجة", ER_TX]] },
+    { k: "custom", t: "سجل مخصص (أكتب العنوان والأعمدة)", c: [] }
+  ];
+  let erCur = null;
+  const erRegs = () => { if (!Array.isArray(data.officialRegs)) data.officialRegs = []; return data.officialRegs; };
+  function erOpen() {
+    document.getElementById("erPlatform").innerHTML = ER_PLATFORM.map((x, i) => { const n = x[4] ? x[4]() : null; return '<button class="er-tile" data-i="' + i + '"><span class="ei">' + x[0] + "</span><span><b>" + acEsc(x[1]) + "</b><small>" + acEsc(x[2]) + (n != null ? " · " + n : "") + "</small></span></button>"; }).join("");
+    const sel = document.getElementById("erNewType");
+    if (!sel.options.length) sel.innerHTML = '<option value="">اختر نوع السجل</option>' + ER_TYPES.map(x => '<option value="' + x.k + '">' + acEsc(x.t) + "</option>").join("");
+    erList(); showView("erec"); window.scrollTo(0, 0); efLoad();
+  }
+  function erList() {
+    const L = erRegs().slice().sort((a, b) => (b.at || 0) - (a.at || 0));
+    document.getElementById("erRegCount").textContent = L.length;
+    document.getElementById("erRegList").innerHTML = L.length ? L.map(r => '<div class="er-reg" data-id="' + acEsc(r.id) + '"><div><b>📑 ' + acEsc(r.title) + "</b><small>" + r.rows.length + " سطر · آخر تعديل " + acEsc(ioStamp(r.at)) + "</small></div><span>◀</span></div>").join("") : '<div class="empty-state">لا توجد سجلات بعد</div>';
+  }
+  document.getElementById("erPlatform").addEventListener("click", e => { const b = e.target.closest(".er-tile"); if (b) { ER_PLATFORM[Number(b.dataset.i)][3](); window.scrollTo(0, 0); } });
+  document.getElementById("erNewType").addEventListener("change", e => { document.getElementById("erCustomBox").style.display = e.target.value === "custom" ? "" : "none"; });
+  document.getElementById("erNewBtn").addEventListener("click", () => {
+    const k = document.getElementById("erNewType").value; if (!k) { showToast("اختر نوع السجل أولاً"); return; }
+    const ty = ER_TYPES.find(x => x.k === k); let title = ty.t, cols = ty.c.map(c => ({ l: c[0], t: c[1] }));
+    if (k === "custom") {
+      title = document.getElementById("erCustomTitle").value.trim();
+      cols = document.getElementById("erCustomCols").value.split(/[،,]/).map(x => x.trim()).filter(Boolean).slice(0, 10)
+        .map(l => ({ l, t: /توقيع/.test(l) ? ER_SG : /^المعلم|اسم المعلم/.test(l) ? ER_TE : /تاريخ/.test(l) ? ER_DT : ER_TX }));
+      if (!title || !cols.length) { showToast("اكتب عنوان السجل والأعمدة"); return; }
+    }
+    const r = { id: "er" + Date.now().toString(36), type: k, title, cols, rows: [{}], at: Date.now() };
+    erRegs().push(r); saveData(); erEdit(r.id);
+  });
+  document.getElementById("erRegList").addEventListener("click", e => { const d = e.target.closest(".er-reg"); if (d) erEdit(d.dataset.id); });
+  function erEdit(id) {
+    erCur = erRegs().find(r => r.id === id); if (!erCur) return;
+    document.getElementById("erRegTitle").textContent = "📑 " + erCur.title;
+    document.getElementById("erRegName").value = erCur.title;
+    erTable(); showView("erReg"); window.scrollTo(0, 0);
+  }
+  function erTable() {
+    const r = erCur, tch = data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar"));
+    document.getElementById("erTable").innerHTML = "<thead><tr><th>م</th>" + r.cols.map(c => "<th>" + acEsc(c.l) + "</th>").join("") + "<th></th></tr></thead><tbody>" +
+      r.rows.map((row, i) => '<tr><td class="n">' + (i + 1) + "</td>" + r.cols.map((c, j) => {
+        const v = row[j] || "";
+        if (c.t === ER_SG) return '<td class="sg">(توقيع عند الطباعة)</td>';
+        if (c.t === ER_TE) return '<td><select data-r="' + i + '" data-c="' + j + '"><option value="">اختر</option>' + tch.map(t => '<option' + (t === v ? " selected" : "") + ">" + acEsc(t) + "</option>").join("") + (v && !tch.includes(v) ? "<option selected>" + acEsc(v) + "</option>" : "") + "</select></td>";
+        return '<td><input type="' + (c.t === ER_DT ? "date" : "text") + '" data-r="' + i + '" data-c="' + j + '" value="' + acEsc(v) + '"></td>';
+      }).join("") + '<td><button data-del="' + i + '" title="حذف السطر">✖</button></td></tr>').join("") + "</tbody>";
+  }
+  document.getElementById("erTable").addEventListener("change", e => {
+    const el = e.target.closest("[data-r]"); if (!el || !erCur) return;
+    (erCur.rows[Number(el.dataset.r)] = erCur.rows[Number(el.dataset.r)] || {})[el.dataset.c] = el.value;
+    erCur.at = Date.now(); saveData();
+  });
+  document.getElementById("erTable").addEventListener("click", e => {
+    const b = e.target.closest("button[data-del]"); if (!b || !erCur) return;
+    erCur.rows.splice(Number(b.dataset.del), 1); if (!erCur.rows.length) erCur.rows.push({});
+    erCur.at = Date.now(); saveData(); erTable();
+  });
+  document.getElementById("erRegName").addEventListener("change", e => { if (!erCur) return; const v = e.target.value.trim(); if (!v) return; erCur.title = v; erCur.at = Date.now(); document.getElementById("erRegTitle").textContent = "📑 " + v; saveData(); });
+  document.getElementById("erAddRow").addEventListener("click", () => { if (!erCur) return; erCur.rows.push({}); erCur.at = Date.now(); saveData(); erTable(); const t = document.querySelectorAll("#erTable tbody tr"); const last = t[t.length - 1]; if (last) { const f = last.querySelector("input,select"); if (f) f.focus(); } });
+  document.getElementById("erBack").addEventListener("click", () => { erOpen(); });
+  document.getElementById("erDelReg").addEventListener("click", e => {
+    const b = e.currentTarget; if (!erCur) return;
+    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "⚠️ اضغط مرة أخرى لتأكيد الحذف"; setTimeout(() => { b.dataset.confirm = ""; b.textContent = "🗑️ حذف السجل"; }, 4000); return; }
+    b.dataset.confirm = ""; b.textContent = "🗑️ حذف السجل";
+    data.officialRegs = erRegs().filter(r => r.id !== erCur.id); erCur = null; saveData(); showToast("حُذف السجل"); erOpen();
+  });
+  function erPrint(blank) {
+    const r = erCur; if (!r) return;
+    const rows = blank ? Array.from({ length: 15 }, () => ({})) : r.rows.filter(x => Object.values(x).some(v => String(v || "").trim()));
+    if (!rows.length) { showToast("السجل فارغ — اكتب سطرًا واحدًا على الأقل أو اطبع نموذجًا فارغًا"); return; }
+    const land = r.cols.length > 6;
+    const B = "border:1.5px solid #174a59; padding:" + (blank ? "12px" : "6px") + " 4px; text-align:center; font-size:" + (land ? 13 : 14) + "px;";
+    const H = B + " background:#174a59; color:#fff; font-weight:700; padding:7px 4px;";
+    const cell = (c, v) => c.t === ER_SG ? "" : c.t === ER_DT && v ? wpEsc(wpDateParts(v).hijri || v) : wpEsc(v || "");
+    const inner = `<table style="width:100%; border-collapse:collapse; margin-top:8px;">
+        <tr><th style="${H} width:5%">م</th>${r.cols.map(c => `<th style="${H}">${wpEsc(c.l)}</th>`).join("")}</tr>
+        ${rows.map((x, i) => `<tr><td style="${B}">${i + 1}</td>${r.cols.map((c, j) => `<td style="${B}">${cell(c, x[j])}</td>`).join("")}</tr>`).join("")}
+      </table>
+      <div style="display:flex; justify-content:space-between; margin:26px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>`;
+    wpOpenDoc(wpShellDoc(r.title, wpGenericPage(r.title, inner), { landscape: land }), r.title.replace(/ /g, "_"));
+  }
+  document.getElementById("erPrint").addEventListener("click", () => erPrint(false));
+  document.getElementById("erPrintBlank").addEventListener("click", () => erPrint(true));
+  /* ===== الملفات المرفوعة (وورد/PDF/إكسل) في سحابة المنصة ===== */
+  const EF_CHUNK = 800000, EF_MAX = 15 * 1024 * 1024;
+  let efItems = [];
+  const efCol = n => window.__fbdb.collection("school").doc("files").collection(n);
+  const efReady = () => !!(window.__fbdb && window.__fbauth && window.__fbauth.currentUser);
+  const efIcon = (n, t) => /pdf/i.test(t) || /\.pdf$/i.test(n) ? "📕" : /sheet|excel|csv/i.test(t) || /\.(xlsx?|csv)$/i.test(n) ? "📗" : /word/i.test(t) || /\.docx?$/i.test(n) ? "📘" : "📄";
+  const efSize = b => b >= 1048576 ? (b / 1048576).toFixed(1) + " م.ب" : Math.max(1, Math.round(b / 1024)) + " ك.ب";
+  async function efLoad() {
+    const box = document.getElementById("efList");
+    if (!efReady()) { box.innerHTML = '<div class="empty-state">سجّل الدخول للسحابة لعرض الملفات ورفعها</div>'; return; }
+    box.innerHTML = '<div class="empty-state">جاري تحميل الملفات…</div>';
+    try {
+      const snap = await efCol("items").get();
+      efItems = []; snap.forEach(d => efItems.push(Object.assign({ id: d.id }, d.data())));
+      efItems.sort((a, b) => (b.at || 0) - (a.at || 0)); efRender();
+    } catch (e) { console.error("efLoad", e); box.innerHTML = '<div class="empty-state">تعذر تحميل الملفات — تحقق من الاتصال</div>'; }
+  }
+  function efRender() {
+    document.getElementById("efCount").textContent = efItems.length;
+    const q = document.getElementById("efSearch").value.trim();
+    const L = efItems.filter(f => !q || (f.name + " " + (f.title || "") + " " + (f.cat || "")).includes(q));
+    const box = document.getElementById("efList");
+    if (!L.length) { box.innerHTML = '<div class="empty-state">' + (efItems.length ? "لا توجد نتائج" : "لا توجد ملفات مرفوعة بعد") + "</div>"; return; }
+    const cats = [...new Set(L.map(f => f.cat || "عام"))];
+    box.innerHTML = cats.map(c => '<div class="ef-cat">📁 ' + acEsc(c) + " (" + L.filter(f => (f.cat || "عام") === c).length + ")</div>" + L.filter(f => (f.cat || "عام") === c).map(f =>
+      '<div class="ef-item" data-id="' + acEsc(f.id) + '"><span class="fi">' + efIcon(f.name, f.type) + '</span><span class="ft"><b>' + acEsc(f.title || f.name) + "</b><small>" + (f.title ? acEsc(f.name) + " · " : "") + efSize(f.size || 0) + " · " + acEsc(ioStamp(f.at)) + '</small></span><button data-a="open">' + (/pdf/i.test(f.type) || /\.pdf$/i.test(f.name) ? "👁️ فتح" : "⬇️ تنزيل") + '</button><button class="del" data-a="del">🗑️</button></div>').join("")).join("");
+  }
+  document.getElementById("efSearch").addEventListener("input", efRender);
+  document.getElementById("efFile").addEventListener("change", e => {
+    const fs = [...e.target.files]; document.getElementById("efPickTx").textContent = fs.length ? "📎 " + fs.map(f => f.name).join("، ") : "📂 اختر ملفًا أو أكثر (Word / PDF / Excel)";
+  });
+  const efRead = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = rej; r.readAsDataURL(f); });
+  document.getElementById("efUpload").addEventListener("click", async () => {
+    if (!efReady()) { showToast("رفع الملفات يحتاج الاتصال بالسحابة وتسجيل الدخول"); return; }
+    const inp = document.getElementById("efFile"), files = [...inp.files];
+    if (!files.length) { showToast("اختر ملفًا أولاً"); return; }
+    const bad = files.find(f => !/\.(pdf|docx?|xlsx?|csv)$/i.test(f.name)); if (bad) { showToast("نوع غير مدعوم: " + bad.name + " — المسموح Word وPDF وExcel"); return; }
+    const big = files.find(f => f.size > EF_MAX); if (big) { showToast("الملف أكبر من 15 ميجابايت: " + big.name); return; }
+    const btn = document.getElementById("efUpload"), prog = document.getElementById("efProg");
+    btn.disabled = true; prog.style.display = "";
+    const cat = document.getElementById("efCat").value, title = document.getElementById("efTitle").value.trim();
+    try {
+      for (let k = 0; k < files.length; k++) {
+        const f = files[k], b64 = await efRead(f), n = Math.max(1, Math.ceil(b64.length / EF_CHUNK));
+        const id = "f" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        for (let i = 0; i < n; i++) {
+          prog.textContent = "⬆️ جاري رفع «" + f.name + "» (" + (k + 1) + "/" + files.length + ") — " + Math.round((i / n) * 100) + "%";
+          await efCol("chunks").doc(id + "_" + i).set({ d: b64.slice(i * EF_CHUNK, (i + 1) * EF_CHUNK) });
+        }
+        const meta = { name: f.name, type: f.type || "", size: f.size, chunks: n, cat, title: files.length === 1 ? title : "", at: Date.now() };
+        await efCol("items").doc(id).set(meta);
+        efItems.unshift(Object.assign({ id }, meta)); efRender();
+      }
+      showToast("✅ تم رفع " + (files.length === 1 ? "الملف" : files.length + " ملفات"));
+      inp.value = ""; document.getElementById("efTitle").value = ""; document.getElementById("efPickTx").textContent = "📂 اختر ملفًا أو أكثر (Word / PDF / Excel)";
+    } catch (e) { console.error("efUpload", e); showToast("تعذر رفع الملف — تحقق من الاتصال وحاول مرة أخرى"); }
+    btn.disabled = false; prog.style.display = "none";
+  });
+  document.getElementById("efList").addEventListener("click", async e => {
+    const b = e.target.closest("button[data-a]"); if (!b) return;
+    const id = b.closest(".ef-item").dataset.id, f = efItems.find(x => x.id === id); if (!f) return;
+    if (b.dataset.a === "del") {
+      if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "تأكيد؟"; setTimeout(() => { if (b.isConnected) { b.dataset.confirm = ""; b.textContent = "🗑️"; } }, 4000); return; }
+      try {
+        await efCol("items").doc(id).delete();
+        for (let i = 0; i < (f.chunks || 1); i++) await efCol("chunks").doc(id + "_" + i).delete();
+        efItems = efItems.filter(x => x.id !== id); efRender(); showToast("حُذف الملف");
+      } catch (err) { showToast("تعذر حذف الملف"); }
+      return;
+    }
+    const isPdf = /pdf/i.test(f.type) || /\.pdf$/i.test(f.name);
+    const w = isPdf ? window.open("", "_blank") : null;
+    b.disabled = true; const old = b.textContent; b.textContent = "⏳";
+    try {
+      const parts = await Promise.all(Array.from({ length: f.chunks || 1 }, (_, i) => efCol("chunks").doc(id + "_" + i).get()));
+      const bin = atob(parts.map(p => (p.data() || {}).d || "").join("")), u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([u8], { type: f.type || "application/octet-stream" }));
+      if (w) w.location.href = url;
+      else { const a = document.createElement("a"); a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); }
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (err) { if (w) w.close(); showToast("تعذر فتح الملف"); }
+    b.disabled = false; b.textContent = old;
+  });
   /* ===== إنشاء تكليف ===== */
   const TK_DEFAULT_BODY = "بناءً على الصلاحيات الممنوحة لمدير المدرسة، وعلمنا بأنكم على قدر المسئولية، لذا تم تكليفكم ";
   function tkOpen() {
@@ -10466,6 +10741,8 @@ ${contentEl.innerHTML}
     document.getElementById("coveragePrintArchiveView").classList.toggle("active", view === "coveragePrintArchive");
     document.getElementById("leaveLogView").classList.toggle("active", view === "leaveLog");
     document.getElementById("reportsHubView").classList.toggle("active", view === "reportsHub");
+    document.getElementById("erecView").classList.toggle("active", view === "erec");
+    document.getElementById("erRegView").classList.toggle("active", view === "erReg");
     document.getElementById("comprehensiveView").classList.toggle("active", view === "comprehensive");
     document.getElementById("masterView").classList.toggle("active", view === "master");
     document.getElementById("notifyView").classList.toggle("active", view === "notify");
@@ -10524,6 +10801,7 @@ ${contentEl.innerHTML}
       else if (go === "taklif") tkOpen();
       else if (go === "inq") document.getElementById("openInquiries").click();
       else if (go === "alert") alOpen();
+      else if (go === "erec") erOpen();
       window.scrollTo(0, 0);
     }));
   })();
@@ -11599,7 +11877,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-16-3";
+window.APP_BUILD = "2026-11-16-6";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
