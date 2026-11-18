@@ -581,6 +581,47 @@
   .er-src th { background: #174a59; color: #fff; padding: 6px 4px; white-space: nowrap; }
   .er-src td { border: 1px solid var(--line); padding: 5px 4px; text-align: center; background: #fff; }
   .er-src td .er-ed { font: inherit; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 3px; background: #fffdf7; min-width: 80px; width: 100%; }
+  .work-reason { flex: 1 1 160px; min-width: 140px; font: inherit; font-size: 13px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 10px; background: #fffdf7; }
+  .er-file-card { display: flex; align-items: center; gap: 10px; border: 1.5px solid #9cc3cc; border-radius: 14px; background: #fff; padding: 12px; }
+  .er-file-card .fi { font-size: 40px; } .er-file-card .ft { flex: 1; min-width: 0; } .er-file-card b { display: block; color: #174a59; font-size: 16px; } .er-file-card small { color: #66736f; font-size: 12px; word-break: break-word; }
+  .er-file-up { margin-top: 6px; }
+  #erViewModal .export-btn, #shPvModal .export-btn { flex: none !important; width: auto !important; }
+  .trk-sum { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+  .trk-pill { background: #eef3f2; border-radius: 999px; padding: 4px 10px; font-size: 12.5px; }
+  .trk-pill.st-present { background: #e6f4ea; color: #146c3a; } .trk-pill.st-late { background: #fff4df; color: #8a5200; } .trk-pill.st-absent { background: #fdecea; color: #b42318; }
+  .trk-row { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 9px; margin-top: 7px; }
+  .trk-n { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; } .trk-n .avatar { width: 30px; height: 30px; border-radius: 50%; background: #174a59; color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+  .trk-c { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .trk-c select { flex: 1 1 140px; }
+  .trk-note { flex: 2 1 180px; font: inherit; font-size: 13px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 10px; background: #fffdf7; }
+  .trk-items { display: flex; flex-wrap: wrap; gap: 4px; flex-basis: 100%; } .trk-items label { font-size: 12.5px; background: #f3f8f9; border: 1px solid #d4e3e6; border-radius: 8px; padding: 4px 8px; }
+  .trk-paper { border: 1px solid #c9d6d3; border-radius: 10px; background: #fff; padding: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .trk-band { display: flex; align-items: center; gap: 10px; background: #174a59; color: #fff; border-radius: 10px; padding: 8px 12px; font-size: 12px; line-height: 1.6; }
+  .trk-band img { height: 42px; } .trk-band b { font-size: 13.5px; }
+  .trk-ttl { text-align: center; color: #174a59; margin: 10px 0 6px; font-size: 16px; }
+  .trk-when { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; border: 1.5px solid #174a59; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #f3f8f9; margin-bottom: 8px; }
+  .trk-when b { color: #174a59; }
+  .trk-tbl { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  .trk-tbl th { background: #174a59; color: #fff; padding: 6px 4px; white-space: nowrap; }
+  .trk-tbl td { border: 1px solid #9fb6b2; padding: 5px 4px; text-align: center; min-width: 58px; }
+  .trk-tbl td.tn { font-weight: 800; white-space: nowrap; text-align: right; }
+  .trk-tbl td.e { background: #f4f6f6; }
+  .trk-tbl td.c { cursor: pointer; background: #fff; user-select: none; }
+  .trk-tbl td.c b { display: block; font-size: 13.5px; color: #1d2b2a; } .trk-tbl td.c small { display: block; font-size: 10.5px; color: #4b5b58; }
+  .trk-tbl td.c.no { background: #fde2df; } .trk-tbl td.c.no small { color: #9a2f23; font-weight: 700; }
+  .trk-sig { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; font-size: 13px; }
+  .trk-sig div { display: flex; flex-direction: column; align-items: center; gap: 3px; } .trk-sig b { color: #174a59; }
+  .trk-l { flex: 1 1 150px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 700; color: #174a59; }
+  .trk-c .trk-l select { flex: none; width: 100%; }
+  .trk-les { flex-basis: 100%; border: 1px dashed #b9d3cd; border-radius: 10px; padding: 7px; background: #f7fbfa; }
+  .trk-les-h { font-size: 12.5px; font-weight: 800; color: #174a59; margin-bottom: 5px; }
+  .trk-les-h span.st-present { color: #146c3a; } .trk-les-h span.st-late { color: #9a5b00; } .trk-les-h span.st-absent { color: #b42318; }
+  .trk-les-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
+  .trk-les-i { border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 5px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+  .trk-les-i b { font-size: 12px; color: #174a59; } .trk-les-i span { font-size: 14px; font-weight: 800; }
+  .trk-c .trk-les-i select { flex: none; height: auto; font: inherit; font-size: 11.5px; padding: 3px; border-radius: 7px; border: 1px solid var(--line); background: #fff; width: 100%; }
+  .trk-les-i select.y { background: #e6f4ea; color: #146c3a; border-color: #9fd3b0; } .trk-les-i select.n { background: #fdecea; color: #b42318; border-color: #f0b4ad; }
+  .trk-les-none { font-size: 12px; color: #66736f; }
+  .er-src span.st-present { color: #146c3a; font-weight: 700; } .er-src span.st-late { color: #9a5b00; font-weight: 700; } .er-src span.st-absent { color: #b42318; font-weight: 700; }
   .er-box { border: 1.5px solid #9cc3cc; border-radius: 14px; padding: 10px; background: #f7fbfb; }
   .er-box-h { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; color: #174a59; font-size: 15.5px; }
   .er-acts { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -596,6 +637,21 @@
   .er-intro-paper { display: block; width: 100%; border: 1px solid #c9d6d3; border-radius: 6px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.08); min-height: 200px; }
   .er-intro-ed { min-height: 130px; border: 1.5px dashed #1F7A6D; border-radius: 10px; padding: 8px; background: #fffef9; margin-top: 6px; overflow-x: auto; outline: none; line-height: 1.8; }
   .er-intro-ed:empty::before { content: attr(data-ph); color: #8a9692; }
+  .er-inq-exp { border: 1.5px solid #1F7A6D; background: #eef7f5; border-radius: 12px; padding: 9px 10px; margin-bottom: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: #174a59; }
+  .er-inq-exp b { flex: 1 1 100%; } .er-inq-exp small { flex: 1 1 100%; color: #4b5b58; margin-top: -4px; }
+  .er-inq-exp .export-btn { flex: 1 !important; }
+  .er-fold { border: 1px solid var(--line); border-radius: 12px; background: #fff; margin-top: 8px; overflow: hidden; }
+  .er-fold-h { display: flex; align-items: center; gap: 8px; padding: 10px; cursor: pointer; }
+  .er-fold-h > span:first-child { flex: 1; color: #174a59; }
+  .er-fold-n { background: #e3f1f4; color: #174a59; border-radius: 999px; padding: 1px 9px; font-weight: 800; font-size: 12.5px; }
+  .er-fold-h .export-btn { flex: none !important; width: auto !important; padding: 5px 9px; font-size: 12px; }
+  .er-fold-b { display: none; border-top: 1px solid var(--line); background: #fafcfc; }
+  .er-fold.open .er-fold-b { display: block; }
+  .er-fold-i { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px dashed #dbe5e3; }
+  .er-fold-i .no { width: 22px; height: 22px; border-radius: 50%; background: #174a59; color: #fff; font-size: 11.5px; display: grid; place-items: center; flex: none; }
+  .er-fold-i .tx { flex: 1; min-width: 0; } .er-fold-i .tx b { display: block; font-size: 13px; } .er-fold-i .tx small { color: #66736f; font-size: 11.5px; }
+  .er-fold-i .export-btn { flex: none !important; width: auto !important; padding: 4px 8px; }
+  .er-wait-p { margin: 10px 0 6px; font-size: 13.5px; line-height: 1.8; }
   .er-day { border: 1.5px solid #c9dcd8; border-radius: 12px; padding: 8px; margin: 10px 0; background: #fbfdfc; }
   .er-day-h { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; background: #174a59; color: #fff; border-radius: 8px; padding: 7px 10px; font-size: 13.5px; margin-bottom: 4px; }
   .er-sub { font-weight: 800; color: #174a59; margin: 12px 0 6px; padding-right: 8px; border-right: 4px solid #1F7A6D; font-size: 14.5px; } .er-sub span { color: #66736f; font-weight: 600; }
@@ -1351,6 +1407,38 @@
         <h2>سجل التأخير</h2>
         <div class="count">بحث بالتاريخ والمعلم</div>
       </button>
+
+      <button class="tile coverage" id="openPrepTile">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7"/><path d="M9 11h5"/></svg></div>
+        <h2>التحضير ومنصة مدرستي</h2>
+        <div class="count">متابعة التحضير وتفعيل المنصة</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- متابعة التحضير (منصة مدرستي) -->
+  <div class="detail" id="trkView">
+    <div class="back-row">
+      <button class="back-btn" data-back="monitoring"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>متابعة</button>
+    </div>
+    <div class="detail-header"><h2>متابعة التحضير (منصة مدرستي)</h2></div>
+    <div id="trkFoldBox">
+      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:flex-end;">
+        <label style="flex:1; min-width:150px; font-size:12px; font-weight:700;">تاريخ التحضير (ميلادي)<input type="date" id="trkDate" class="date-input" style="width:100%;"><small id="trkDateH" style="display:block; color:#66736f; font-weight:400;"></small></label>
+        <button class="export-btn" id="trkOpenDay" style="flex:none;">📂 فتح / إنشاء اليوم</button>
+      </div>
+      <div class="er-sec" style="font-size:14.5px;">📁 أيام المتابعة (حسب تاريخ التحضير)</div>
+      <div id="trkFolders"></div>
+    </div>
+    <div id="trkSheetBox" style="display:none;">
+      <div class="er-acts" style="margin-bottom:8px;">
+        <button class="export-btn" id="trkBackFold">📁 المجلدات</button>
+        <button class="export-btn" id="trkAll">✅ الكل تم التحضير</button>
+        <button class="export-btn" id="trkPrint">🖨️ طباعة</button>
+        <button class="export-btn" id="trkDelDay" style="color:#b42318;">🗑️ حذف اليوم</button>
+      </div>
+      <div class="sched-hint" style="text-align:right;">اضغط على خانة الفصل للتبديل بين «تم التحضير» و«لم يتم التحضير».</div>
+      <div class="trk-paper" id="trkSheet"></div>
     </div>
   </div>
 
@@ -1416,13 +1504,13 @@
         </div>
       </div>
       <div class="er-seg" id="erSeg"></div>
-      <div style="display:flex; gap:6px; flex-wrap:wrap; margin:8px 0;">
+      <div id="erFilt" style="display:flex; gap:6px; flex-wrap:wrap; margin:8px 0;">
         <label style="flex:1; min-width:130px; font-size:12px; font-weight:700;">من (ميلادي)<input type="date" id="erFrom" class="date-input" style="width:100%;"><small id="erFromH" style="display:block; color:#66736f; font-weight:400;"></small></label>
         <label style="flex:1; min-width:130px; font-size:12px; font-weight:700;">إلى (ميلادي)<input type="date" id="erTo" class="date-input" style="width:100%;"><small id="erToH" style="display:block; color:#66736f; font-weight:400;"></small></label>
         <label style="flex:1; min-width:140px; font-size:12px; font-weight:700;">المعلم<select id="erTeacher" class="select-styled" style="width:100%;"></select></label>
       </div>
       <div id="erSrcTable" style="overflow-x:auto;"></div>
-      <div class="export-row" style="margin-top:8px;"><button class="export-btn" id="erSrcPrint">🖨️ طباعة السجل</button><button class="export-btn" id="erSrcPdf">📄 تصدير PDF</button><button class="export-btn" id="erSrcWord">📝 تصدير Word</button></div>
+      <div class="export-row" id="erSrcBottom" style="margin-top:8px;"><button class="export-btn" id="erSrcPrint">🖨️ طباعة السجل</button><button class="export-btn" id="erSrcPdf">📄 تصدير PDF</button><button class="export-btn" id="erSrcWord">📝 تصدير Word</button></div>
     </div>
     <div id="erCustomBox" style="display:none; margin-bottom:8px;">
       <input type="text" id="erCustomTitle" class="date-input" placeholder="عنوان السجل" style="width:100%; margin-bottom:6px;">
@@ -1888,6 +1976,18 @@
         <h2>الترحيلات المحفوظة</h2>
         <div class="count" id="shArchCount">حسب تاريخ الغياب</div>
       </button>
+    </div>
+  </div>
+
+  <!-- عرض ملف سجل مرفوع -->
+  <div id="erViewModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(10,30,36,.6); padding:10px;">
+    <div style="background:#fff; border-radius:14px; height:100%; display:flex; flex-direction:column; overflow:hidden; max-width:900px; margin:0 auto;">
+      <div style="display:flex; gap:6px; align-items:center; padding:8px 10px; background:#174a59; color:#fff;">
+        <b id="erViewTitle" style="flex:1; font-size:15px;">عرض السجل</b>
+        <button type="button" id="erViewPrint" class="export-btn" style="padding:5px 10px;">🖨️ طباعة</button>
+        <button type="button" id="erViewClose" class="export-btn" style="padding:5px 10px; background:#fff; color:#174a59;">✖️ إغلاق</button>
+      </div>
+      <iframe id="erViewFrame" style="flex:1; width:100%; border:0; background:#eef3f4;"></iframe>
     </div>
   </div>
 
@@ -2984,6 +3084,11 @@
     if (!out.shiftArchive || typeof out.shiftArchive !== "object" || Array.isArray(out.shiftArchive)) out.shiftArchive = {};
     if (!Array.isArray(out.officialRegs)) out.officialRegs = [];
     if (!out.erIntro || typeof out.erIntro !== "object" || Array.isArray(out.erIntro)) out.erIntro = {};
+    if (!out.erFiles || typeof out.erFiles !== "object" || Array.isArray(out.erFiles)) out.erFiles = {};
+    if (!Array.isArray(out.prepMadFollow)) out.prepMadFollow = [];
+    if (!Array.isArray(out.prepDays)) out.prepDays = [...new Set(out.prepMadFollow.map(r => r.date).filter(Boolean))];
+    // دمج بيانات النسخة السابقة (سجلان منفصلان) في سجل واحد
+    [["prepFollow", "prep"], ["madrasatiFollow", "mad"]].forEach(([K, f]) => { if (Array.isArray(out[K])) { out[K].forEach(o => { let r = out.prepMadFollow.find(x => x.date === o.date && x.teacher === o.teacher); if (!r) { r = { date: o.date, teacher: o.teacher }; out.prepMadFollow.push(r); } if (o.status && !r[f]) r[f] = o.status; if (o.items && !r.items) r.items = o.items; if (o.note) r.note = r.note ? r.note + " — " + o.note : o.note; }); delete out[K]; } });
     if (!Array.isArray(out.notices)) out.notices = [];
     if (!Array.isArray(out.assignmentSheets)) out.assignmentSheets = [];
     if (!Array.isArray(out.hiddenClassSlots)) out.hiddenClassSlots = [];
@@ -4934,7 +5039,7 @@
     if (status === "early_leave" && time) diffMinutes = computeEarlyDiff(time);
     const record = { date, teacher, status, time: time || "", diffMinutes };
     if (status === "" || status === "present") { if (idx > -1) data.workAttendance.splice(idx, 1); } // حاضر هو الافتراضي فلا يُخزَّن
-    else if (idx > -1) { const o = data.workAttendance[idx]; if (o.status === status) { if (o.excuse) record.excuse = o.excuse; if (o.note) record.note = o.note; } data.workAttendance[idx] = record; }
+    else if (idx > -1) { const o = data.workAttendance[idx]; if (o.status === status) { if (o.excuse) record.excuse = o.excuse; if (o.note) record.note = o.note; if (o.reason) record.reason = o.reason; } data.workAttendance[idx] = record; }
     else data.workAttendance.push(record);
     saveData();
   }
@@ -5020,6 +5125,20 @@
           renderWorkAttendanceList(dateStr);
         });
         controls.appendChild(timeInput);
+
+        // سبب الاستئذان (كتابة) — يظهر عند اختيار «مستأذن» ويُنقل لسجل الاستئذان
+        if (status === "permission") {
+          const rs = document.createElement("input");
+          rs.type = "text"; rs.className = "work-reason"; rs.placeholder = "سبب الاستئذان"; rs.maxLength = 200;
+          rs.value = record && record.reason ? record.reason : "";
+          rs.addEventListener("change", () => {
+            const rec = data.workAttendance.find(r => r.date === dateStr && r.teacher === name);
+            if (!rec) return;
+            const v = rs.value.trim(); if (v) rec.reason = v; else delete rec.reason;
+            saveData(); showToast("حُفظ سبب الاستئذان");
+          });
+          controls.appendChild(rs);
+        }
 
         if (record && record.time && status !== "permission") {
           const liveDiff = status === "late" ? computeLateDiff(record.time) : computeEarlyDiff(record.time);
@@ -9665,21 +9784,24 @@ ${contentEl.innerHTML}
   function ioDefaultBody() {
     const v = ioVals(), x = (s, w) => s || (w || "......");
     const when = "يوم " + x(v.day) + " الموافق " + x(v.hijri, "....../....../......");
-    if (v.type === "absence") return "لوحظ غيابكم عن العمل " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     const mins = v.mins == null ? "......" : v.mins;
-    if (v.type === "late") return "لوحظ تأخركم عن الحضور صباح " + when + " بمقدار (" + mins + ") دقيقة عن بداية الدوام الرسمي (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
-    if (v.type === "customIfada") return "نأمل إفادتنا عن " + x(v.purpose) + "، شاكرين لكم تعاونكم.";
-    if (v.type === "customInq") return "لوحظ " + x(v.purpose) + " " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
+    // صيغة موحّدة لجميع المساءلات حسب النوع
+    const close = "، وذلك لاستكمال الإجراءات الإدارية، شاكرين لكم حسن تعاونكم وتفهمكم وحرصكم الدائم على انتظام العمل، ومقدّرين لكم جهودكم.";
+    const ask = what => "نأمل منكم التكرم بالإفادة عن سبب " + what + close;
+    if (v.type === "absence") return ask("غيابكم " + when);
+    if (v.type === "late") return ask("تأخركم عن الحضور " + when + " بمقدار (" + mins + ") دقيقة عن بداية الدوام الرسمي (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")");
+    if (v.type === "early") return ask("انصرافكم مبكرًا " + when + " قبل نهاية الدوام الرسمي (" + x(v.ref) + ") بمقدار (" + mins + ") دقيقة، حيث كان انصرافكم الساعة (" + x(v.time) + ")");
+    if (v.type === "lineup") return ask("عدم حضوركم الطابور الصباحي " + when);
+    if (v.type === "lateLineup") return ask("تأخركم عن حضور الطابور الصباحي " + when);
+    if (v.type === "lateClass") return ask("تأخركم عن الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + " بمقدار (" + mins + ") دقيقة عن بداية الحصة (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")");
+    if (v.type === "missClass") return ask("عدم حضوركم الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when);
+    if (v.type === "missWait") return ask("عدم حضوركم حصة الانتظار المكلفين بها في الحصة (" + x(v.period) + ") بالفصل (" + x(v.cls) + ") بدلًا من المعلم الغائب (" + x(v.absent) + ") " + when);
+    if (v.type === "refuseWait") return ask("رفضكم حصة الانتظار في الحصة (" + x(v.period) + ") بالفصل (" + x(v.cls) + ") بدلًا من المعلم الغائب (" + x(v.absent) + ") " + when);
+    if (v.type === "customInq") return ask(x(v.purpose) + " " + when);
+    if (v.type === "customIfada") return "نأمل منكم التكرم بالإفادة عن " + x(v.purpose) + close;
     if (v.type === "lowGrades") {
-      return "لوحظ تدني درجات طلاب الفصل (" + x(v.gcls) + ") في مادة (" + x(v.subject) + ")" + (v.exam ? " في " + v.exam : "") + "، آمل الإفادة عن أسباب ذلك، وإيضاح الإجراءات العلاجية المتخذة لرفع مستوى الطلاب، مع إرفاق ما يلي:\n١- خطة توزيع المنهج.\n٢- الخطط الأسبوعية.\n٣- خطط التحسين مع الشواهد.\n٤- شواهد إبلاغ أولياء الأمور بمستويات أبنائهم والخطط المتاحة لتحسين مستوياتهم.\n٥- الفرص التي أُتيحت للطلاب لتحسين درجاتهم مع الشواهد.";
+      return "نأمل منكم التكرم بالإفادة عن أسباب تدني درجات طلاب الفصل (" + x(v.gcls) + ") في مادة (" + x(v.subject) + ")" + (v.exam ? " في " + v.exam : "") + "، وإيضاح الإجراءات العلاجية المتخذة لرفع مستوى الطلاب، وذلك لاستكمال الإجراءات الإدارية، مع إرفاق ما يلي:\n١- خطة توزيع المنهج.\n٢- الخطط الأسبوعية.\n٣- خطط التحسين مع الشواهد.\n٤- شواهد إبلاغ أولياء الأمور بمستويات أبنائهم والخطط المتاحة لتحسين مستوياتهم.\n٥- الفرص التي أُتيحت للطلاب لتحسين درجاتهم مع الشواهد.\nشاكرين لكم حسن تعاونكم وتفهمكم وحرصكم الدائم على انتظام العمل، ومقدّرين لكم جهودكم.";
     }
-    if (v.type === "lineup") return "لوحظ عدم حضوركم الطابور الصباحي " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
-    if (v.type === "early") return "لوحظ انصرافكم مبكرًا " + when + " قبل نهاية الدوام الرسمي (" + x(v.ref) + ") بمقدار (" + mins + ") دقيقة، حيث كان انصرافكم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
-    if (v.type === "lateClass") return "لوحظ تأخركم عن الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + " بمقدار (" + mins + ") دقيقة عن بداية الحصة (" + x(v.ref) + ")، حيث كان حضوركم الساعة (" + x(v.time) + ")، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
-    if (v.type === "missClass") return "لوحظ عدم حضوركم الحصة (" + x(v.period) + ") في الفصل (" + x(v.cls) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
-    if (v.type === "missWait") return "لوحظ عدم حضوركم حصة الانتظار المكلفين بها في الحصة (" + x(v.period) + ") بالفصل (" + x(v.cls) + ") بدلًا من المعلم الغائب (" + x(v.absent) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
-    if (v.type === "lateLineup") return "لوحظ تأخركم عن حضور الطابور الصباحي " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
-    if (v.type === "refuseWait") return "نظرًا لرفضكم حصة الانتظار في الحصة (" + x(v.period) + ") بالفصل (" + x(v.cls) + ") بدلًا من المعلم الغائب (" + x(v.absent) + ") " + when + "، آمل الإفادة عن سبب ذلك، والتعهد بعدم تكرار ذلك مستقبلًا.";
     return "";
   }
   function ioSync(regen) {
@@ -9763,7 +9885,7 @@ ${contentEl.innerHTML}
     ioEl("ioEditing").style.display = r ? "" : "none";
     ioEl("ioEditing").textContent = r ? "✏️ تعدّل مساءلة محفوظة: " + r.title + " — " + r.teacher + " — " + (r.hijri || "") + " (اضغط «مساءلة جديدة» لبدء مساءلة أخرى)" : "";
   }
-  function ioPrintRec(v) {
+  function ioPrintRec(v, asPage) {
     const T = Object.assign({}, IO_TYPES[v.type] || { cls: false }, { title: ioTitleOf(v) }), body = v.body || "";
     const rsrc = v.replyAt ? v : (data.officialInq || []).find(x => x.id === (v.id || ioCurId));
     const rp = rsrc && rsrc.replyAt ? rsrc : null;
@@ -9807,6 +9929,7 @@ ${contentEl.innerHTML}
           <div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
         </div>
       </div>`;
+    if (asPage) return wpGenericPage(T.title, inner, date);
     wpOpenDoc(wpShellDoc(T.title, wpGenericPage(T.title, inner, date), { fitOnePage: true }), T.title.replace(/ /g, "_") + (v.teacher ? "_" + v.teacher : ""));
   }
   ioEl("ioType").addEventListener("change", () => { ioPrefillTime(); ioSync(true); });
@@ -10520,6 +10643,89 @@ ${contentEl.innerHTML}
     if (ioEl("ioAttachDoc").checked) { const d = docAttachment("inq", r); if (d) files.unshift(d); }
     linkSend("inq", r, files);
   });
+  /* ===== متابعة التحضير (منصة مدرستي): مجلد لكل يوم وجدول بالحصص ===== */
+  const TRK_T = "متابعة التحضير (منصة مدرستي)";
+  const TRK_PREP = [["done", "محضّر"], ["partial", "تحضير ناقص"], ["none", "غير محضّر"]];
+  const TRK_CLS = { done: "present", partial: "late", none: "absent" };
+  const trkLab = (L, v) => (L.find(x => x[0] === v) || [, ""])[1];
+  const trkArr = () => { if (!Array.isArray(data.prepMadFollow)) data.prepMadFollow = []; return data.prepMadFollow; };
+  const trkDays = () => { if (!Array.isArray(data.prepDays)) data.prepDays = []; return data.prepDays; };
+  const trkLessons = (t, date) => { const d = date ? dayNameFromDate(date) : null; return d ? data.schedule.filter(x => x.day === d && x.teacher === t).sort((a, b) => Number(a.period) - Number(b.period)) : []; };
+  const trkRec = (t, date) => trkArr().find(x => x.date === date && x.teacher === t);
+  const trkNo = (t, date, per) => { const r = trkRec(t, date); return !!(r && r.lessons && r.lessons[per] === "no"); };
+  // حالة المعلم في اليوم: كل الحصص تم التحضير = محضّر، بعضها = ناقص، لا شيء = غير محضّر
+  const trkStatus = (t, date) => { const L = trkLessons(t, date); if (!L.length) return ""; const n = L.filter(x => trkNo(t, date, x.period)).length; return n === 0 ? "done" : n === L.length ? "none" : "partial"; };
+  const trkLessonsText = r => trkLessons(r.teacher, r.date).map(x => (shPer(Number(x.period)) || x.period) + " " + x.className + " " + (trkNo(r.teacher, r.date, x.period) ? "✗" : "✓")).join("، ");
+  const trkTeachersOf = date => data.teachers.filter(t => trkLessons(t, date).length).sort((a, b) => a.localeCompare(b, "ar"));
+  const trkPers = date => { const s2 = new Set(); data.schedule.filter(x => x.day === dayNameFromDate(date)).forEach(x => s2.add(Number(x.period))); return [...s2].sort((a, b) => a - b); };
+  let trkCur = "";
+  function trkOpen() { const d = document.getElementById("trkDate"); if (!d.value) d.value = todayISODate(); trkCur = ""; trkShow(); showView("trk"); window.scrollTo(0, 0); }
+  function trkShow() {
+    document.getElementById("trkFoldBox").style.display = trkCur ? "none" : "";
+    document.getElementById("trkSheetBox").style.display = trkCur ? "" : "none";
+    if (trkCur) trkSheet(); else trkFolders();
+  }
+  function trkFolders() {
+    const v = document.getElementById("trkDate").value, p = v ? wpDateParts(v) : null;
+    document.getElementById("trkDateH").textContent = p ? (p.dayName || "") + " — " + p.hijri + (v && !dayNameFromDate(v) ? " (إجازة أسبوعية)" : "") : "";
+    const D = trkDays().slice().sort((a, b) => b.localeCompare(a)), box = document.getElementById("trkFolders");
+    if (!D.length) { box.innerHTML = '<div class="empty-state">لا توجد أيام بعد — اختر تاريخ التحضير ثم «فتح / إنشاء اليوم»</div>'; return; }
+    box.innerHTML = D.map(d => { const q = wpDateParts(d), T = trkTeachersOf(d), bad = T.filter(t => trkStatus(t, d) !== "done").length;
+      return '<div class="er-fold" data-d="' + d + '"><div class="er-fold-h"><span>📁 <b>' + acEsc((q.dayName || "") + " — " + q.hijri) + '</b> <small style="color:#66736f;">' + acEsc(erG(d)) + '</small></span><span class="er-fold-n" style="' + (bad ? "background:#fdecea; color:#b42318;" : "") + '">' + (bad ? bad + " غير مكتمل" : "مكتمل ✓") + "</span></div></div>"; }).join("");
+  }
+  document.getElementById("trkFolders").addEventListener("click", e => { const f = e.target.closest(".er-fold"); if (f) { trkCur = f.dataset.d; trkShow(); window.scrollTo(0, 0); } });
+  document.getElementById("trkDate").addEventListener("change", trkFolders);
+  document.getElementById("trkOpenDay").addEventListener("click", () => {
+    const d = document.getElementById("trkDate").value; if (!d) { showToast("اختر تاريخ التحضير"); return; }
+    if (!dayNameFromDate(d)) { showToast("هذا اليوم إجازة أسبوعية"); return; }
+    if (!trkDays().includes(d)) { trkDays().push(d); saveData(); }
+    trkCur = d; trkShow(); window.scrollTo(0, 0);
+  });
+  document.getElementById("trkBackFold").addEventListener("click", () => { trkCur = ""; trkShow(); });
+  const trkHeadHTML = d => { const q = wpDateParts(d); return '<div class="trk-band"><img src="' + MOE_LOGO + '" alt=""><div><div>المملكة العربية السعودية — وزارة التعليم</div><div>الإدارة العامة للتعليم بالمنطقة الشرقية</div><b>مدرسة عطاء بن أبي رباح المتوسطة</b></div></div><h3 class="trk-ttl">' + TRK_T + '</h3><div class="trk-when"><span><b>اليوم:</b> ' + acEsc(q.dayName || "") + "</span><span><b>التاريخ:</b> " + acEsc(q.hijri) + "</span><span><b>الموافق:</b> " + acEsc(erG(d)) + "</span></div>"; };
+  function trkSheet() {
+    const d = trkCur, T = trkTeachersOf(d), P = trkPers(d), box = document.getElementById("trkSheet");
+    box.innerHTML = trkHeadHTML(d) + (T.length ? '<div style="overflow-x:auto;"><table class="trk-tbl"><thead><tr><th>م</th><th>المعلم</th>' + P.map(p => "<th>" + acEsc(shPer(p) || p) + "</th>").join("") + "</tr></thead><tbody>" +
+      T.map((t, i) => "<tr><td>" + (i + 1) + '</td><td class="tn">' + acEsc(t) + "</td>" + P.map(p => { const L = trkLessons(t, d).filter(x => Number(x.period) === p); if (!L.length) return '<td class="e"></td>'; const no = trkNo(t, d, p); return '<td class="c' + (no ? " no" : "") + '" data-t="' + acEsc(t) + '" data-p="' + p + '"><b>' + acEsc(L.map(x => x.className).join(" / ")) + "</b><small>" + (no ? "لم يتم التحضير" : "تم التحضير") + "</small></td>"; }).join("") + "</tr>").join("") + "</tbody></table></div>" : '<div class="empty-state">لا توجد حصص في الجدول المدرسي لهذا اليوم</div>') +
+      '<div class="trk-sig"><div><b>وكيل الشؤون التعليمية</b><span>موسى آل ضاحي</span><span>التوقيع: ..................</span></div><div><b>مدير المدرسة</b><span>موسى آل عبيد</span><span>التوقيع: ..................</span></div></div>';
+  }
+  function trkSet(t, date, fn) {
+    const A = trkArr(); let r = trkRec(t, date);
+    if (!r) { r = { date, teacher: t }; A.push(r); }
+    fn(r);
+    if (r.lessons && !Object.keys(r.lessons).length) delete r.lessons;
+    const st = trkStatus(t, date); if (st) r.prep = st; else delete r.prep;
+    if (!r.lessons && !r.note && !r.mad) A.splice(A.indexOf(r), 1);
+    saveData();
+  }
+  document.getElementById("trkSheet").addEventListener("click", e => {
+    const c = e.target.closest("td.c"); if (!c) return;
+    const t = c.dataset.t, p = c.dataset.p, no = !c.classList.contains("no");
+    trkSet(t, trkCur, r => { r.lessons = r.lessons || {}; if (no) r.lessons[p] = "no"; else delete r.lessons[p]; });
+    c.classList.toggle("no", no); c.querySelector("small").textContent = no ? "لم يتم التحضير" : "تم التحضير";
+  });
+  document.getElementById("trkAll").addEventListener("click", () => {
+    trkTeachersOf(trkCur).forEach(t => trkSet(t, trkCur, r => { if (r.lessons) Object.keys(r.lessons).forEach(k => { if (r.lessons[k] === "no") delete r.lessons[k]; }); }));
+    trkSheet(); showToast("تم تعيين جميع الحصص: تم التحضير");
+  });
+  document.getElementById("trkDelDay").addEventListener("click", e => {
+    const b = e.currentTarget;
+    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "⚠️ اضغط للتأكيد"; setTimeout(() => { b.dataset.confirm = ""; b.textContent = "🗑️ حذف اليوم"; }, 4000); return; }
+    b.dataset.confirm = ""; b.textContent = "🗑️ حذف اليوم";
+    data.prepDays = trkDays().filter(x => x !== trkCur); data.prepMadFollow = trkArr().filter(x => x.date !== trkCur);
+    saveData(); trkCur = ""; trkShow(); showToast("حُذف اليوم");
+  });
+  function trkPage(d) {
+    const T = trkTeachersOf(d), P = trkPers(d), q = wpDateParts(d);
+    const B = "border:1.5px solid #174a59; padding:6px 3px; text-align:center; font-size:12.5px;", H = B + " background:#174a59; color:#fff; font-weight:700;";
+    const rows = T.map((t, i) => `<tr><td style="${B}">${i + 1}</td><td style="${B} font-weight:700; white-space:nowrap;">${wpEsc(t)}</td>${P.map(p => { const L = trkLessons(t, d).filter(x => Number(x.period) === p); if (!L.length) return `<td style="${B} background:#f4f6f6;"></td>`; const no = trkNo(t, d, p); return `<td style="${B}${no ? " background:#fde2df;" : ""}"><b>${wpEsc(L.map(x => x.className).join(" / "))}</b><br><span style="font-size:10.5px;">${no ? "لم يتم التحضير" : "تم التحضير"}</span></td>`; }).join("")}</tr>`).join("");
+    return `<section class="page gen">${wpBandHTML()}<h2>${wpEsc(TRK_T)}</h2>
+      <div style="display:flex; justify-content:space-between; gap:10px; border:1.5px solid #174a59; border-radius:8px; padding:7px 12px; margin:4px 0 10px; font-size:15px; background:#f3f8f9;"><div><b style="color:#174a59;">اليوم:</b> ${wpEsc(q.dayName || "")}</div><div><b style="color:#174a59;">التاريخ:</b> ${wpEsc(q.hijri)}</div><div><b style="color:#174a59;">الموافق:</b> ${wpEsc(erG(d))}</div></div>
+      <table style="width:100%; border-collapse:collapse;"><tr><th style="${H} width:5%">م</th><th style="${H}">المعلم</th>${P.map(p => `<th style="${H}">${wpEsc(shPer(p) || p)}</th>`).join("")}</tr>${rows}</table>
+      <div style="display:flex; justify-content:space-between; margin:26px 20px 0; font-size:15px;"><div style="text-align:center;"><b style="color:#174a59;">وكيل الشؤون التعليمية</b><br>موسى آل ضاحي<br>التوقيع: ....................</div><div style="text-align:center;"><b style="color:#174a59;">مدير المدرسة</b><br>موسى آل عبيد<br>التوقيع: ....................</div></div></section>`;
+  }
+  document.getElementById("trkPrint").addEventListener("click", () => { if (trkCur) wpOpenDoc(wpShellDoc(TRK_T, trkPage(trkCur), { landscape: trkPers(trkCur).length > 7, fitOnePage: true }), "متابعة_التحضير_" + trkCur); });
+  document.getElementById("openPrepTile").addEventListener("click", trkOpen);
   /* ===== السجلات الإلكترونية ===== */
   const ER_PLATFORM = [
     ["📕", "سجل الغياب", "غياب المعلمين", () => document.getElementById("openAbsenceLog").click()],
@@ -10557,7 +10763,7 @@ ${contentEl.innerHTML}
   function erOpen() {
     document.getElementById("erPlatform").innerHTML = ER_PLATFORM.map((x, i) => { const n = x[4] ? x[4]() : null; return '<button class="er-tile" data-i="' + i + '"><span class="ei">' + x[0] + "</span><span><b>" + acEsc(x[1]) + "</b><small>" + acEsc(x[2]) + (n != null ? " · " + n : "") + "</small></span></button>"; }).join("");
     const sel = document.getElementById("erNewType");
-    if (!sel.options.length) sel.innerHTML = '<option value="">اختر</option><optgroup label="من المنصة">' + Object.keys(ER_SRC).map(k => '<option value="src:' + k + '">' + acEsc(ER_SRC[k].t) + "</option>").join("") + '</optgroup><optgroup label="تقارير المنصة (تُفتح صفحتها)">' + Object.keys(ER_GO).map(k => '<option value="go:' + k + '">' + acEsc(ER_GO[k][0]) + "</option>").join("") + '</optgroup><optgroup label="سجلات تُعبّأ يدويًا">' + ER_TYPES.map(x => '<option value="' + x.k + '">' + acEsc(x.t) + "</option>").join("") + "</optgroup>";
+    if (!sel.options.length) sel.innerHTML = '<option value="">اختر</option><optgroup label="من المنصة">' + Object.keys(ER_SRC).filter(k => !ER_SRC[k].file).map(k => '<option value="src:' + k + '">' + acEsc(ER_SRC[k].t) + "</option>").join("") + '</optgroup><optgroup label="سجلات بملف مرفوع">' + Object.keys(ER_SRC).filter(k => ER_SRC[k].file).map(k => '<option value="src:' + k + '">' + acEsc(ER_SRC[k].t) + "</option>").join("") + '</optgroup><optgroup label="تقارير المنصة (تُفتح صفحتها)">' + Object.keys(ER_GO).map(k => '<option value="go:' + k + '">' + acEsc(ER_GO[k][0]) + "</option>").join("") + '</optgroup><optgroup label="سجلات تُعبّأ يدويًا">' + ER_TYPES.map(x => '<option value="' + x.k + '">' + acEsc(x.t) + "</option>").join("") + "</optgroup>";
     const ts = document.getElementById("erTeacher"), tv = ts.value;
     ts.innerHTML = '<option value="">الكل</option>' + data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar")).map(t => '<option value="' + acEsc(t) + '">' + acEsc(t) + "</option>").join("");
     if (data.teachers.includes(tv)) ts.value = tv;
@@ -10686,17 +10892,17 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
         dates.forEach(d => data.teachers.forEach(t => out.push(have[d + "|" + t] || { date: d, day: dayNameFromDate(d), teacher: t, status: "present", detail: "" })));
         return out;
       } },
-    perm: { t: "سجل الاستئذان والانصراف المبكر", from: "متابعة الدوام", segs: [["permission", "الاستئذان"], ["early_leave", "الانصراف المبكر"], ["all", "الكل"]],
-      cols: [C_DAY, C_DATE, C_GREG, C_T, C_SEC, C_ST, C_DET],
-      rows: seg => erWork(seg === "all" ? ["permission", "early_leave"] : [seg], { permission: "الاستئذان", early_leave: "الانصراف المبكر" }) },
+    perm: { t: "سجل الاستئذان", from: "متابعة الدوام", byTeacher: 1,
+      cols: [C_DAY, C_DATE, C_GREG, C_T, ["وقت الاستئذان", r => (r.record && r.record.time) || String(r.detail || "").replace(/^الساعة\s*/, "") || "—"], ["سبب الاستئذان", r => (r.record && r.record.reason) || "—"], ["ملاحظات", r => (r.record && r.record.note) || "", { edit: "note" }]],
+      rows: () => erWork(["permission"], { permission: "الاستئذان" }) },
     duty: { t: "سجل المناوبة والإشراف", from: "المناوبة والطابور", segs: [["recess", "مناوبة الفسحة"], ["endOfDay", "مناوبة نهاية الدوام"], ["lineup", "متابعة الطابور"], ["all", "الكل"]],
       cols: [C_DAY, C_DATE, C_GREG, C_T, C_SEC, C_ST, C_DET],
       rows: seg => { const out = [], N = { recess: "مناوبة الفسحة", endOfDay: "مناوبة نهاية الدوام", lineup: "الطابور" }; ["recess", "endOfDay", "lineup"].filter(x => seg === "all" || seg === x).forEach(x => getMonitorTypeRecords(x).filter(r => r.status && r.status !== "present").forEach(r => out.push(Object.assign({ sec: N[x] }, r)))); return out; } },
     lessons: { t: "سجل متابعة الحصص", from: "سجل متابعة الحصص", segs: [["absent", "الغياب عن الحصة"], ["late", "التأخر عن الحصة"], ["permission", "مستأذن"], ["all", "الكل"]],
       cols: [C_DAY, C_DATE, C_GREG, C_T, ["الحصة", r => shPer(Number(r.period)) || r.period], ["الفصل", r => r.className || "—"], C_ST],
       rows: seg => (data.attendance || []).filter(r => r.status && r.status !== "present" && (seg === "all" || r.status === seg)).map(r => Object.assign({ sec: statusLabel(r.status) }, r)) },
-    wait: { t: "سجل حصص الانتظار", from: "سجل الانتظار",
-      cols: [C_DAY, C_DATE, C_GREG, ["الحصة", r => shPer(Number(r.period)) || r.period], ["الفصل", r => r.className || "—"], ["المعلم الغائب", r => r.absentTeacher || "—"], ["المنتظر", r => r.subTeacher || "—"], ["ملاحظة", r => r.note || r.rank || "—"]],
+    wait: { t: "سجل حصص الانتظار", from: "سجل الانتظار", byAbsent: 1,
+      cols: [C_DAY, C_DATE, C_GREG, ["الحصة", r => shPer(Number(r.period)) || r.period], ["الفصل", r => r.className || "—"], ["المعلم الغائب", r => r.absentTeacher || "—", { abs: 1 }], ["المنتظر", r => r.subTeacher || "—"], ["التوقيع", r => wsLabel(r.date, r) || ""], ["ملاحظة", r => r.note || r.rank || "—"]],
       rows: () => (data.coverageRecords || []).filter(r => r.subTeacher).map(r => Object.assign({ tset: [r.subTeacher, r.absentTeacher] }, r)) },
     waitCount: { t: "حصر حصص الانتظار", from: "سجل الانتظار", noDate: 1,
       cols: [["المعلم", r => r.teacher], ["عدد حصص الانتظار", r => String(r.n)]],
@@ -10705,13 +10911,20 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     shifts: { t: "سجل ترحيل الحصص", from: "الترحيلات المحفوظة",
       cols: [C_DAY, C_DATE, C_GREG, ["الغائب/المستأذن", r => (r.absent || []).join("، ") || "—"], ["حصص مرحّلة", r => String((r.items || []).filter(i => i.type === "shift").length)], ["انتظار يدوي", r => String((r.items || []).filter(i => i.type === "manual").length)], ["تحتاج منتظر", r => String((r.items || []).filter(i => i.type === "wait").length)]],
       rows: () => Object.values(data.shiftArchive || {}).map(r => Object.assign({ tset: r.absent || [] }, r)) },
-    inq: { t: "سجل المسائلات", from: "المسائلات المحفوظة",
+    inq: { t: "سجل المسائلات", from: "المسائلات المحفوظة", folders: 1,
       cols: [C_DATE, C_GREG, C_T, ["المساءلة", r => r.title || "—"], ["الرابط", erSent], ["الطباعة", r => r.printedAt ? "طُبعت" : "—"], ["التسليم", r => r.delivered ? "سُلّمت" : "—"]],
       rows: () => (data.officialInq || []).map(r => Object.assign({}, r, { date: r.dateIso || erIso(r.createdAt) })) },
     alerts: { t: "سجل التنبيهات", from: "التنبيهات المحفوظة",
       cols: [C_DATE, C_GREG, C_T, ["التنبيه", r => r.title || "—"], ["الرابط", erSent], ["الطباعة", r => r.printedAt ? "طُبع" : "—"], ["التسليم", r => r.delivered ? "سُلّم" : "—"]],
       rows: () => (data.officialAlerts || []).map(r => Object.assign({}, r, { date: r.dateIso || (/^\d{4}-\d\d-\d\d$/.test(r.date || "") ? r.date : "") || erIso(r.createdAt) })) }
   };
+  ER_SRC.prepMad = { t: "سجل متابعة التحضير (منصة مدرستي)", from: TRK_T,
+    segs: [["status", "جميع المعلمين"], ["prepNo", "غير المكتمل"], ["all", "الكل"]],
+    segTitle: { status: "جميع المعلمين", prepNo: "غير المحضّرين أو التحضير الناقص" },
+    cols: [C_DAY, C_DATE, C_GREG, C_T, ["الحصص والتحضير", r => trkLessonsText(r) || "—"], ["التحضير", r => trkLab(TRK_PREP, r.prep) || "—", { pc: "prep" }]],
+    rows: seg => trkDays().flatMap(d => trkTeachersOf(d).map(t => ({ date: d, day: dayNameFromDate(d), teacher: t, prep: trkStatus(t, d) }))).filter(r => seg === "prepNo" ? r.prep !== "done" : true) };
+  ER_SRC.tdata = { t: "سجل بيانات المعلمين", from: "ملف مرفوع", file: 1, cols: [], rows: () => [] };
+  ER_SRC.plans = { t: "سجل الخطط وتوزيع المقررات", from: "ملف مرفوع", file: 1, cols: [], rows: () => [] };
   const ER_GO = { monRep: ["تقارير المتابعة", () => document.getElementById("openMonitorReports").click()], comp: ["التقرير الشامل", () => document.getElementById("openComprehensive").click()], ack: ["متابعة الاطلاع", () => ackOpenView()] };
   let erSeg = "all";
   function erSrcRows(segArg) {
@@ -10738,6 +10951,16 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     const days = [...new Set(secs.flatMap(x => x.rows.map(r => r.date)).filter(Boolean))].sort();
     return days.map(d => ({ date: d, secs: secs.map(x => Object.assign({}, x, { rows: x.rows.filter(r => r.date === d), cols: x.cols.filter(c => !(c[2] && c[2].dt)) })) }));
   }
+  // سجل الانتظار: لكل معلم غائب جدول مستقل وعبارة مستقلة، في نفس صفحة اليوم
+  function erParts(x) {
+    const S = ER_SRC[document.getElementById("erNewType").value.slice(4)] || {};
+    if (!S.byAbsent || !x.rows.length) return [{ head: "", rows: x.rows, cols: x.cols }];
+    const order = [], by = {};
+    x.rows.forEach(r => { const a = r.absentTeacher || "—"; if (!by[a]) { by[a] = []; order.push(a); } by[a].push(r); });
+    const cols = x.cols.filter(c => !(c[2] && c[2].abs));
+    return order.map(a => ({ abs: a, kind: kindOf(by[a][0]), rows: by[a], cols }));
+  }
+  const erPartHead = (pt, esc) => pt.abs ? "نظرًا " + kindVerb(pt.kind) + " الزميل المعلم ( <b>" + esc(pt.abs) + "</b> ) فقد تم تكليفكم بسد الحصص حسب الجدول التالي:" : "";
   const erDayHead = d => { const p = wpDateParts(d); return { day: p.dayName || dayNameFromDate(d) || "—", hijri: p.hijri, greg: erG(d) }; };
   function erSrcRender() {
     const k = document.getElementById("erNewType").value.slice(4), S = ER_SRC[k]; if (!S) return;
@@ -10746,6 +10969,11 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     seg.style.display = S.segs ? "" : "none";
     seg.innerHTML = (S.segs || []).map(x => '<button type="button" data-s="' + x[0] + '"' + (x[0] === erSeg ? ' class="on"' : "") + ">" + acEsc(x[1]) + "</button>").join("");
     ["erFrom", "erTo"].forEach(id => { const v = document.getElementById(id).value, p = v ? wpDateParts(v) : null; document.getElementById(id + "H").textContent = p ? (p.dayName || "") + " — " + p.hijri : ""; });
+    ["erFilt", "erSrcBottom"].forEach(id => { document.getElementById(id).style.display = S.file ? "none" : ""; });
+    document.querySelector("#erSrcBox .er-acts").style.display = S.file ? "none" : "";
+    if (S.file) { erFileRender(); return; }
+    if (S.folders) { erInqRender(); return; }
+    if (S.byTeacher) { erTeachRender(); return; }
     const secs = erSections(), multi = secs.length > 1, groups = erByDay(secs);
     const box = document.getElementById("erSrcTable");
     if (!secs.some(x => x.rows.length)) { box.innerHTML = '<div class="empty-state">لا توجد سجلات مطابقة في ' + acEsc(S.from) + "</div>"; return; }
@@ -10753,16 +10981,17 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
       const h = g.date ? erDayHead(g.date) : null;
       return '<div class="er-day">' + (h ? '<div class="er-day-h"><span><b>اليوم:</b> ' + acEsc(h.day) + "</span><span><b>التاريخ:</b> " + acEsc(h.hijri) + "</span><span>" + acEsc(h.greg) + "</span></div>" : "") +
         g.secs.map(x => (multi ? '<div class="er-sub">' + acEsc(x.name) + " <span>(" + x.rows.length + ")</span></div>" : "") +
-          (!x.rows.length ? '<div class="empty-state" style="padding:8px;">لا يوجد</div>' :
-          '<table class="er-src"><thead><tr><th>م</th>' + x.cols.map(c => "<th>" + acEsc(c[0]) + "</th>").join("") + "</tr></thead><tbody>" +
-          x.rows.map((r, i) => "<tr><td>" + (i + 1) + "</td>" + x.cols.map(c => "<td" + (c[2] && c[2].st ? ' class="st-' + acEsc(r.status) + '"' : "") + ">" + erCell(c, r) + "</td>").join("") + "</tr>").join("") + "</tbody></table>")).join("") + "</div>";
+          (!x.rows.length ? '<div class="empty-state" style="padding:8px;">لا يوجد</div>' : erParts(x).map(pt =>
+          (pt.abs ? '<p class="er-wait-p">' + erPartHead(pt, acEsc) + "</p>" : "") +
+          '<table class="er-src"><thead><tr><th>م</th>' + pt.cols.map(c => "<th>" + acEsc(c[0]) + "</th>").join("") + "</tr></thead><tbody>" +
+          pt.rows.map((r, i) => "<tr><td>" + (i + 1) + "</td>" + pt.cols.map(c => "<td" + (c[2] && c[2].st ? ' class="st-' + acEsc(r.status) + '"' : "") + ">" + erCell(c, r) + "</td>").join("") + "</tr>").join("") + "</tbody></table>").join(""))).join("") + "</div>";
     }).join("");
   }
   // خانات قابلة للتعديل: العذر والملاحظات تُحفظ في سجل الدوام نفسه
   function erCell(c, r) {
     const ed = c[2] && c[2].edit;
-    if (!ed) return acEsc(c[1](r));
-    if (!(r.record && ["absent", "late"].includes(r.status))) return "";
+    if (!ed) return c[2] && c[2].pc ? '<span class="st-' + (TRK_CLS[r[c[2].pc]] || "") + '">' + acEsc(c[1](r)) + "</span>" : acEsc(c[1](r));
+    if (!(r.record && ["absent", "late", "permission"].includes(r.status))) return "";
     const key = acEsc(r.record.date + "|" + r.record.teacher);
     if (ed === "excuse") { const v = r.record.excuse || ""; return '<select class="er-ed" data-k="' + key + '" data-f="excuse"><option value="">اختر</option><option value="yes"' + (v === "yes" ? " selected" : "") + '>بعذر</option><option value="no"' + (v === "no" ? " selected" : "") + ">بدون عذر</option></select>"; }
     return '<input type="text" class="er-ed" data-k="' + key + '" data-f="note" value="' + acEsc(r.record.note || "") + '" placeholder="…">';
@@ -10775,8 +11004,185 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   });
   document.getElementById("erSeg").addEventListener("click", e => { const b = e.target.closest("button[data-s]"); if (!b) return; erSeg = b.dataset.s; erSrcRender(); });
   ["erFrom", "erTo", "erTeacher"].forEach(id => document.getElementById(id).addEventListener("change", erSrcRender));
+  // سجل المسائلات: مجلد لكل معلم، والمساءلات مرتبة حسب تاريخ الغياب/التأخر/المخالفة
+  const erInqOpen = new Set();
+  const erInqDate = r => r.dateIso || erIso(r.createdAt);
+  function erInqFolders() {
+    const { rows } = erSrcRows(), by = {};
+    rows.forEach(r => { (by[r.teacher || "—"] = by[r.teacher || "—"] || []).push(r); });
+    return Object.keys(by).sort((a, b) => a.localeCompare(b, "ar")).map(t => ({ t, list: by[t].sort((a, b) => erInqDate(a).localeCompare(erInqDate(b)) || (a.createdAt || 0) - (b.createdAt || 0)) }));
+  }
+  // ===== سجلات بملف مرفوع (Word / PDF / Excel) =====
+  const erFileKey = () => document.getElementById("erNewType").value.slice(4);
+  const erFileMeta = () => (data.erFiles || {})[erFileKey()] || null;
+  const erFileKind = m => /\.pdf$/i.test(m.name) ? "pdf" : /\.(xlsx?|csv)$/i.test(m.name) ? "xlsx" : /\.docx$/i.test(m.name) ? "docx" : /\.doc$/i.test(m.name) ? "doc" : "";
+  function erFileRender() {
+    const S = ER_SRC[erFileKey()], m = erFileMeta(), box = document.getElementById("erSrcTable");
+    const up = '<label class="ef-pick er-file-up"><input type="file" id="erFileIn" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv"><span>📤 ' + (m ? "استبدال الملف" : "رفع ملف " + acEsc(S.t)) + " (Word / PDF / Excel)</span></label>";
+    if (!m) { box.innerHTML = up + '<div class="sched-hint" style="text-align:right;">يُحفظ الملف في سحابة المنصة الخاصة بك (يلزم تسجيل الدخول)، بحد أقصى 15 ميجابايت.</div><div id="erFileProg" class="sched-hint" style="display:none;"></div>'; return; }
+    box.innerHTML = '<div class="er-file-card"><span class="fi">' + efIcon(m.name, m.type) + '</span><span class="ft"><b>' + acEsc(S.t) + "</b><small>" + acEsc(m.name) + " · " + efSize(m.size || 0) + " · " + acEsc(ioStamp(m.at)) + '</small></span></div><div class="er-acts" style="margin:8px 0;"><button type="button" class="export-btn" data-f="view">👁️ عرض السجل</button><button type="button" class="export-btn" data-f="print">🖨️ طباعة</button><button type="button" class="export-btn" data-f="del" style="color:#b42318;">🗑️ حذف الملف</button></div>' + up + '<div id="erFileProg" class="sched-hint" style="display:none;"></div>';
+  }
+  async function erFileBytes(m) {
+    const parts = await Promise.all(Array.from({ length: m.chunks || 1 }, (_, i) => efCol("chunks").doc(m.id + "_" + i).get()));
+    const bin = atob(parts.map(p => (p.data() || {}).d || "").join("")), u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return u8;
+  }
+  async function erFileDelChunks(m) { for (let i = 0; i < (m.chunks || 1); i++) { try { await efCol("chunks").doc(m.id + "_" + i).delete(); } catch (e) {} } }
+  function erLoadLib(url, name) {
+    if (window[name]) return Promise.resolve();
+    return new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = url; sc.onload = () => window[name] ? res() : rej(); sc.onerror = rej; document.head.appendChild(sc); });
+  }
+  // تحويل الملف إلى صفحات بالترويسة (التعريف أولًا مرة واحدة)
+  async function erFilePages(m, u8) {
+    const S = ER_SRC[erFileKey()], k = erFileKind(m), title = S.t;
+    let body = "";
+    if (k === "xlsx") {
+      if (typeof XLSX === "undefined") throw new Error("xlsx");
+      const wb = XLSX.read(u8, { type: "array" });
+      body = wb.SheetNames.map(n => { const h = XLSX.utils.sheet_to_html(wb.Sheets[n], { editable: false }); const t = (h.match(/<table[\s\S]*<\/table>/i) || [""])[0]; return (wb.SheetNames.length > 1 ? `<h3 style="color:#174a59; margin:10px 0 6px;">${wpEsc(n)}</h3>` : "") + t; }).join("");
+    } else if (k === "docx") {
+      await erLoadLib("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js", "mammoth");
+      body = erClean((await window.mammoth.convertToHtml({ arrayBuffer: u8.buffer })).value);
+    } else throw new Error("kind");
+    const css = `<style>.er-file-doc table{border-collapse:collapse;width:100%;margin:6px 0}.er-file-doc td,.er-file-doc th{border:1px solid #174a59;padding:5px 4px;text-align:center;font-size:13px;color:#1d2b2a;background:transparent}.er-file-doc tr:first-child td{background:#174a59;color:#fff;font-weight:700}.er-file-doc img{max-width:100%}</style>`;
+    return erIntroPage(title, (data.erIntro || {})[erIntroKey()] || "") + `<section class="page gen">${wpBandHTML()}<h2>${wpEsc(title)}</h2>${css}<div class="er-file-doc">${body}</div></section>`;
+  }
+  async function erFileOpen(mode) {
+    const m = erFileMeta(); if (!m) return;
+    if (!efReady()) { showToast("عرض الملف يحتاج الاتصال بالسحابة وتسجيل الدخول"); return; }
+    const k = erFileKind(m), S = ER_SRC[erFileKey()];
+    const w = k === "pdf" || k === "doc" ? window.open("", "_blank") : null;
+    showToast("⏳ جاري تحميل الملف…");
+    try {
+      const u8 = await erFileBytes(m);
+      if (k === "pdf" || k === "doc") {
+        const url = URL.createObjectURL(new Blob([u8], { type: m.type || (k === "pdf" ? "application/pdf" : "application/msword") }));
+        if (k === "doc") { if (w) w.close(); const a = document.createElement("a"); a.href = url; a.download = m.name; document.body.appendChild(a); a.click(); a.remove(); showToast("ملف Word القديم (.doc) يُنزَّل لفتحه — للعرض داخل المنصة احفظه بصيغة .docx"); }
+        else { if (w) w.location.href = url; if (mode === "print") showToast("اضغط زر الطباعة في عارض PDF"); }
+        setTimeout(() => URL.revokeObjectURL(url), 120000); return;
+      }
+      const pages = await erFilePages(m, u8), doc = wpShellDoc(S.t, pages, {});
+      if (mode === "print") { wpOpenDoc(doc, S.t.replace(/ /g, "_")); return; }
+      erViewDoc = { doc, title: S.t };
+      document.getElementById("erViewTitle").textContent = "👁️ " + S.t;
+      const fr = document.getElementById("erViewFrame");
+      fr.onload = () => { try { const d = fr.contentDocument; d.querySelectorAll(".bar, .no-print").forEach(x => x.style.display = "none"); d.body.style.minWidth = "800px"; const ww = Math.max(800, d.documentElement.scrollWidth), cw = fr.clientWidth; if (ww > cw) d.body.style.zoom = ((cw - 4) / ww).toFixed(3); } catch (e) {} };
+      fr.srcdoc = doc; document.getElementById("erViewModal").style.display = "block";
+    } catch (e) {
+      if (w) w.close(); console.error("erFileOpen", e);
+      showToast(String(e && e.message) === "kind" ? "نوع الملف غير مدعوم للعرض" : "تعذر فتح الملف — تحقق من الاتصال");
+    }
+  }
+  let erViewDoc = null;
+  document.getElementById("erViewClose").addEventListener("click", () => { document.getElementById("erViewModal").style.display = "none"; document.getElementById("erViewFrame").srcdoc = ""; });
+  document.getElementById("erViewPrint").addEventListener("click", () => { if (erViewDoc) wpOpenDoc(erViewDoc.doc, erViewDoc.title.replace(/ /g, "_")); });
+  document.getElementById("erSrcTable").addEventListener("change", async e => {
+    if (e.target.id !== "erFileIn") return;
+    const f = e.target.files[0]; if (!f) return;
+    if (!efReady()) { showToast("رفع الملف يحتاج الاتصال بالسحابة وتسجيل الدخول"); return; }
+    if (!/\.(pdf|docx?|xlsx?|csv)$/i.test(f.name)) { showToast("المسموح Word وPDF وExcel فقط"); return; }
+    if (f.size > EF_MAX) { showToast("الملف أكبر من 15 ميجابايت"); return; }
+    const key = erFileKey(), prog = document.getElementById("erFileProg"); prog.style.display = "";
+    try {
+      const b64 = await efRead(f), n = Math.max(1, Math.ceil(b64.length / EF_CHUNK)), id = "r" + key + Date.now().toString(36);
+      for (let i = 0; i < n; i++) { prog.textContent = "⬆️ جاري الرفع — " + Math.round((i / n) * 100) + "%"; await efCol("chunks").doc(id + "_" + i).set({ d: b64.slice(i * EF_CHUNK, (i + 1) * EF_CHUNK) }); }
+      const old = erFileMeta();
+      if (!data.erFiles || typeof data.erFiles !== "object") data.erFiles = {};
+      data.erFiles[key] = { id, name: f.name, type: f.type || "", size: f.size, chunks: n, at: Date.now() };
+      saveData(); if (old) erFileDelChunks(old);
+      showToast("✅ تم رفع ملف " + ER_SRC[key].t); erFileRender();
+    } catch (err) { console.error(err); showToast("تعذر رفع الملف — تحقق من الاتصال"); prog.style.display = "none"; }
+  });
+  document.getElementById("erSrcTable").addEventListener("click", e => {
+    const b = e.target.closest("button[data-f]"); if (!b) return;
+    if (b.dataset.f === "view") erFileOpen("view");
+    else if (b.dataset.f === "print") erFileOpen("print");
+    else if (b.dataset.f === "del") {
+      if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "⚠️ اضغط للتأكيد"; setTimeout(() => { if (b.isConnected) { b.dataset.confirm = ""; b.textContent = "🗑️ حذف الملف"; } }, 4000); return; }
+      const m = erFileMeta(); if (!m) return; delete data.erFiles[erFileKey()]; saveData(); erFileDelChunks(m); erFileRender(); showToast("حُذف الملف");
+    }
+  });
+  // سجل لكل معلم: جدول مستقل أعلاه اسم المعلم، وكل حالة في صف (في الطباعة: كل معلم في ورقة)
+  function erTeachGroups() {
+    const S = ER_SRC[document.getElementById("erNewType").value.slice(4)];
+    const R = erSrcRows(erSeg), by = {};
+    R.rows.forEach(r => { (by[r.teacher] = by[r.teacher] || []).push(r); });
+    const cols = S.cols.filter(c => !(c[2] && (c[2].tch || c[2].sec)));
+    return { S, R, cols, list: Object.keys(by).sort((a, b) => a.localeCompare(b, "ar")).map(t => ({ t, rows: by[t].sort((a, b) => a.date.localeCompare(b.date)) })) };
+  }
+  function erTeachRender() {
+    const { S, cols, list } = erTeachGroups(), box = document.getElementById("erSrcTable");
+    if (!list.length) { box.innerHTML = '<div class="empty-state">لا توجد سجلات مطابقة في ' + acEsc(S.from) + "</div>"; return; }
+    box.innerHTML = '<div class="sched-hint" style="text-align:right;">المصدر: ' + acEsc(S.from) + " — عدد المعلمين: <b>" + list.length + "</b> — في الطباعة كل معلم في ورقة مستقلة.</div>" + list.map(g =>
+      '<div class="er-day"><div class="er-day-h"><span><b>المعلم:</b> ' + acEsc(g.t) + "</span><span>العدد: " + g.rows.length + "</span></div>" +
+      '<table class="er-src"><thead><tr><th>م</th>' + cols.map(c => "<th>" + acEsc(c[0]) + "</th>").join("") + "</tr></thead><tbody>" +
+      g.rows.map((r, i) => "<tr><td>" + (i + 1) + "</td>" + cols.map(c => "<td" + (c[2] && c[2].st ? ' class="st-' + acEsc(r.status) + '"' : "") + ">" + erCell(c, r) + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>").join("");
+  }
+  function erTeachBuild() {
+    const { S, R, cols, list } = erTeachGroups();
+    if (!list.length) { showToast("لا توجد سجلات للطباعة"); return null; }
+    const segName = S.segs && erSeg !== "all" ? ((S.segs.find(x => x[0] === erSeg) || [, ""])[1]) : "";
+    const title = S.t + (segName ? " — " + segName : "");
+    const B = "border:1.5px solid #174a59; padding:7px 4px; text-align:center; font-size:13.5px;", H = B + " background:#174a59; color:#fff; font-weight:700;";
+    const range = (R.f || R.t) ? `<div style="text-align:center; font-size:14px; margin:0 0 8px;"><b style="color:#174a59;">الفترة:</b> من ${wpEsc(R.f ? wpDateParts(R.f).hijri : "البداية")} إلى ${wpEsc(R.t ? wpDateParts(R.t).hijri : "اليوم")}</div>` : "";
+    const pages = list.map(g => `<section class="page gen">${wpBandHTML()}<h2>${wpEsc(title)}</h2>${range}
+      <div style="display:flex; justify-content:space-between; border:1.5px solid #174a59; border-radius:8px; padding:8px 14px; margin:4px 0 10px; font-size:16px; background:#f3f8f9;"><div><b style="color:#174a59;">المعلم:</b> ${wpEsc(g.t)}</div><div><b style="color:#174a59;">العدد:</b> ${g.rows.length}</div></div>
+      <table style="width:100%; border-collapse:collapse;"><tr><th style="${H} width:6%">م</th>${cols.map(c => `<th style="${H}">${wpEsc(c[0])}</th>`).join("")}</tr>
+      ${g.rows.map((r, i) => `<tr><td style="${B}">${i + 1}</td>${cols.map(c => `<td style="${B}${c[2] && c[2].st ? " font-weight:700; color:#9a5b00;" : ""}">${wpEsc(c[1](r))}</td>`).join("")}</tr>`).join("")}</table>
+      <div style="display:flex; justify-content:space-between; margin:24px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div></section>`).join("");
+    return { title, pages: erIntroPage(title, (data.erIntro || {})[erIntroKey()] || "") + pages, landscape: false };
+  }
+  function erInqRender() {
+    const box = document.getElementById("erSrcTable"), F = erInqFolders();
+    if (!F.length) { box.innerHTML = '<div class="empty-state">لا توجد مساءلات مطابقة</div>'; return; }
+    const n = F.reduce((a, f) => a + f.list.length, 0);
+    box.innerHTML = '<div class="er-inq-exp"><b>📤 تصدير مسائلات جميع المعلمين</b><small>ورقة فاصلة باسم كل معلم قبل مسائلاته</small><div class="er-acts"><button type="button" class="export-btn" data-x="pdf">📄 PDF</button><button type="button" class="export-btn" data-x="word">📝 Word</button><button type="button" class="export-btn" data-x="xlsx">📊 Excel</button></div></div>' +
+      '<div class="sched-hint" style="text-align:right;">' + F.length + " مجلد — " + n + " مساءلة، مرتبة حسب تاريخ الغياب أو التأخر أو المخالفة. الطباعة: كل مساءلة في صفحة مستقلة.</div>" + F.map(f =>
+      '<div class="er-fold' + (erInqOpen.has(f.t) ? " open" : "") + '" data-t="' + acEsc(f.t) + '"><div class="er-fold-h"><span>📁 <b>' + acEsc(f.t) + '</b></span><span class="er-fold-n">' + f.list.length + '</span><button type="button" class="export-btn" data-a="pf">🖨️ طباعة المجلد</button></div><div class="er-fold-b">' +
+      f.list.map((r, i) => { const d = erInqDate(r), p = d ? wpDateParts(d) : {}; return '<div class="er-fold-i" data-id="' + acEsc(r.id) + '"><span class="no">' + (i + 1) + '</span><span class="tx"><b>' + acEsc(ioTitleOf(r)) + "</b><small>" + acEsc((r.day || p.dayName || "") + " — " + (r.hijri || p.hijri || "") + (d ? " — " + erG(d) : "")) + " · " + acEsc(erSent(r)) + (r.printedAt ? " · طُبعت" : "") + '</small></span><button type="button" class="export-btn" data-a="p1">🖨️</button></div>'; }).join("") + "</div></div>").join("");
+  }
+  document.getElementById("erSrcTable").addEventListener("click", e => {
+    const xb = e.target.closest("button[data-x]");
+    if (xb) { if (xb.dataset.x === "xlsx") erInqExcel(); else { const d = erInqBuild(""); if (d) erExport(xb.dataset.x, d.title, d.pages, false); } return; }
+    const fold = e.target.closest(".er-fold"); if (!fold) return;
+    const b = e.target.closest("button[data-a]"), t = fold.dataset.t;
+    if (b && b.dataset.a === "p1") { const r = (data.officialInq || []).find(x => x.id === b.closest(".er-fold-i").dataset.id); if (r) { ioPrintRec(r); ioMarkPrinted(r.id); erInqRender(); } return; }
+    if (b && b.dataset.a === "pf") { const d = erInqBuild(t); if (d) wpOpenDoc(wpShellDoc(d.title, d.pages, { fitOnePage: true }), d.title.replace(/ /g, "_")); return; }
+    if (e.target.closest(".er-fold-h")) { fold.classList.toggle("open"); if (fold.classList.contains("open")) erInqOpen.add(t); else erInqOpen.delete(t); }
+  });
+  function erInqBuild(only) {
+    const F = erInqFolders().filter(f => !only || f.t === only);
+    if (!F.length) { showToast("لا توجد مساءلات للطباعة"); return null; }
+    const title = "سجل المسائلات" + (only ? " — " + only : "");
+    // ورقة فاصلة باسم المعلم قبل مسائلاته (عند تصدير أكثر من معلم)
+    const sep = f => `<section class="page gen">${wpBandHTML()}<div style="height:150px;"></div><div style="text-align:center; border:3px double #174a59; border-radius:18px; padding:34px 14px; margin:0 30px; color:#174a59;"><div style="font-size:22px; font-weight:700;">ملف مسائلات المعلم</div><div style="font-size:38px; font-weight:800; margin:14px 0;">${wpEsc(f.t)}</div><div style="font-size:17px; color:#4b5b58;">عدد المسائلات: ${f.list.length}</div></div></section>`;
+    const pages = F.map(f => (only ? "" : sep(f)) + f.list.map(r => ioPrintRec(r, true)).join("")).join("");
+    return { title, pages: (only ? "" : erIntroPage(title, (data.erIntro || {})[erIntroKey()] || "")) + pages, landscape: false, fit: true };
+  }
+  function erInqExcel() {
+    if (typeof XLSX === "undefined") { showToast("تعذر تحميل أداة Excel، تحقق من الاتصال"); return; }
+    const F = erInqFolders(); if (!F.length) { showToast("لا توجد مساءلات للتصدير"); return; }
+    const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] };
+    const idx = wpSheetFromAoa([["م", "المعلم", "عدد المسائلات"], ...F.map((f, i) => [String(i + 1), f.t, String(f.list.length)])], "فهرس مسائلات المعلمين");
+    idx["!cols"] = [{ wch: 6 }, { wch: 28 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, idx, "الفهرس");
+    const used = new Set(["الفهرس"]);
+    F.forEach(f => {
+      const head = ["م", "نوع المساءلة", "اليوم", "التاريخ الهجري", "التاريخ الميلادي", "نص المساءلة", "إفادة المعلم", "توقيع المعلم", "الرابط", "الطباعة", "التسليم"];
+      const rows = f.list.map((r, i) => { const d = erInqDate(r), p = d ? wpDateParts(d) : {}; return [String(i + 1), ioTitleOf(r), r.day || p.dayName || "", r.hijri || p.hijri || "", d ? erG(d) : "", r.body || "", r.teacherReply || "", r.replyAt ? (r.teacherSigned ? "موقّع" : "لم يوقّع") : "", erSent(r), r.printedAt ? "طُبعت" : "", r.delivered ? "سُلّمت" : ""]; });
+      const ws = wpSheetFromAoa([head, ...rows], "مسائلات المعلم: " + f.t);
+      ws["!cols"] = [{ wch: 5 }, { wch: 26 }, { wch: 10 }, { wch: 22 }, { wch: 14 }, { wch: 70 }, { wch: 40 }, { wch: 12 }, { wch: 14 }, { wch: 10 }, { wch: 10 }];
+      let nm = String(f.t).replace(/[\\/?*\[\]:]/g, "-").slice(0, 28) || "معلم", n = nm, k = 2; while (used.has(n)) n = nm + " " + k++; used.add(n);
+      XLSX.utils.book_append_sheet(wb, ws, n);
+    });
+    saveFile("سجل_المسائلات.xlsx", XLSX.write(wb, { bookType: "xlsx", type: "array" }));
+    showToast("✅ تم تصدير Excel — ورقة لكل معلم");
+  }
   function erSrcBuild() {
     const k = document.getElementById("erNewType").value.slice(4); if (!ER_SRC[k]) return null;
+    if (ER_SRC[k].folders) return erInqBuild("");
+    if (ER_SRC[k].byTeacher) return erTeachBuild();
     const secs = erSections(), { S, f, t, tf } = secs[0], multi = secs.length > 1;
     if (!secs.some(x => x.rows.length)) { showToast("لا توجد سجلات للطباعة"); return null; }
     const title = S.t + (!multi && secs[0].name ? " — " + secs[0].name : "");
@@ -10786,10 +11192,12 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     const stc = st => st === "absent" ? "#b42318" : st === "present" ? "#146c3a" : "#9a5b00";
     const sign = `<div style="display:flex; justify-content:space-between; margin:22px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div>`;
     const tables = g => g.secs.map(x => (multi ? `<h3 style="color:#174a59; font-size:15.5px; margin:12px 0 6px; border-right:4px solid #1F7A6D; padding-right:8px;">${wpEsc(x.name)} (${x.rows.length})</h3>` : "") +
-      (!x.rows.length ? `<div style="text-align:center; color:#66736f; padding:7px; border:1px dashed #b9c9c6;">لا يوجد</div>` : `<table style="width:100%; border-collapse:collapse;">
-      <tr><th style="${H} width:6%">م</th>${x.cols.map(c => `<th style="${H}">${wpEsc(c[0])}</th>`).join("")}</tr>
-      ${x.rows.map((r, i) => `<tr><td style="${B}">${i + 1}</td>${x.cols.map(c => `<td style="${B}${c[2] && c[2].st ? " font-weight:700; color:" + stc(r.status) + ";" : ""}">${wpEsc(c[1](r))}</td>`).join("")}</tr>`).join("")}
-    </table>`)).join("");
+      (!x.rows.length ? `<div style="text-align:center; color:#66736f; padding:7px; border:1px dashed #b9c9c6;">لا يوجد</div>` : erParts(x).map((pt, pi) =>
+      (pt.abs ? `${pi === 0 ? `<p style="font-size:15px; margin:6px 0 2px;">السلام عليكم ورحمة الله وبركاته</p><p style="font-size:15px; margin:0 0 4px;">إخواني المعلمين</p>` : ""}<p style="font-size:15px; line-height:1.9; margin:${pi === 0 ? 4 : 14}px 0 6px;">${erPartHead(pt, wpEsc)}</p>` : "") +
+      `<table style="width:100%; border-collapse:collapse;">
+      <tr><th style="${H} width:6%">م</th>${pt.cols.map(c => `<th style="${H}">${wpEsc(c[0])}</th>`).join("")}</tr>
+      ${pt.rows.map((r, i) => `<tr><td style="${B}">${i + 1}</td>${pt.cols.map(c => `<td style="${B}${c[2] && c[2].st ? " font-weight:700; color:" + stc(r.status) + ";" : ""}">${wpEsc(c[1](r))}</td>`).join("")}</tr>`).join("")}
+    </table>`).join(""))).join("");
     // كل يوم في صفحة مستقلة كالسجل الورقي: اليوم والتاريخ أعلى الجدول
     const pages = erByDay(secs).map(g => {
       const h = g.date ? erDayHead(g.date) : null;
@@ -10798,7 +11206,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     }).join("");
     return { title, pages: erIntroPage(title, (data.erIntro || {})[erIntroKey()] || "") + pages, landscape: secs[0].cols.length > 11 };
   }
-  document.getElementById("erSrcPrint").addEventListener("click", () => { const d = erSrcBuild(); if (d) wpOpenDoc(wpShellDoc(d.title, d.pages, { landscape: d.landscape }), d.title.replace(/ /g, "_")); });
+  document.getElementById("erSrcPrint").addEventListener("click", () => { const d = erSrcBuild(); if (d) wpOpenDoc(wpShellDoc(d.title, d.pages, { landscape: d.landscape, fitOnePage: !!d.fit }), d.title.replace(/ /g, "_")); });
   document.getElementById("erSrcPdf").addEventListener("click", () => { const d = erSrcBuild(); if (d) erExport("pdf", d.title, d.pages, d.landscape); });
   document.getElementById("erSrcWord").addEventListener("click", () => { const d = erSrcBuild(); if (d) erExport("word", d.title, d.pages, d.landscape); });
   document.querySelector("#erSrcBox .er-acts").addEventListener("click", e => { const b = e.target.closest("[data-act]"); if (!b) return; document.getElementById({ print: "erSrcPrint", pdf: "erSrcPdf", word: "erSrcWord" }[b.dataset.act]).click(); });
@@ -11042,6 +11450,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     document.getElementById("leaveLogView").classList.toggle("active", view === "leaveLog");
     document.getElementById("reportsHubView").classList.toggle("active", view === "reportsHub");
     document.getElementById("erecView").classList.toggle("active", view === "erec");
+    document.getElementById("trkView").classList.toggle("active", view === "trk");
     document.getElementById("erRegView").classList.toggle("active", view === "erReg");
     document.getElementById("comprehensiveView").classList.toggle("active", view === "comprehensive");
     document.getElementById("masterView").classList.toggle("active", view === "master");
@@ -12177,7 +12586,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-17-8";
+window.APP_BUILD = "2026-11-18-14";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
