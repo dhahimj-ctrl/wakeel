@@ -581,6 +581,15 @@
   .er-src th { background: #174a59; color: #fff; padding: 6px 4px; white-space: nowrap; }
   .er-src td { border: 1px solid var(--line); padding: 5px 4px; text-align: center; background: #fff; }
   .er-src td .er-ed { font: inherit; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 3px; background: #fffdf7; min-width: 80px; width: 100%; }
+  .work-controls { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+  .work-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .work-grp { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: #174a59; }
+  .work-grp span { min-width: 54px; } .work-grp select { min-width: 110px; padding: 6px 8px 6px 22px; font-size: 12.5px; }
+  .work-line input[type=time] { font: inherit; font-size: 12.5px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 8px; }
+  .work-excuse { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: #174a59; }
+  .work-excuse select { min-width: 96px; padding: 6px 8px 6px 22px; font-size: 12px; }
+  .work-excuse.off { opacity: .45; }
+  .work-excuse select.ex-yes { background-color: #e6f4ea; color: #146c3a; } .work-excuse select.ex-no { background-color: #fdecea; color: #b42318; }
   .work-reason { flex: 1 1 160px; min-width: 140px; font: inherit; font-size: 13px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 10px; background: #fffdf7; }
   .er-file-card { display: flex; align-items: center; gap: 10px; border: 1.5px solid #9cc3cc; border-radius: 14px; background: #fff; padding: 12px; }
   .er-file-card .fi { font-size: 40px; } .er-file-card .ft { flex: 1; min-width: 0; } .er-file-card b { display: block; color: #174a59; font-size: 16px; } .er-file-card small { color: #66736f; font-size: 12px; word-break: break-word; }
@@ -3842,10 +3851,10 @@
 
   // حالة الحصة من متابعة الدوام: الغائب تُصبح كل حصصه «غائب»، والمستأذن حصصه بعد وقت الاستئذان «مستأذن»
   function workOverride(date, teacher, period) {
-    const w = (data.workAttendance || []).find(r => r.date === date && r.teacher === teacher);
-    if (!w) return "";
-    if (w.status === "absent") return "absent";
-    if (w.status === "permission" && wtAfterPerm(period, w.time, date)) return "permission";
+    const L = (data.workAttendance || []).filter(r => r.date === date && r.teacher === teacher);
+    if (L.some(r => r.status === "absent")) return "absent";
+    const w = L.find(r => r.status === "permission");
+    if (w && wtAfterPerm(period, w.time, date)) return "permission";
     return "";
   }
   function subFor(date, period, cls, teacher) {
@@ -5183,6 +5192,25 @@
     saveData(); wtrLoad(""); document.getElementById("wtrKind").value = ""; wtrRender(); renderWorkAttendanceList(document.getElementById("workDateInput").value); showToast("حُذفت الفترة");
   });
 
+  // الحالات في متابعة الدوام: الحضور (حاضر/غياب)، والتأخر، والاستئذان/الانصراف المبكر — يمكن اجتماع أكثر من حالة لنفس المعلم
+  const WORK_GROUP = { absent: "main", late: "late", permission: "leave", early_leave: "leave" };
+  const workRecs = (date, teacher) => (data.workAttendance || []).filter(r => r.date === date && r.teacher === teacher);
+  const workRec = (date, teacher, status) => (data.workAttendance || []).find(r => r.date === date && r.teacher === teacher && r.status === status);
+  function setWorkGroup(date, teacher, group, status, time) {
+    const old = workRecs(date, teacher).find(r => WORK_GROUP[r.status] === group);
+    data.workAttendance = data.workAttendance.filter(r => !(r.date === date && r.teacher === teacher && WORK_GROUP[r.status] === group));
+    if (group === "main" && status === "absent") data.workAttendance = data.workAttendance.filter(r => !(r.date === date && r.teacher === teacher));
+    if (group !== "main" && status) data.workAttendance = data.workAttendance.filter(r => !(r.date === date && r.teacher === teacher && r.status === "absent"));
+    if (status && status !== "present") {
+      let diffMinutes = 0;
+      if (status === "late" && time) diffMinutes = computeLateDiff(time, date);
+      if (status === "early_leave" && time) diffMinutes = computeEarlyDiff(time, date);
+      const rec = { date, teacher, status, time: time || "", diffMinutes };
+      if (old && old.status === status) ["excuse", "note", "reason", "alertSent", "inquiryFlagged", "inquirySent"].forEach(k => { if (old[k] != null) rec[k] = old[k]; });
+      data.workAttendance.push(rec);
+    }
+    saveData();
+  }
   function setWorkAttendance(date, teacher, status, time) {
     const idx = data.workAttendance.findIndex(r => r.date === date && r.teacher === teacher);
     let diffMinutes = 0;
@@ -5225,85 +5253,75 @@
       return;
     }
     data.teachers.forEach(name => {
-      const record = data.workAttendance.find(r => r.date === dateStr && r.teacher === name);
-      const status = (record && record.status) || "present"; // الافتراضي: حاضر
+      const recs = workRecs(dateStr, name);
+      const absR = recs.find(r => r.status === "absent"), lateR = recs.find(r => r.status === "late"), leaveR = recs.find(r => r.status === "permission" || r.status === "early_leave");
+      const rerender = () => renderWorkAttendanceList(dateStr);
 
       const row = document.createElement("div");
       row.className = "work-row";
-
       const label = document.createElement("div");
       label.className = "label";
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-      avatar.textContent = initials(name);
-      const txt = document.createElement("span");
-      txt.className = "txt";
-      txt.textContent = name;
-      label.appendChild(avatar);
-      label.appendChild(txt);
-
+      label.innerHTML = '<div class="avatar">' + acEsc(initials(name)) + '</div><span class="txt">' + acEsc(name) + "</span>";
       const controls = document.createElement("div");
       controls.className = "work-controls";
 
-      const sel = document.createElement("select");
-      sel.className = "select-styled";
-      sel.innerHTML = `
-        <option value="" disabled>اختر</option>
-        <option value="present" ${status === "present" ? "selected" : ""}>حاضر</option>
-        <option value="absent" ${status === "absent" ? "selected" : ""}>غياب</option>
-        <option value="late" ${status === "late" ? "selected" : ""}>متأخر</option>
-        <option value="early_leave" ${status === "early_leave" ? "selected" : ""}>انصراف مبكر</option>
-        <option value="permission" ${status === "permission" ? "selected" : ""}>مستأذن</option>`;
-      sel.addEventListener("change", () => {
-        setWorkAttendance(dateStr, name, sel.value, "");
-        renderWorkAttendanceList(dateStr);
-      });
-      controls.appendChild(sel);
+      const mkSel = (cls, title, opts, val) => {
+        const w = document.createElement("label"); w.className = "work-grp " + cls;
+        w.innerHTML = "<span>" + title + '</span><select class="select-styled">' + opts.map(o => '<option value="' + o[0] + '"' + (o[2] ? " disabled" : "") + (o[0] === val ? " selected" : "") + ">" + o[1] + "</option>").join("") + "</select>";
+        return w;
+      };
+      const excuseSel = rec => {
+        const ex = document.createElement("label"); ex.className = "work-excuse";
+        ex.innerHTML = '<span>العذر</span><select class="select-styled"><option value="">اختر</option><option value="yes">بعذر</option><option value="no">بدون عذر</option></select>';
+        const es = ex.querySelector("select"); es.value = rec.excuse || "";
+        if (es.value === "yes") es.classList.add("ex-yes"); else if (es.value === "no") es.classList.add("ex-no");
+        es.addEventListener("change", () => { const r = workRec(dateStr, name, rec.status); if (!r) return; if (es.value) r.excuse = es.value; else delete r.excuse; saveData(); rerender(); });
+        return ex;
+      };
+      const timeIn = (rec, ph) => {
+        const t = document.createElement("input"); t.type = "time"; t.value = rec.time || ""; t.title = ph;
+        t.addEventListener("change", () => { setWorkGroup(dateStr, name, WORK_GROUP[rec.status], rec.status, t.value); rerender(); });
+        return t;
+      };
+      const badge = rec => {
+        if (!rec.time || rec.status === "permission") return null;
+        const m = rec.status === "late" ? computeLateDiff(rec.time, rec.date) : computeEarlyDiff(rec.time, rec.date);
+        if (m <= 0) return null;
+        const b = document.createElement("span"); b.className = "status-badge " + (rec.status === "late" ? "late" : "early");
+        b.textContent = (rec.status === "late" ? "متأخر " : "مبكر ") + formatDurationBadge(m) + (rec.excuse === "yes" ? " — بعذر" : "");
+        return b;
+      };
+      const line = () => { const d = document.createElement("div"); d.className = "work-line"; controls.appendChild(d); return d; };
 
-      if (status === "late" || status === "early_leave" || status === "permission") {
-        if (status === "permission") {
-          const lbl = document.createElement("span");
-          lbl.style.fontSize = "12px";
-          lbl.style.color = "var(--ink-soft)";
-          lbl.textContent = "وقت الاستئذان:";
-          controls.appendChild(lbl);
+      // 1) الحضور: حاضر / غياب
+      const l1 = line();
+      const s1 = mkSel("g-main", "الحضور", [["", "اختر", 1], ["present", "حاضر"], ["absent", "غياب"]], absR ? "absent" : "present");
+      s1.querySelector("select").addEventListener("change", e => { setWorkGroup(dateStr, name, "main", e.target.value, ""); rerender(); });
+      l1.appendChild(s1);
+      if (absR) l1.appendChild(excuseSel(absR));
+
+      if (!absR) {
+        // 2) التأخر
+        const l2 = line();
+        const s2 = mkSel("g-late", "التأخر", [["", "اختر"], ["late", "متأخر"]], lateR ? "late" : "");
+        s2.querySelector("select").addEventListener("change", e => { setWorkGroup(dateStr, name, "late", e.target.value, ""); rerender(); });
+        l2.appendChild(s2);
+        if (lateR) { l2.appendChild(timeIn(lateR, "وقت الحضور")); const bg = badge(lateR); if (bg) l2.appendChild(bg); l2.appendChild(excuseSel(lateR)); }
+
+        // 3) الاستئذان / الانصراف المبكر
+        const l3 = line();
+        const s3 = mkSel("g-leave", "الاستئذان / الانصراف", [["", "اختر"], ["permission", "مستأذن"], ["early_leave", "انصراف مبكر"]], leaveR ? leaveR.status : "");
+        s3.querySelector("select").addEventListener("change", e => { setWorkGroup(dateStr, name, "leave", e.target.value, ""); rerender(); });
+        l3.appendChild(s3);
+        if (leaveR) {
+          l3.appendChild(timeIn(leaveR, leaveR.status === "permission" ? "وقت الاستئذان" : "وقت الانصراف"));
+          if (leaveR.status === "permission") {
+            const rs = document.createElement("input");
+            rs.type = "text"; rs.className = "work-reason"; rs.placeholder = "سبب الاستئذان"; rs.maxLength = 200; rs.value = leaveR.reason || "";
+            rs.addEventListener("change", () => { const r = workRec(dateStr, name, "permission"); if (!r) return; const v = rs.value.trim(); if (v) r.reason = v; else delete r.reason; saveData(); showToast("حُفظ سبب الاستئذان"); });
+            l3.appendChild(rs);
+          } else { const bg = badge(leaveR); if (bg) l3.appendChild(bg); l3.appendChild(excuseSel(leaveR)); }
         }
-        const timeInput = document.createElement("input");
-        timeInput.type = "time";
-        timeInput.value = record && record.time ? record.time : "";
-        timeInput.addEventListener("change", () => {
-          setWorkAttendance(dateStr, name, status, timeInput.value);
-          renderWorkAttendanceList(dateStr);
-        });
-        controls.appendChild(timeInput);
-
-        // سبب الاستئذان (كتابة) — يظهر عند اختيار «مستأذن» ويُنقل لسجل الاستئذان
-        if (status === "permission") {
-          const rs = document.createElement("input");
-          rs.type = "text"; rs.className = "work-reason"; rs.placeholder = "سبب الاستئذان"; rs.maxLength = 200;
-          rs.value = record && record.reason ? record.reason : "";
-          rs.addEventListener("change", () => {
-            const rec = data.workAttendance.find(r => r.date === dateStr && r.teacher === name);
-            if (!rec) return;
-            const v = rs.value.trim(); if (v) rec.reason = v; else delete rec.reason;
-            saveData(); showToast("حُفظ سبب الاستئذان");
-          });
-          controls.appendChild(rs);
-        }
-
-        if (record && record.time && status !== "permission") {
-          const liveDiff = status === "late" ? computeLateDiff(record.time, record.date) : computeEarlyDiff(record.time, record.date);
-          if (liveDiff > 0) {
-            const badge = document.createElement("span");
-            badge.className = "status-badge " + (status === "late" ? "late" : "early");
-            badge.textContent = (status === "late" ? "متأخر " : "مبكر ") + formatDurationBadge(liveDiff);
-            controls.appendChild(badge);
-          }
-        }
-      }
-
-      if (status === "absent" || status === "late" || status === "early_leave") {
-        controls.appendChild(buildActionControl(record, "الدوام (حضور)", dayNameFromDate(dateStr), dateStr, () => renderWorkAttendanceList(dateStr)));
       }
 
       row.appendChild(label);
@@ -5686,10 +5704,26 @@
       dates.forEach(dt => tlist.forEach(t => { if (!have.has(dt + "|" + t)) records.push({ record: null, date: dt, day: dayNameFromDate(dt), teacher: t, status: "present", detail: "" }); }));
     }
     if (teacherFilter) records = records.filter(r => r.teacher === teacherFilter);
-    if (statusFilter) records = records.filter(r => r.status === statusFilter);
+    const mergeWork = type === "work" && (!statusFilter || statusFilter === "present");
+    if (statusFilter && !mergeWork) records = records.filter(r => r.status === statusFilter);
     if (dayFilter) records = records.filter(r => r.day === dayFilter);
     if (dFrom) records = records.filter(r => r.date && r.date >= dFrom && r.date <= dTo);
     records.sort((a, b) => (a.date || "").localeCompare(b.date || "") || a.teacher.localeCompare(b.teacher));
+    const countSrc = records.slice();
+    // الدوام: صف واحد لكل معلم في اليوم؛ الحاضر تُكتب حالاته الأخرى (تأخر/انصراف/استئذان) مع العذر في الملاحظات
+    if (mergeWork) {
+      const exTxt = x => x.record && x.record.excuse === "yes" ? "بعذر" : x.record && x.record.excuse === "no" ? "بدون عذر" : "";
+      const fmt = x => [statusLabel(x.status) + (x.status === "permission" ? (x.record && x.record.time ? " الساعة " + x.record.time : "") : x.detail ? " " + x.detail : ""), x.status === "permission" ? (x.record && x.record.reason ? "السبب: " + x.record.reason : "") : exTxt(x)].filter(Boolean).join(" - ");
+      const map = new Map(), keys = [];
+      records.forEach(r => { const k = r.date + "|" + r.teacher; if (!map.has(k)) { map.set(k, []); keys.push(k); } map.get(k).push(r); });
+      records = keys.map(k => {
+        const L = map.get(k), ab = L.find(x => x.status === "absent");
+        if (ab) return Object.assign({}, ab, { note: exTxt(ab) });
+        const others = L.filter(x => x.status !== "present");
+        return Object.assign({}, L[0], { status: "present", detail: "", note: others.map(fmt).join(" — "), record: others[0] ? others[0].record : null });
+      });
+      if (statusFilter === "present") records = records.filter(r => r.status === "present");
+    }
 
     if (records.length === 0) {
       wrap.innerHTML = '<div class="empty-state">لا توجد سجلات مطابقة</div>';
@@ -5708,7 +5742,7 @@
       const first = teacherFilter
         ? `<td>${r.day || "—"}</td><td>${r.date ? wpDateParts(r.date).hijri : "—"}</td><td>${gregTxt(r.date)}</td>`
         : `<td>${r.day || "—"}</td><td>${r.date ? wpDateParts(r.date).hijri : "—"}</td><td>${gregTxt(r.date)}</td><td>${r.teacher}</td>`;
-      html += `<tr>${first}<td>${statusLabel(r.status)}</td><td>${r.detail || "—"}</td><td>${getMonitorActionSummary(r)}</td><td></td></tr>`;
+      html += `<tr>${first}<td>${statusLabel(r.status)}</td><td>${r.detail || "—"}</td><td>${getMonitorActionSummary(r)}</td><td>${acEsc(r.note || "")}</td></tr>`;
     });
     html += "</tbody>";
 
@@ -5716,8 +5750,9 @@
       const teacher = teacherFilter;
       const counts = { present: 0, absent: 0, late: 0, early_leave: 0, unavailable: 0, permission: 0 };
       let totalLateMin = 0, totalEarlyMin = 0;
-      records.forEach(r => {
+      (mergeWork ? countSrc.filter(r => r.status !== "present").concat(records.filter(r => r.status === "present")) : records).forEach(r => {
         if (counts[r.status] !== undefined) counts[r.status]++;
+        if (r.record && r.record.excuse === "yes") return; // دقائق «بعذر» لا تدخل في المجموع
         if (type === "work" && r.status === "late" && r.detail) {
           const m = parseInt(r.detail, 10);
           if (!isNaN(m)) totalLateMin += m;
@@ -6561,14 +6596,15 @@ ${pages}
   // الحالة في «متابعة الدوام» هي المرجع: غياب ← سجل الغياب، مستأذن ← سجل الاستئذان
   function workStatusOf(date, teacher) {
     if (!date || !teacher) return "";
-    const w = (data.workAttendance || []).find(r => r.date === date && r.teacher === teacher);
-    return w ? w.status : "";
+    const L = (data.workAttendance || []).filter(r => r.date === date && r.teacher === teacher);
+    return L.some(r => r.status === "absent") ? "absent" : L.some(r => r.status === "permission") ? "permission" : L.length ? L[0].status : "";
   }
   // تسجيل الحالة في متابعة الدوام تلقائياً عند تسجيل غياب/استئذان من حصص الانتظار (دون تغيير حالة مسجلة مسبقاً)
   function ensureWorkStatus(date, teacher, status) {
     if (!date || !teacher || !dayNameFromDate(date)) return false;
     if (!Array.isArray(data.workAttendance)) data.workAttendance = [];
-    if (data.workAttendance.some(r => r.date === date && r.teacher === teacher)) return false;
+    const L = data.workAttendance.filter(r => r.date === date && r.teacher === teacher);
+    if (status === "absent" ? L.length : L.some(r => r.status === "absent" || r.status === "permission" || r.status === "early_leave")) return false;
     data.workAttendance.push({ date, teacher, status, time: "", diffMinutes: 0 });
     return true;
   }
@@ -7342,14 +7378,14 @@ ${bodyHTML}
   }
   function ptWork(dateStr) {
     const rows = data.teachers.map((name, i) => {
-      const r = data.workAttendance.find(x => x.date === dateStr && x.teacher === name);
-      let diff = "—";
-      if (r && r.time && r.status === "permission") diff = "استئذان الساعة " + r.time;
-      if (r && r.time && (r.status === "late" || r.status === "early_leave")) {
-        const m = r.status === "late" ? computeLateDiff(r.time, r.date) : computeEarlyDiff(r.time, r.date);
-        if (m > 0) diff = formatDurationBadge(m);
-      }
-      return [i + 1, name, r && r.status ? statusLabel(r.status) : "حاضر", r && r.time ? r.time : "—", diff, ptActions(r)];
+      const L = data.workAttendance.filter(x => x.date === dateStr && x.teacher === name);
+      if (!L.length) return [i + 1, name, "حاضر", "—", "—", "—"];
+      const diffs = L.map(r => {
+        if (r.status === "permission") return (r.time ? "استئذان الساعة " + r.time : "استئذان") + (r.reason ? " (" + r.reason + ")" : "");
+        if (r.time && (r.status === "late" || r.status === "early_leave")) { const m = r.status === "late" ? computeLateDiff(r.time, r.date) : computeEarlyDiff(r.time, r.date); return m > 0 ? formatDurationBadge(m) + (r.excuse === "yes" ? " بعذر" : "") : ""; }
+        return r.excuse === "yes" ? "بعذر" : r.excuse === "no" ? "بدون عذر" : "";
+      }).filter(Boolean);
+      return [i + 1, name, L.map(r => statusLabel(r.status)).join(" + "), L.map(r => r.time).filter(Boolean).join(" / ") || "—", diffs.join(" — ") || "—", L.map(r => ptActions(r)).filter(x => x && x !== "—").join(" — ") || "—"];
     });
     ptRender("workTable", { title: "متابعة الدوام — " + (dayNameFromDate(dateStr) || "") + " " + wpDateParts(dateStr).hijri, headers: ["م", "المعلم", "الحالة", "الوقت", "مدة التأخير / الخروج", "الإجراء المتخذ"], rows, date: dateStr, fileBase: "الدوام_" + dateStr, sheet: "الدوام" });
   }
@@ -7389,16 +7425,16 @@ ${bodyHTML}
   }
   function lvCollect(mode) {
     const out = [], seen = new Set();
-    const add = (date, teacher, time, source, minutes) => {
+    const add = (date, teacher, time, source, minutes, extra) => {
       if (!date || !teacher) return;
       const k = date + "|" + teacher;
       if (seen.has(k)) { const e = out.find(x => x.k === k); if (e && time && !e.time) e.time = time; if (e && source && !e.sources.includes(source)) e.sources.push(source); return; }
-      seen.add(k); out.push({ k, date, teacher, time: time || "", minutes: minutes || 0, sources: source ? [source] : [] });
+      seen.add(k); out.push({ k, date, teacher, time: time || "", minutes: minutes || 0, sources: source ? [source] : [], excused: !!(extra && extra.excused) });
     };
     // المرجع الوحيد هو الحالة في «متابعة الدوام»: غياب ← سجل الغياب، مستأذن ← سجل الاستئذان
     backfillWorkStatus();
     if (mode === "late") {
-      data.workAttendance.filter(r => r.status === "late").forEach(r => add(r.date, r.teacher, r.time, "متابعة الدوام", (r.time ? computeLateDiff(r.time, r.date) : r.diffMinutes || 0)));
+      data.workAttendance.filter(r => r.status === "late").forEach(r => add(r.date, r.teacher, r.time, "متابعة الدوام", (r.time ? computeLateDiff(r.time, r.date) : r.diffMinutes || 0), { excused: r.excuse === "yes" }));
       return out;
     }
     const want = mode === "absence" ? "absent" : "permission";
@@ -7468,11 +7504,11 @@ ${bodyHTML}
       const p = wpDateParts(r.date);
       const row = [i + 1, r.teacher, p.dayName || "—", p.hijri, p.greg];
       if (isPerm) row.push(r.time || "—");
-      if (isLate) { row.push(r.time || "—"); row.push(r.minutes ? formatDurationBadge(r.minutes) : "—"); }
+      if (isLate) { row.push(r.time || "—"); row.push(r.minutes ? formatDurationBadge(r.minutes) + (r.excused ? " (بعذر)" : "") : "—"); }
       return row;
     });
     const word = isPerm ? "الاستئذان" : isLate ? "التأخير" : "الغياب";
-    const lateTotal = isLate ? recs.reduce((n, r) => n + (r.minutes || 0), 0) : 0;
+    const lateTotal = isLate ? recs.reduce((n, r) => n + (r.excused ? 0 : (r.minutes || 0)), 0) : 0;
     let title = (lvArchiveMode ? "أرشيف " : "") + "سجل " + word;
     if (teacher) title += " — " + teacher;
     if (date) title += " — " + (wpDateParts(date).dayName || "") + " " + wpDateParts(date).hijri;
@@ -7599,7 +7635,8 @@ window.addEventListener("load",function(){var go=function(){setTimeout(function(
         let minutes = 0;
         if (r.status === "late") minutes = r.time ? computeLateDiff(r.time, r.date) : (r.diffMinutes || 0);
         if (r.status === "early_leave") minutes = r.time ? computeEarlyDiff(r.time, r.date) : (r.diffMinutes || 0);
-        return { teacher: r.teacher, status: r.status, date: r.date, day: dayNameFromDate(r.date), minutes, note: r.time ? "الساعة " + r.time : "" };
+        const exc = r.excuse === "yes";
+        return { teacher: r.teacher, status: r.status, date: r.date, day: dayNameFromDate(r.date), minutes, excused: exc && minutes > 0, note: (r.time ? "الساعة " + r.time : "") + (exc ? (r.time ? " — " : "") + "بعذر" : r.excuse === "no" ? (r.time ? " — " : "") + "بدون عذر" : "") };
       });
     } else if (sec.id === "lineup") {
       ev = data.lineupAttendance.filter(r => subs.includes(r.status)).map(r => ({ teacher: r.teacher, status: r.status, date: r.date, day: dayNameFromDate(r.date), minutes: 0, note: "" }));
@@ -7612,7 +7649,7 @@ window.addEventListener("load",function(){var go=function(){setTimeout(function(
   }
   function crCellText(list, withMinutes) {
     if (!list.length) return "";
-    const mins = list.reduce((n, e) => n + (e.minutes || 0), 0);
+    const mins = list.reduce((n, e) => n + (e.excused ? 0 : (e.minutes || 0)), 0);
     return list.length + (withMinutes && mins ? " (" + crFmtHM(mins) + ")" : "");
   }
   function crBuild() {
@@ -10220,7 +10257,8 @@ ${contentEl.innerHTML}
   // مجموع التأخير بالساعات بصيغة ساعات:دقائق (مثال: 2:10 ساعة)
   const alFmtHM = m => { m = Math.round(m || 0); const h = Math.floor(m / 60), r = m % 60; return h + ":" + String(r).padStart(2, "0") + " ساعة"; };
   const alLateInc = rows => (rows || []).filter(r => r.inc !== false);
-  const alLateTotal = () => alLateInc(alLate).reduce((n, r) => n + (Number(r.minutes) || 0), 0);
+  const alMinSum = rows => rows.reduce((n, r) => n + (r.exc ? 0 : (Number(r.minutes) || 0)), 0);
+  const alLateTotal = () => alMinSum(alLateInc(alLate));
   function alLateRange(v) {
     const inc = alLateInc(v.lateRows), f = v.lateFrom || (inc[0] && inc[0].date) || "", t = v.lateTo || (inc.length && inc[inc.length - 1].date) || "";
     const one = d => { if (!d) return ""; const p = wpDateParts(d); return (p.dayName ? p.dayName + " " : "") + p.hijri + " (" + ioGreg(d) + ")"; };
@@ -10235,7 +10273,7 @@ ${contentEl.innerHTML}
     alLateHints();
     const notes = {}, excl = new Set(); alLate.forEach(r => { if (r.note) notes[r.date] = r.note; if (r.inc === false) excl.add(r.date); });
     alLate = (data.workAttendance || []).filter(r => r.teacher === t && r.status === "late" && r.date && (!f || r.date >= f) && (!to || r.date <= to))
-      .map(r => ({ date: r.date, minutes: r.time ? computeLateDiff(r.time, r.date) : (r.diffMinutes || 0), note: notes[r.date] || "", inc: !excl.has(r.date) }))
+      .map(r => ({ date: r.date, minutes: r.time ? computeLateDiff(r.time, r.date) : (r.diffMinutes || 0), exc: r.excuse === "yes", note: notes[r.date] || (r.excuse === "yes" ? "بعذر" : ""), inc: !excl.has(r.date) }))
       .filter(r => r.minutes > 0).sort((a, b) => a.date.localeCompare(b.date));
     alLateRender();
   }
@@ -10304,7 +10342,7 @@ ${contentEl.innerHTML}
     const rec = (data.officialAlerts || []).find(x => x.id === (v.id || alCurId)) || v;
     const conf = rec.ackId ? linkState(rec).conf : "";
     const noSign = conf && rec.replyAt && rec.teacherSigned === false;
-    const rows = alLateInc(v.lateRows), tot = rows.reduce((n, r) => n + (Number(r.minutes) || 0), 0), rng = alLateRange(v);
+    const rows = alLateInc(v.lateRows), tot = alMinSum(rows), rng = alLateRange(v);
     const t1 = `<table style="width:100%; border-collapse:collapse; margin:8px 0 12px; table-layout:fixed;">
         <tr><td style="${H}">اسم المعلم</td><td style="${H}">السجل المدني</td></tr>
         <tr><td style="${B} font-weight:700; height:32px;">${wpEsc(v.teacher || "")}</td><td style="${B} font-weight:700; letter-spacing:1px;">${wpEsc(v.civil || "")}</td></tr></table>`;
@@ -10585,7 +10623,7 @@ ${contentEl.innerHTML}
   function alDocSpec(v) {
     const dots = "...................";
     if (isLH(v.type)) {
-      const rows = alLateInc(v.lateRows), tot = rows.reduce((n, r) => n + (Number(r.minutes) || 0), 0), rng = alLateRange(v);
+      const rows = alLateInc(v.lateRows), tot = alMinSum(rows), rng = alLateRange(v);
       return { title: v.typeName || "التنبيه الأول عن ساعات التأخير", dateIso: v.dateIso, blocks: [
         { t: "table", groups: [[["اسم المعلم", v.teacher, 1], ["السجل المدني", v.civil, 1]]], body: null },
         ...(rng ? [{ t: "text", text: rng, font: "800 27px ", align: "center", color: "#174a59", gap: 6 }] : []),
@@ -11040,14 +11078,18 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   const ER_SRC = {
     att: { t: "سجل الغياب والتأخر", from: "متابعة الدوام", segs: [["status", "حالة الحضور"], ["late", "المتأخرون"], ["absent", "الغائبون"], ["all", "الكل"]],
       segTitle: { status: "حالة الحضور لجميع المعلمين", late: "المتأخرون", absent: "الغائبون" },
-      cols: [C_DAY, C_DATE, C_GREG, C_T, C_ST, ["مقدار التأخر", r => r.status === "late" ? (r.lateMin ? r.lateMin + " دقيقة" : "—") : "", { noAbs: 1 }],
+      cols: [C_DAY, C_DATE, C_GREG, C_T, C_ST, ["مقدار التأخر", r => r.status === "late" ? (r.lateMin ? r.lateMin + " دقيقة" + (r.record && r.record.excuse === "yes" ? " (بعذر)" : "") : "—") : "", { noAbs: 1 }],
         ["العذر", r => r.record && ["absent", "late"].includes(r.status) ? (r.record.excuse === "yes" ? "بعذر" : r.record.excuse === "no" ? "بدون عذر" : "") : "", { edit: "excuse" }],
-        ["ملاحظات", r => r.record && ["absent", "late"].includes(r.status) ? (r.record.note || "") : "", { edit: "note" }]],
+        ["ملاحظات", r => r.record && ["absent", "late"].includes(r.status) ? (r.record.note || "") : (r.composed || ""), { edit: "note" }]],
       rows: (seg, ctx) => {
         const recs = getMonitorTypeRecords("work").map(r => Object.assign({}, r, { lateMin: r.status === "late" ? ((r.record && r.record.time) ? computeLateDiff(r.record.time, r.record.date) : (r.record && r.record.diffMinutes) || 0) : 0 }));
         if (seg !== "status") return recs.filter(r => r.status === seg);
         // جميع المعلمين: «حاضر» هو الافتراضي ويُستكمل لكل معلم في أيام الدوام
-        const have = {}; recs.forEach(r => { have[r.date + "|" + r.teacher] = r; });
+        // الحاضر: تُكتب حالاته الأخرى (تأخر/انصراف مبكر/استئذان) مع العذر في الملاحظات
+        const exT = x => x.record && x.record.excuse === "yes" ? "بعذر" : x.record && x.record.excuse === "no" ? "بدون عذر" : "";
+        const fmt = x => [statusLabel(x.status) + (x.status === "permission" ? (x.record && x.record.time ? " الساعة " + x.record.time : "") : x.detail ? " " + x.detail : ""), x.status === "permission" ? (x.record && x.record.reason ? "السبب: " + x.record.reason : "") : exT(x)].filter(Boolean).join(" - ");
+        const grp = {}; recs.forEach(r => { (grp[r.date + "|" + r.teacher] = grp[r.date + "|" + r.teacher] || []).push(r); });
+        const have = {}; Object.keys(grp).forEach(k => { const L = grp[k], ab = L.find(x => x.status === "absent"); have[k] = ab || Object.assign({}, L[0], { status: "present", record: null, lateMin: 0, composed: L.map(fmt).join(" — ") }); });
         let dates = [];
         if (ctx.f || ctx.t) {
           const today = todayISODate(), a = ctx.f || ctx.t, b = ctx.t || ctx.f, end = b < today ? b : today;
@@ -11155,14 +11197,14 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   function erCell(c, r) {
     const ed = c[2] && c[2].edit;
     if (!ed) return c[2] && c[2].pc ? '<span class="st-' + (TRK_CLS[r[c[2].pc]] || "") + '">' + acEsc(c[1](r)) + "</span>" : acEsc(c[1](r));
-    if (!(r.record && ["absent", "late", "permission"].includes(r.status))) return "";
-    const key = acEsc(r.record.date + "|" + r.record.teacher);
+    if (!(r.record && ["absent", "late", "permission"].includes(r.status))) return acEsc(c[1](r));
+    const key = acEsc(r.record.date + "|" + r.record.teacher + "|" + r.record.status);
     if (ed === "excuse") { const v = r.record.excuse || ""; return '<select class="er-ed" data-k="' + key + '" data-f="excuse"><option value="">اختر</option><option value="yes"' + (v === "yes" ? " selected" : "") + '>بعذر</option><option value="no"' + (v === "no" ? " selected" : "") + ">بدون عذر</option></select>"; }
     return '<input type="text" class="er-ed" data-k="' + key + '" data-f="note" value="' + acEsc(r.record.note || "") + '" placeholder="…">';
   }
   document.getElementById("erSrcTable").addEventListener("change", e => {
     const el = e.target.closest(".er-ed"); if (!el) return;
-    const [d, t] = el.dataset.k.split("|"), rec = data.workAttendance.find(r => r.date === d && r.teacher === t); if (!rec) return;
+    const [d, t, st] = el.dataset.k.split("|"), rec = data.workAttendance.find(r => r.date === d && r.teacher === t && (!st || r.status === st)); if (!rec) return;
     const v = el.value.trim(); if (v) rec[el.dataset.f] = v; else delete rec[el.dataset.f];
     saveData(); erSrcRender(); showToast("تم الحفظ");
   });
@@ -12838,7 +12880,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-20-4";
+window.APP_BUILD = "2026-11-20-9";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
