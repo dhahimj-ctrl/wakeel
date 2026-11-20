@@ -7032,7 +7032,8 @@ ${pages}
     // تغليف محتوى كل صفحة بجدول له تذييل متكرر يحجز مساحة الشريط السفلي في كل ورقة مطبوعة
     pagesHTML = pagesHTML.replace(/<section class="page([^"]*)">([\s\S]*?)<\/section>/g, (m, cls, inner) =>
       '<section class="page' + cls + '"><table class="pgwrap"><tbody><tr><td class="pgcell">' + inner + '</td></tr></tbody><tfoot><tr><td class="pgcell"><div class="pgspace"></div></td></tr></tfoot></table></section>');
-    const auto = opts.autoPrint !== false;
+    // لا طباعة تلقائية عند العرض داخل المنصة (معاينة أو صفحة التعريف)
+    const auto = opts.autoPrint !== false && !wpCapture;
     return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -11005,7 +11006,7 @@ ${contentEl.innerHTML}
     if (!h) return;
     const fr = document.createElement("iframe");
     fr.className = "er-intro-paper"; fr.setAttribute("title", "تعريف السجل");
-    fr.srcdoc = wpShellDoc(title, erIntroPage(title, h), {});
+    fr.srcdoc = wpShellDoc(title, erIntroPage(title, h), { autoPrint: false });
     fr.onload = () => {
       try {
         const d = fr.contentDocument; d.querySelectorAll(".bar, .no-print").forEach(x => x.style.display = "none");
@@ -11270,9 +11271,10 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
         else { if (w) w.location.href = url; if (mode === "print") showToast("اضغط زر الطباعة في عارض PDF"); }
         setTimeout(() => URL.revokeObjectURL(url), 120000); return;
       }
-      const pages = await erFilePages(m, u8), doc = wpShellDoc(S.t, pages, {});
-      if (mode === "print") { wpOpenDoc(doc, S.t.replace(/ /g, "_")); return; }
-      erViewDoc = { doc, title: S.t };
+      const pages = await erFilePages(m, u8);
+      if (mode === "print") { wpOpenDoc(wpShellDoc(S.t, pages, {}), S.t.replace(/ /g, "_")); return; }
+      const doc = wpShellDoc(S.t, pages, { autoPrint: false });
+      erViewDoc = { pages, title: S.t };
       document.getElementById("erViewTitle").textContent = "👁️ " + S.t;
       const fr = document.getElementById("erViewFrame");
       fr.onload = () => { try { const d = fr.contentDocument; d.querySelectorAll(".bar, .no-print").forEach(x => x.style.display = "none"); d.body.style.minWidth = "800px"; const ww = Math.max(800, d.documentElement.scrollWidth), cw = fr.clientWidth; if (ww > cw) d.body.style.zoom = ((cw - 4) / ww).toFixed(3); } catch (e) {} };
@@ -11284,7 +11286,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   }
   let erViewDoc = null;
   document.getElementById("erViewClose").addEventListener("click", () => { document.getElementById("erViewModal").style.display = "none"; document.getElementById("erViewFrame").srcdoc = ""; });
-  document.getElementById("erViewPrint").addEventListener("click", () => { if (erViewDoc) wpOpenDoc(erViewDoc.doc, erViewDoc.title.replace(/ /g, "_")); });
+  document.getElementById("erViewPrint").addEventListener("click", () => { if (erViewDoc) wpOpenDoc(wpShellDoc(erViewDoc.title, erViewDoc.pages, {}), erViewDoc.title.replace(/ /g, "_")); });
   document.getElementById("erSrcTable").addEventListener("change", async e => {
     if (e.target.id !== "erFileIn") return;
     const f = e.target.files[0]; if (!f) return;
@@ -12882,7 +12884,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-20-10";
+window.APP_BUILD = "2026-11-20-11";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
