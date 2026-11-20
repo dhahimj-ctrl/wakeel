@@ -630,6 +630,9 @@
   .trk-les-none { font-size: 12px; color: #66736f; }
   .er-src span.st-present { color: #146c3a; font-weight: 700; } .er-src span.st-late { color: #9a5b00; font-weight: 700; } .er-src span.st-absent { color: #b42318; font-weight: 700; }
   .tr-box { border: 1px solid var(--line); border-radius: 12px; background: #f7fbfb; padding: 8px 10px; margin: 0 0 8px; }
+  .tr-h { font-weight: 800; color: #174a59; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+  .tr-kind { display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 700; color: #174a59; margin-top: 6px; }
+  .tr-form label small { font-weight: 400; color: #66736f; font-size: 11px; min-height: 14px; }
   .tr-box summary { cursor: pointer; font-weight: 700; color: #174a59; font-size: 13.5px; }
   .tr-form { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
   .tr-form label { flex: 1 1 130px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 700; color: #174a59; }
@@ -1827,28 +1830,28 @@
     <div class="detail-header">
       <h2>متابعة الدوام</h2>
     </div>
-    <div class="sched-grid" style="margin-bottom:6px;">
-      <div class="field">
-        <label for="workCheckInInput">وقت الحضور الأساسي</label>
-        <input type="time" id="workCheckInInput" class="date-input">
+    <div class="tr-box" id="wtrBox">
+      <div class="tr-h">🕘 أوقات الدوام <span id="wtrCount" class="count-pill">0</span></div>
+      <div class="sched-hint" style="text-align:right;">اختر نوع الدوام وحدّد فترته ووقتيه؛ خلال الفترة تُحسب أوقات الحضور والتأخر والاستئذان والانصراف المبكر عليها.</div>
+      <label class="tr-kind">نوع الدوام<select id="wtrKind" class="select-styled">
+        <option value="">اختر</option>
+        <option value="summer">☀️ الدوام الصيفي</option>
+        <option value="winter">❄️ الدوام الشتوي</option>
+        <option value="ramadan">🌙 دوام رمضان</option>
+        <option value="custom">➕ إضافة فترة جديدة</option>
+      </select></label>
+      <div id="wtrFormBox" style="display:none;">
+        <label class="tr-kind" id="wtrNameL" style="display:none;">اسم الفترة<input type="text" id="wtrName" class="date-input" placeholder="مثال: دوام الاختبارات"></label>
+        <div class="tr-form">
+          <label>من (ميلادي)<input type="date" id="wtrFrom" class="date-input"><small id="wtrFromH"></small></label>
+          <label>إلى (ميلادي)<input type="date" id="wtrTo" class="date-input"><small id="wtrToH"></small></label>
+          <label>وقت الحضور<input type="time" id="wtrIn" class="date-input"></label>
+          <label>وقت الانصراف<input type="time" id="wtrOut" class="date-input"></label>
+        </div>
+        <button class="export-btn" id="wtrAdd" style="width:100%; margin-top:6px;">💾 حفظ وتطبيق على الفترة</button>
       </div>
-      <div class="field">
-        <label for="workCheckOutInput">وقت الانصراف الأساسي</label>
-        <input type="time" id="workCheckOutInput" class="date-input">
-      </div>
-    </div>
-    <details class="tr-box" id="wtrBox">
-      <summary>📅 أوقات دوام لفترة محددة (من — إلى) <span id="wtrCount" class="count-pill">0</span></summary>
-      <div class="sched-hint" style="text-align:right;">خلال الفترة تُحسب أوقات الحضور والتأخر والاستئذان والانصراف المبكر على أوقاتها، وخارجها على الأوقات الأساسية أعلاه.</div>
-      <div class="tr-form">
-        <label>من (ميلادي)<input type="date" id="wtrFrom" class="date-input"></label>
-        <label>إلى (ميلادي)<input type="date" id="wtrTo" class="date-input"></label>
-        <label>وقت الحضور<input type="time" id="wtrIn" class="date-input"></label>
-        <label>وقت الانصراف<input type="time" id="wtrOut" class="date-input"></label>
-      </div>
-      <button class="export-btn" id="wtrAdd" style="width:100%; margin-top:6px;">➕ إضافة الفترة</button>
       <div id="wtrList"></div>
-    </details>
+    </div>
     <div class="sched-hint" id="wtrNow" style="text-align:right; margin:0 0 10px;"></div>
     <div class="field" style="margin-bottom:14px;">
       <label for="workDateInput">التاريخ</label>
@@ -5107,7 +5110,12 @@
 
   // أوقات الدوام والحصص لفترات محددة (من — إلى)؛ خارجها تُطبَّق الأوقات الأساسية
   const inTR = (r, d) => d && r.from && r.to && d >= r.from && d <= r.to;
-  function workTimesRange(date) { return (data.workTimeRanges || []).slice().reverse().find(r => inTR(r, date)) || null; }
+  function workTimesRange(date) {
+    const P = { custom: 3, ramadan: 2 };
+    const L = (data.workTimeRanges || []).map((r, i) => ({ r, i })).filter(x => inTR(x.r, date));
+    L.sort((a, b) => (P[b.r.kind] || 1) - (P[a.r.kind] || 1) || b.i - a.i);
+    return L.length ? L[0].r : null;
+  }
   function workTimesFor(date) { const r = workTimesRange(date); return r ? { checkIn: r.checkIn || data.workTimes.checkIn, checkOut: r.checkOut || data.workTimes.checkOut } : data.workTimes; }
   function periodTimesRange(date) { return (data.periodTimeRanges || []).slice().reverse().find(r => inTR(r, date)) || null; }
   function periodTimesFor(date) { const r = periodTimesRange(date); return r && Array.isArray(r.times) && r.times.length === PERIODS.length ? r.times : data.periodTimes; }
@@ -5119,34 +5127,60 @@
     return Math.max(0, minutesFromTimeStr(workTimesFor(date).checkOut) - minutesFromTimeStr(actualTime));
   }
 
-  function fillWorkTimeInputs() {
-    document.getElementById("workCheckInInput").value = data.workTimes.checkIn;
-    document.getElementById("workCheckOutInput").value = data.workTimes.checkOut;
-    wtrRender();
-  }
+  const WTR_KINDS = { summer: "الدوام الصيفي", winter: "الدوام الشتوي", ramadan: "دوام رمضان" };
+  const WTR_IC = { summer: "☀️", winter: "❄️", ramadan: "🌙", custom: "📅" };
+  const wtrName = r => r.name || WTR_KINDS[r.kind] || "فترة";
+  function fillWorkTimeInputs() { wtrRender(); }
   const trLabel = r => "من " + wpDateParts(r.from).hijri + " (" + r.from.split("-").reverse().join("/") + ") إلى " + wpDateParts(r.to).hijri + " (" + r.to.split("-").reverse().join("/") + ")";
+  function wtrHints() { ["wtrFrom", "wtrTo"].forEach(id => { const v = document.getElementById(id).value, p = v ? wpDateParts(v) : null; document.getElementById(id + "H").textContent = p ? (p.dayName || "") + " — " + p.hijri : ""; }); }
   function wtrRender() {
     const L = data.workTimeRanges || [];
     document.getElementById("wtrCount").textContent = L.length;
-    document.getElementById("wtrList").innerHTML = L.map((r, i) => '<div class="tr-item"><div><b>🕘 ' + acEsc(r.checkIn) + " — " + acEsc(r.checkOut) + "</b><small>" + acEsc(trLabel(r)) + '</small></div><button type="button" data-del="' + i + '">🗑️</button></div>').join("");
+    document.getElementById("wtrList").innerHTML = L.map((r, i) => '<div class="tr-item"><div><b>' + (WTR_IC[r.kind] || "📅") + " " + acEsc(wtrName(r)) + ": " + acEsc(r.checkIn) + " — " + acEsc(r.checkOut) + "</b><small>" + acEsc(trLabel(r)) + '</small></div><div style="display:flex; gap:4px;"><button type="button" data-ed="' + i + '" title="تعديل">✏️</button><button type="button" data-del="' + i + '" title="حذف">🗑️</button></div></div>').join("") || '<div class="empty-state" style="padding:10px;">لم تُحدَّد أوقات دوام بعد — اختر نوع الدوام من القائمة</div>';
     const d = document.getElementById("workDateInput").value, rr = workTimesRange(d), w = workTimesFor(d);
-    document.getElementById("wtrNow").innerHTML = d ? "⏱️ أوقات هذا اليوم: الحضور <b>" + acEsc(w.checkIn) + "</b> — الانصراف <b>" + acEsc(w.checkOut) + "</b>" + (rr ? " (فترة محددة)" : " (الأوقات الأساسية)") : "";
+    document.getElementById("wtrNow").innerHTML = d ? "⏱️ أوقات هذا اليوم: الحضور <b>" + acEsc(w.checkIn) + "</b> — الانصراف <b>" + acEsc(w.checkOut) + "</b>" + (rr ? " (" + acEsc(wtrName(rr)) + ")" : " (لا توجد فترة تشمل هذا اليوم — تُستخدم الأوقات الافتراضية)") : "";
   }
+  let wtrEditIdx = -1;
+  function wtrLoad(kind, idx) {
+    const box = document.getElementById("wtrFormBox");
+    box.style.display = kind ? "" : "none";
+    document.getElementById("wtrNameL").style.display = kind === "custom" ? "" : "none";
+    if (!kind) return;
+    const L = data.workTimeRanges || [];
+    wtrEditIdx = idx != null ? idx : kind === "custom" ? -1 : L.findIndex(r => r.kind === kind);
+    const r = L[wtrEditIdx] || { from: "", to: "", checkIn: data.workTimes.checkIn, checkOut: data.workTimes.checkOut, name: "" };
+    document.getElementById("wtrFrom").value = r.from; document.getElementById("wtrTo").value = r.to;
+    document.getElementById("wtrIn").value = r.checkIn; document.getElementById("wtrOut").value = r.checkOut;
+    document.getElementById("wtrName").value = r.kind === "custom" ? (r.name || "") : "";
+    wtrHints();
+  }
+  const wtrRecalc = (f, t) => data.workAttendance.forEach(r => { if (r.date >= f && r.date <= t && r.time) { if (r.status === "late") r.diffMinutes = computeLateDiff(r.time, r.date); if (r.status === "early_leave") r.diffMinutes = computeEarlyDiff(r.time, r.date); } });
+  document.getElementById("wtrKind").addEventListener("change", e => wtrLoad(e.target.value));
+  ["wtrFrom", "wtrTo"].forEach(id => document.getElementById(id).addEventListener("change", wtrHints));
   document.getElementById("wtrAdd").addEventListener("click", () => {
-    const f = document.getElementById("wtrFrom").value, t = document.getElementById("wtrTo").value, i = document.getElementById("wtrIn").value, o = document.getElementById("wtrOut").value;
-    if (!f || !t || (!i && !o)) { showToast("حدّد التاريخ من وإلى ووقت الحضور أو الانصراف"); return; }
+    const kind = document.getElementById("wtrKind").value; if (!kind) return;
+    const f = document.getElementById("wtrFrom").value, t = document.getElementById("wtrTo").value, i = document.getElementById("wtrIn").value, o = document.getElementById("wtrOut").value, nm = document.getElementById("wtrName").value.trim();
+    if (!f || !t || !i || !o) { showToast("حدّد التاريخ من وإلى ووقت الحضور والانصراف"); return; }
     if (t < f) { showToast("تاريخ «إلى» قبل «من»"); return; }
+    if (kind === "custom" && !nm) { showToast("اكتب اسم الفترة"); return; }
     if (!Array.isArray(data.workTimeRanges)) data.workTimeRanges = [];
-    data.workTimeRanges.push({ from: f, to: t, checkIn: i || data.workTimes.checkIn, checkOut: o || data.workTimes.checkOut });
-    data.workAttendance.forEach(r => { if (r.date >= f && r.date <= t && r.time) { if (r.status === "late") r.diffMinutes = computeLateDiff(r.time, r.date); if (r.status === "early_leave") r.diffMinutes = computeEarlyDiff(r.time, r.date); } });
-    saveData(); wtrRender(); renderWorkAttendanceList(document.getElementById("workDateInput").value); showToast("تمت إضافة الفترة وأُعيد حساب التأخر والانصراف المبكر فيها");
+    const old = data.workTimeRanges[wtrEditIdx];
+    const rec = { kind, from: f, to: t, checkIn: i, checkOut: o }; if (kind === "custom") rec.name = nm;
+    if (old) data.workTimeRanges[wtrEditIdx] = rec; else data.workTimeRanges.push(rec);
+    if (old) wtrRecalc(old.from, old.to);
+    wtrRecalc(f, t);
+    saveData(); document.getElementById("wtrKind").value = ""; wtrLoad(""); wtrRender();
+    renderWorkAttendanceList(document.getElementById("workDateInput").value);
+    showToast("✅ حُفظت أوقات " + (kind === "custom" ? nm : WTR_KINDS[kind]) + " وطُبّقت على فترتها");
   });
   document.getElementById("wtrList").addEventListener("click", e => {
+    const ed = e.target.closest("[data-ed]");
+    if (ed) { const r = data.workTimeRanges[Number(ed.dataset.ed)]; document.getElementById("wtrKind").value = r.kind || "custom"; wtrLoad(r.kind || "custom", Number(ed.dataset.ed)); document.getElementById("wtrBox").scrollIntoView({ block: "start", behavior: "smooth" }); return; }
     const b = e.target.closest("[data-del]"); if (!b) return;
     if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "تأكيد؟"; setTimeout(() => { if (b.isConnected) { b.dataset.confirm = ""; b.textContent = "🗑️"; } }, 4000); return; }
     const r = data.workTimeRanges.splice(Number(b.dataset.del), 1)[0];
-    if (r) data.workAttendance.forEach(x => { if (x.date >= r.from && x.date <= r.to && x.time) { if (x.status === "late") x.diffMinutes = computeLateDiff(x.time, x.date); if (x.status === "early_leave") x.diffMinutes = computeEarlyDiff(x.time, x.date); } });
-    saveData(); wtrRender(); renderWorkAttendanceList(document.getElementById("workDateInput").value); showToast("حُذفت الفترة");
+    if (r) wtrRecalc(r.from, r.to);
+    saveData(); wtrLoad(""); document.getElementById("wtrKind").value = ""; wtrRender(); renderWorkAttendanceList(document.getElementById("workDateInput").value); showToast("حُذفت الفترة");
   });
 
   function setWorkAttendance(date, teacher, status, time) {
@@ -12567,19 +12601,6 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     showView("workAttendance");
   });
   document.getElementById("workDateInput").addEventListener("change", e => { renderWorkAttendanceList(e.target.value); wtrRender(); });
-  document.getElementById("workCheckInInput").addEventListener("change", e => {
-    data.workTimes.checkIn = e.target.value;
-    saveData();
-    renderWorkAttendanceList(document.getElementById("workDateInput").value);
-    showToast("تم حفظ وقت الحضور الأساسي");
-  });
-  document.getElementById("workCheckOutInput").addEventListener("change", e => {
-    data.workTimes.checkOut = e.target.value;
-    saveData();
-    renderWorkAttendanceList(document.getElementById("workDateInput").value);
-    showToast("تم حفظ وقت الانصراف الأساسي");
-  });
-
   document.getElementById("openLineupTile").addEventListener("click", () => {
     const dateInput = document.getElementById("lineupDateInput");
     if (!dateInput.value) dateInput.value = schoolDayISO();
@@ -12817,7 +12838,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-20-3";
+window.APP_BUILD = "2026-11-20-4";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
