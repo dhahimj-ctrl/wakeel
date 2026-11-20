@@ -3112,6 +3112,8 @@
       return r;
     }).filter(r => r.date);
     if (!Array.isArray(out.workAttendance)) out.workAttendance = [];
+    // «حاضر» هو الافتراضي ولا يُخزَّن في متابعة الدوام — إزالة أي سجل «حاضر» قديم حتى لا يظهر في السجلات
+    out.workAttendance = out.workAttendance.filter(r => r && r.status && r.status !== "present");
     if (!Array.isArray(out.coverageRecords)) out.coverageRecords = [];
     if (!Array.isArray(out.waitUncovered)) out.waitUncovered = [];
     if (!Array.isArray(out.dutyTemplates)) out.dutyTemplates = [];
@@ -5719,7 +5721,7 @@
       records = keys.map(k => {
         const L = map.get(k), ab = L.find(x => x.status === "absent");
         if (ab) return Object.assign({}, ab, { note: exTxt(ab) });
-        const others = L.filter(x => x.status !== "present");
+        const others = L.filter(x => ["late", "early_leave", "permission"].includes(x.status));
         return Object.assign({}, L[0], { status: "present", detail: "", note: others.map(fmt).join(" — "), record: others[0] ? others[0].record : null });
       });
       if (statusFilter === "present") records = records.filter(r => r.status === "present");
@@ -11089,7 +11091,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
         const exT = x => x.record && x.record.excuse === "yes" ? "بعذر" : x.record && x.record.excuse === "no" ? "بدون عذر" : "";
         const fmt = x => [statusLabel(x.status) + (x.status === "permission" ? (x.record && x.record.time ? " الساعة " + x.record.time : "") : x.detail ? " " + x.detail : ""), x.status === "permission" ? (x.record && x.record.reason ? "السبب: " + x.record.reason : "") : exT(x)].filter(Boolean).join(" - ");
         const grp = {}; recs.forEach(r => { (grp[r.date + "|" + r.teacher] = grp[r.date + "|" + r.teacher] || []).push(r); });
-        const have = {}; Object.keys(grp).forEach(k => { const L = grp[k], ab = L.find(x => x.status === "absent"); have[k] = ab || Object.assign({}, L[0], { status: "present", record: null, lateMin: 0, composed: L.map(fmt).join(" — ") }); });
+        const have = {}; Object.keys(grp).forEach(k => { const L = grp[k], ab = L.find(x => x.status === "absent"); have[k] = ab || Object.assign({}, L[0], { status: "present", record: null, lateMin: 0, composed: L.filter(x => ["late", "early_leave", "permission"].includes(x.status)).map(fmt).join(" — ") }); });
         let dates = [];
         if (ctx.f || ctx.t) {
           const today = todayISODate(), a = ctx.f || ctx.t, b = ctx.t || ctx.f, end = b < today ? b : today;
@@ -12880,7 +12882,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-20-9";
+window.APP_BUILD = "2026-11-20-10";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
