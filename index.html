@@ -610,6 +610,13 @@
   .trk-tbl td.c.no { background: #fde2df; } .trk-tbl td.c.no small { color: #9a2f23; font-weight: 700; }
   .trk-sig { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px; font-size: 13px; }
   .trk-sig div { display: flex; flex-direction: column; align-items: center; gap: 3px; } .trk-sig b { color: #174a59; }
+  .er-dicons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+  .er-dicon { border: 1.5px solid #9cc3cc; background: #fff; border-radius: 14px; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; font: inherit; cursor: pointer; color: #174a59; }
+  .er-dicon span { font-size: 26px; } .er-dicon b { font-size: 12.5px; }
+  .er-dicon.on { background: #174a59; color: #fff; border-color: #174a59; }
+  .er-dtbl td select, .er-dtbl td input { font: inherit; font-size: 12.5px; border: 1px solid var(--line); border-radius: 7px; padding: 4px; background: #fff; width: 100%; min-width: 74px; margin: 2px 0; }
+  .er-dtbl td { min-width: 0; padding: 4px 3px; } .er-dtbl td.tn { white-space: normal; }
+  .er-dtbl select.st-present { color: #146c3a; } .er-dtbl select.st-late { color: #9a5b00; background: #fff4df; } .er-dtbl select.st-permission { color: #1f5fa8; background: #e8f0fb; } .er-dtbl select.st-absent, .er-dtbl select.st-unavailable { color: #b42318; background: #fde2df; }
   .trk-l { flex: 1 1 150px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 700; color: #174a59; }
   .trk-c .trk-l select { flex: none; width: 100%; }
   .trk-les { flex-basis: 100%; border: 1px dashed #b9d3cd; border-radius: 10px; padding: 7px; background: #f7fbfa; }
@@ -622,6 +629,12 @@
   .trk-les-i select.y { background: #e6f4ea; color: #146c3a; border-color: #9fd3b0; } .trk-les-i select.n { background: #fdecea; color: #b42318; border-color: #f0b4ad; }
   .trk-les-none { font-size: 12px; color: #66736f; }
   .er-src span.st-present { color: #146c3a; font-weight: 700; } .er-src span.st-late { color: #9a5b00; font-weight: 700; } .er-src span.st-absent { color: #b42318; font-weight: 700; }
+  .tr-box { border: 1px solid var(--line); border-radius: 12px; background: #f7fbfb; padding: 8px 10px; margin: 0 0 8px; }
+  .tr-box summary { cursor: pointer; font-weight: 700; color: #174a59; font-size: 13.5px; }
+  .tr-form { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tr-form label { flex: 1 1 130px; display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 700; color: #174a59; }
+  .tr-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 7px 9px; margin-top: 6px; }
+  .tr-item small { display: block; color: #66736f; font-size: 11.5px; } .tr-item button { border: 0; background: none; color: #b42318; font-size: 15px; cursor: pointer; flex: none; }
   .er-box { border: 1.5px solid #9cc3cc; border-radius: 14px; padding: 10px; background: #f7fbfb; }
   .er-box-h { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; color: #174a59; font-size: 15.5px; }
   .er-acts { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -1157,8 +1170,14 @@
         <h4>أوقات الحصص</h4>
         <button id="closeTimeSettings">إغلاق</button>
       </div>
+      <div class="tr-form" style="margin-bottom:8px;">
+        <label style="flex:1 1 100%;">التطبيق على<select id="tsScope" class="select-styled"></select></label>
+        <label id="tsFromL" style="display:none;">من (ميلادي)<input type="date" id="tsFrom" class="date-input"></label>
+        <label id="tsToL" style="display:none;">إلى (ميلادي)<input type="date" id="tsTo" class="date-input"></label>
+      </div>
       <div id="tsRows"></div>
       <button class="ts-save" id="saveTimeSettings">حفظ الأوقات</button>
+      <button class="ts-save" id="tsDelRange" style="display:none; background:#fdecea; color:#b42318; margin-top:6px;">🗑️ حذف هذه الفترة</button>
     </div>
   </div>
 
@@ -1808,7 +1827,7 @@
     <div class="detail-header">
       <h2>متابعة الدوام</h2>
     </div>
-    <div class="sched-grid" style="margin-bottom:14px;">
+    <div class="sched-grid" style="margin-bottom:6px;">
       <div class="field">
         <label for="workCheckInInput">وقت الحضور الأساسي</label>
         <input type="time" id="workCheckInInput" class="date-input">
@@ -1818,6 +1837,19 @@
         <input type="time" id="workCheckOutInput" class="date-input">
       </div>
     </div>
+    <details class="tr-box" id="wtrBox">
+      <summary>📅 أوقات دوام لفترة محددة (من — إلى) <span id="wtrCount" class="count-pill">0</span></summary>
+      <div class="sched-hint" style="text-align:right;">خلال الفترة تُحسب أوقات الحضور والتأخر والاستئذان والانصراف المبكر على أوقاتها، وخارجها على الأوقات الأساسية أعلاه.</div>
+      <div class="tr-form">
+        <label>من (ميلادي)<input type="date" id="wtrFrom" class="date-input"></label>
+        <label>إلى (ميلادي)<input type="date" id="wtrTo" class="date-input"></label>
+        <label>وقت الحضور<input type="time" id="wtrIn" class="date-input"></label>
+        <label>وقت الانصراف<input type="time" id="wtrOut" class="date-input"></label>
+      </div>
+      <button class="export-btn" id="wtrAdd" style="width:100%; margin-top:6px;">➕ إضافة الفترة</button>
+      <div id="wtrList"></div>
+    </details>
+    <div class="sched-hint" id="wtrNow" style="text-align:right; margin:0 0 10px;"></div>
     <div class="field" style="margin-bottom:14px;">
       <label for="workDateInput">التاريخ</label>
       <input type="date" id="workDateInput" class="date-input">
@@ -3101,6 +3133,8 @@
       out.periodTimes = JSON.parse(JSON.stringify(DEFAULT_PERIOD_TIMES));
     }
     out.workTimes = Object.assign({}, DEFAULT_WORK_TIMES, out.workTimes || {});
+    if (!Array.isArray(out.workTimeRanges)) out.workTimeRanges = [];
+    if (!Array.isArray(out.periodTimeRanges)) out.periodTimeRanges = [];
     if (!out.dutyDesignated) out.dutyDesignated = {};
     if (!Array.isArray(out.dutyDesignated.recess)) out.dutyDesignated.recess = [];
     if (!Array.isArray(out.dutyDesignated.endOfDay)) out.dutyDesignated.endOfDay = [];
@@ -3732,6 +3766,22 @@
     const pad = n => String(n).padStart(2, "0");
     return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
   }
+  // الجمعة والسبت إجازة نهاية الأسبوع: أقرب يوم دوام (الجمعة ← الخميس، السبت ← الأحد)
+  function nearestSchoolDay(iso) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || "")) return iso;
+    const d = new Date(iso + "T12:00:00"), g = d.getDay();
+    if (g === 5) d.setDate(d.getDate() - 1); else if (g === 6) d.setDate(d.getDate() + 1); else return iso;
+    const pad = n => String(n).padStart(2, "0");
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+  function schoolDayISO() { return nearestSchoolDay(todayISODate()); }
+  // أي خانة تاريخ في المنصة: لا يُقبل الجمعة أو السبت
+  document.addEventListener("change", e => {
+    const el = e.target;
+    if (!el || el.tagName !== "INPUT" || el.type !== "date" || !el.value) return;
+    const n = nearestSchoolDay(el.value);
+    if (n !== el.value) { const fri = new Date(el.value + "T12:00:00").getDay() === 5; el.value = n; try { showToast((fri ? "الجمعة" : "السبت") + " إجازة نهاية الأسبوع — تم اختيار " + (fri ? "الخميس" : "الأحد") + " بدلًا منه"); } catch (x) {} }
+  }, true);
 
   function isAbsentToday(teacher) {
     const today = todayISODate();
@@ -3792,7 +3842,7 @@
     const w = (data.workAttendance || []).find(r => r.date === date && r.teacher === teacher);
     if (!w) return "";
     if (w.status === "absent") return "absent";
-    if (w.status === "permission" && wtAfterPerm(period, w.time)) return "permission";
+    if (w.status === "permission" && wtAfterPerm(period, w.time, date)) return "permission";
     return "";
   }
   function subFor(date, period, cls, teacher) {
@@ -4223,11 +4273,19 @@
     });
   }
 
+  document.getElementById("tsScope").addEventListener("change", fillTimeSettingsRows);
+  document.getElementById("tsDelRange").addEventListener("click", e => {
+    const b = e.currentTarget, v = document.getElementById("tsScope").value; if (v === "base" || v === "new") return;
+    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "⚠️ اضغط للتأكيد"; setTimeout(() => { b.dataset.confirm = ""; b.textContent = "🗑️ حذف هذه الفترة"; }, 4000); return; }
+    b.dataset.confirm = ""; b.textContent = "🗑️ حذف هذه الفترة";
+    data.periodTimeRanges.splice(Number(v), 1); saveData(); tsScopeFill(); fillTimeSettingsRows(); showToast("حُذفت الفترة");
+  });
   function getCurrentPeriodNumber() {
     const now = new Date();
     const nowStr = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
-    for (let i = 0; i < data.periodTimes.length; i++) {
-      const { start, end } = data.periodTimes[i];
+    const PT = periodTimesFor(todayISODate());
+    for (let i = 0; i < PT.length; i++) {
+      const { start, end } = PT[i];
       if (nowStr >= start && nowStr < end) return i + 1;
     }
     return null;
@@ -4250,7 +4308,7 @@
       return;
     }
 
-    if (!dateInput.value) dateInput.value = todayISODate();
+    if (!dateInput.value) dateInput.value = schoolDayISO();
     const date = dateInput.value;
     const isToday = date === todayISODate();
     const day = dayNameFromDate(date);
@@ -4461,24 +4519,49 @@
     waSendWithAck(teacher, phone, "تنبيه تأخر عن حصة", message);
   }
 
+  // نطاق أوقات الحصص: الأساسية، أو فترة محددة، أو فترة جديدة
+  function tsScopeFill(keep) {
+    const sel = document.getElementById("tsScope"), L = data.periodTimeRanges || [];
+    sel.innerHTML = '<option value="base">الأوقات الأساسية</option>' + L.map((r, i) => '<option value="' + i + '">📅 ' + acEsc(trLabel(r)) + "</option>").join("") + '<option value="new">➕ فترة جديدة (من — إلى)</option>';
+    sel.value = keep != null && sel.querySelector('option[value="' + keep + '"]') ? keep : "base";
+  }
+  function tsCurTimes() { const v = document.getElementById("tsScope").value; if (v === "base") return data.periodTimes; if (v === "new") return data.periodTimes; return (data.periodTimeRanges[Number(v)] || {}).times || data.periodTimes; }
   function fillTimeSettingsRows() {
+    if (!document.getElementById("tsScope").options.length) tsScopeFill();
+    const v = document.getElementById("tsScope").value, T = tsCurTimes();
+    document.getElementById("tsFromL").style.display = document.getElementById("tsToL").style.display = v === "base" ? "none" : "";
+    document.getElementById("tsDelRange").style.display = v !== "base" && v !== "new" ? "" : "none";
+    if (v !== "base" && v !== "new") { const r = data.periodTimeRanges[Number(v)]; document.getElementById("tsFrom").value = r.from; document.getElementById("tsTo").value = r.to; }
+    else if (v === "new") { document.getElementById("tsFrom").value = ""; document.getElementById("tsTo").value = ""; }
     const wrap = document.getElementById("tsRows");
     wrap.innerHTML = PERIODS.map((label, i) => `
       <div class="ts-row">
         <span class="ts-label">الحصة ${label}</span>
-        <input type="time" data-idx="${i}" data-field="start" value="${data.periodTimes[i].start}">
+        <input type="time" data-idx="${i}" data-field="start" value="${T[i].start}">
         <span class="ts-sep">إلى</span>
-        <input type="time" data-idx="${i}" data-field="end" value="${data.periodTimes[i].end}">
+        <input type="time" data-idx="${i}" data-field="end" value="${T[i].end}">
       </div>`).join("");
   }
 
   function saveTimeSettings() {
+    const v = document.getElementById("tsScope").value;
+    let target = data.periodTimes;
+    if (v !== "base") {
+      const f = document.getElementById("tsFrom").value, t = document.getElementById("tsTo").value;
+      if (!f || !t) { showToast("حدّد تاريخ «من» و«إلى» للفترة"); return; }
+      if (t < f) { showToast("تاريخ «إلى» قبل «من»"); return; }
+      if (!Array.isArray(data.periodTimeRanges)) data.periodTimeRanges = [];
+      let r = v === "new" ? null : data.periodTimeRanges[Number(v)];
+      if (!r) { r = { from: f, to: t, times: JSON.parse(JSON.stringify(data.periodTimes)) }; data.periodTimeRanges.push(r); }
+      r.from = f; r.to = t; target = r.times;
+    }
     const inputs = document.querySelectorAll("#tsRows input[type='time']");
     inputs.forEach(input => {
       const idx = parseInt(input.dataset.idx, 10);
       const field = input.dataset.field;
-      if (input.value) data.periodTimes[idx][field] = input.value;
+      if (input.value) target[idx][field] = input.value;
     });
+    if (v === "new") tsScopeFill(String(data.periodTimeRanges.length - 1)); else tsScopeFill(v);
     saveData();
     document.getElementById("timeSettings").hidden = true;
     updateQuickResult();
@@ -4874,6 +4957,7 @@
       if (idx > -1) data.lineupAttendance.splice(idx, 1);
     } else if (idx > -1) {
       data.lineupAttendance[idx].status = status;
+      if (status !== "permission") delete data.lineupAttendance[idx].reason;
     } else {
       data.lineupAttendance.push({ date, teacher, status });
     }
@@ -4985,12 +5069,14 @@
         <option value="present" ${value === "present" ? "selected" : ""}>حاضر</option>
         <option value="absent" ${value === "absent" ? "selected" : ""}>غائب</option>
         <option value="late" ${value === "late" ? "selected" : ""}>متأخر</option>
-        <option value="unavailable" ${value === "unavailable" ? "selected" : ""}>غير متواجد</option>`;
+        <option value="unavailable" ${value === "unavailable" ? "selected" : ""}>غير متواجد</option>
+        <option value="permission" ${value === "permission" ? "selected" : ""}>مستأذن</option>`;
       sel.addEventListener("change", () => {
         setLineupAttendance(dateStr, name, sel.value);
         renderLineupList(dateStr);
       });
       right.appendChild(sel);
+      if (value === "permission") right.appendChild(permReasonInput(record, () => data.lineupAttendance.find(r => r.date === dateStr && r.teacher === name)));
 
       if (value === "absent" || value === "late" || value === "unavailable") {
         const dayName = DAY_INDEX_MAP[new Date(dateStr + "T00:00:00").getDay()] || dateStr;
@@ -5019,24 +5105,55 @@
     return text;
   }
 
-  function computeLateDiff(actualTime) {
-    return Math.max(0, minutesFromTimeStr(actualTime) - minutesFromTimeStr(data.workTimes.checkIn));
+  // أوقات الدوام والحصص لفترات محددة (من — إلى)؛ خارجها تُطبَّق الأوقات الأساسية
+  const inTR = (r, d) => d && r.from && r.to && d >= r.from && d <= r.to;
+  function workTimesRange(date) { return (data.workTimeRanges || []).slice().reverse().find(r => inTR(r, date)) || null; }
+  function workTimesFor(date) { const r = workTimesRange(date); return r ? { checkIn: r.checkIn || data.workTimes.checkIn, checkOut: r.checkOut || data.workTimes.checkOut } : data.workTimes; }
+  function periodTimesRange(date) { return (data.periodTimeRanges || []).slice().reverse().find(r => inTR(r, date)) || null; }
+  function periodTimesFor(date) { const r = periodTimesRange(date); return r && Array.isArray(r.times) && r.times.length === PERIODS.length ? r.times : data.periodTimes; }
+  function computeLateDiff(actualTime, date) {
+    return Math.max(0, minutesFromTimeStr(actualTime) - minutesFromTimeStr(workTimesFor(date).checkIn));
   }
 
-  function computeEarlyDiff(actualTime) {
-    return Math.max(0, minutesFromTimeStr(data.workTimes.checkOut) - minutesFromTimeStr(actualTime));
+  function computeEarlyDiff(actualTime, date) {
+    return Math.max(0, minutesFromTimeStr(workTimesFor(date).checkOut) - minutesFromTimeStr(actualTime));
   }
 
   function fillWorkTimeInputs() {
     document.getElementById("workCheckInInput").value = data.workTimes.checkIn;
     document.getElementById("workCheckOutInput").value = data.workTimes.checkOut;
+    wtrRender();
   }
+  const trLabel = r => "من " + wpDateParts(r.from).hijri + " (" + r.from.split("-").reverse().join("/") + ") إلى " + wpDateParts(r.to).hijri + " (" + r.to.split("-").reverse().join("/") + ")";
+  function wtrRender() {
+    const L = data.workTimeRanges || [];
+    document.getElementById("wtrCount").textContent = L.length;
+    document.getElementById("wtrList").innerHTML = L.map((r, i) => '<div class="tr-item"><div><b>🕘 ' + acEsc(r.checkIn) + " — " + acEsc(r.checkOut) + "</b><small>" + acEsc(trLabel(r)) + '</small></div><button type="button" data-del="' + i + '">🗑️</button></div>').join("");
+    const d = document.getElementById("workDateInput").value, rr = workTimesRange(d), w = workTimesFor(d);
+    document.getElementById("wtrNow").innerHTML = d ? "⏱️ أوقات هذا اليوم: الحضور <b>" + acEsc(w.checkIn) + "</b> — الانصراف <b>" + acEsc(w.checkOut) + "</b>" + (rr ? " (فترة محددة)" : " (الأوقات الأساسية)") : "";
+  }
+  document.getElementById("wtrAdd").addEventListener("click", () => {
+    const f = document.getElementById("wtrFrom").value, t = document.getElementById("wtrTo").value, i = document.getElementById("wtrIn").value, o = document.getElementById("wtrOut").value;
+    if (!f || !t || (!i && !o)) { showToast("حدّد التاريخ من وإلى ووقت الحضور أو الانصراف"); return; }
+    if (t < f) { showToast("تاريخ «إلى» قبل «من»"); return; }
+    if (!Array.isArray(data.workTimeRanges)) data.workTimeRanges = [];
+    data.workTimeRanges.push({ from: f, to: t, checkIn: i || data.workTimes.checkIn, checkOut: o || data.workTimes.checkOut });
+    data.workAttendance.forEach(r => { if (r.date >= f && r.date <= t && r.time) { if (r.status === "late") r.diffMinutes = computeLateDiff(r.time, r.date); if (r.status === "early_leave") r.diffMinutes = computeEarlyDiff(r.time, r.date); } });
+    saveData(); wtrRender(); renderWorkAttendanceList(document.getElementById("workDateInput").value); showToast("تمت إضافة الفترة وأُعيد حساب التأخر والانصراف المبكر فيها");
+  });
+  document.getElementById("wtrList").addEventListener("click", e => {
+    const b = e.target.closest("[data-del]"); if (!b) return;
+    if (b.dataset.confirm !== "1") { b.dataset.confirm = "1"; b.textContent = "تأكيد؟"; setTimeout(() => { if (b.isConnected) { b.dataset.confirm = ""; b.textContent = "🗑️"; } }, 4000); return; }
+    const r = data.workTimeRanges.splice(Number(b.dataset.del), 1)[0];
+    if (r) data.workAttendance.forEach(x => { if (x.date >= r.from && x.date <= r.to && x.time) { if (x.status === "late") x.diffMinutes = computeLateDiff(x.time, x.date); if (x.status === "early_leave") x.diffMinutes = computeEarlyDiff(x.time, x.date); } });
+    saveData(); wtrRender(); renderWorkAttendanceList(document.getElementById("workDateInput").value); showToast("حُذفت الفترة");
+  });
 
   function setWorkAttendance(date, teacher, status, time) {
     const idx = data.workAttendance.findIndex(r => r.date === date && r.teacher === teacher);
     let diffMinutes = 0;
-    if (status === "late" && time) diffMinutes = computeLateDiff(time);
-    if (status === "early_leave" && time) diffMinutes = computeEarlyDiff(time);
+    if (status === "late" && time) diffMinutes = computeLateDiff(time, date);
+    if (status === "early_leave" && time) diffMinutes = computeEarlyDiff(time, date);
     const record = { date, teacher, status, time: time || "", diffMinutes };
     if (status === "" || status === "present") { if (idx > -1) data.workAttendance.splice(idx, 1); } // حاضر هو الافتراضي فلا يُخزَّن
     else if (idx > -1) { const o = data.workAttendance[idx]; if (o.status === status) { if (o.excuse) record.excuse = o.excuse; if (o.note) record.note = o.note; if (o.reason) record.reason = o.reason; } data.workAttendance[idx] = record; }
@@ -5141,7 +5258,7 @@
         }
 
         if (record && record.time && status !== "permission") {
-          const liveDiff = status === "late" ? computeLateDiff(record.time) : computeEarlyDiff(record.time);
+          const liveDiff = status === "late" ? computeLateDiff(record.time, record.date) : computeEarlyDiff(record.time, record.date);
           if (liveDiff > 0) {
             const badge = document.createElement("span");
             badge.className = "status-badge " + (status === "late" ? "late" : "early");
@@ -5184,7 +5301,7 @@
       .forEach(r => {
         let detail = "";
         if (r.status === "late" && r.time) {
-          const diff = computeLateDiff(r.time);
+          const diff = computeLateDiff(r.time, r.date);
           if (diff > 0) detail = "تأخر " + formatDurationBadge(diff);
         }
         list.push({
@@ -5439,12 +5556,12 @@
   function getMonitorTypeRecords(type) {
     if (type === "lineup") {
       return data.lineupAttendance.map(r => ({
-        record: r, date: r.date, day: dayNameFromDate(r.date), teacher: r.teacher, status: r.status, detail: ""
+        record: r, date: r.date, day: dayNameFromDate(r.date), teacher: r.teacher, status: r.status, detail: r.status === "permission" && r.reason ? "السبب: " + r.reason : ""
       }));
     }
     if (type === "recess" || type === "endOfDay") {
       return data.dutyAttendance.filter(r => r.type === type).map(r => ({
-        record: r, date: r.date || "", day: r.day, teacher: r.teacher, status: r.status, detail: ""
+        record: r, date: r.date || "", day: r.day, teacher: r.teacher, status: r.status, detail: r.status === "permission" && r.reason ? "السبب: " + r.reason : ""
       }));
     }
     if (type === "work") {
@@ -5452,7 +5569,7 @@
         let detail = "";
         if (r.status === "permission" && r.time) detail = "الساعة " + r.time;
         if ((r.status === "late" || r.status === "early_leave") && r.time) {
-          const diff = r.status === "late" ? computeLateDiff(r.time) : computeEarlyDiff(r.time);
+          const diff = r.status === "late" ? computeLateDiff(r.time, r.date) : computeEarlyDiff(r.time, r.date);
           detail = diff > 0 ? formatDurationBadge(diff) : "";
         }
         return { record: r, date: r.date, day: dayNameFromDate(r.date), teacher: r.teacher, status: r.status, detail };
@@ -5479,7 +5596,7 @@
     const sel = document.getElementById("mrStatusSelect");
     const options = type === "work"
       ? [["", "الكل"], ["present", "حاضر"], ["absent", "غياب"], ["late", "متأخر"], ["early_leave", "انصراف مبكر"], ["permission", "مستأذن"]]
-      : [["", "الكل"], ["present", "حاضر"], ["absent", "غائب"], ["late", "متأخر"], ["unavailable", "غير متواجد"]];
+      : [["", "الكل"], ["present", "حاضر"], ["absent", "غائب"], ["late", "متأخر"], ["unavailable", "غير متواجد"], ["permission", "مستأذن"]];
     sel.innerHTML = options.map(([v, l]) => `<option value="${v}">${l}</option>`).join("");
   }
 
@@ -7131,21 +7248,31 @@ ${bodyHTML}
     (cfg.extraButtons || []).forEach(b => mk(b.label, b.onClick));
     host.appendChild(bar);
   }
+  // خانة «سبب الاستئذان» للطابور والمناوبة
+  function permReasonInput(rec, getRec, after) {
+    const rs = document.createElement("input");
+    rs.type = "text"; rs.className = "work-reason"; rs.placeholder = "سبب الاستئذان"; rs.maxLength = 200;
+    rs.style.minWidth = "120px"; rs.value = rec && rec.reason ? rec.reason : "";
+    rs.addEventListener("change", () => { const r = getRec(); if (!r) return; const v = rs.value.trim(); if (v) r.reason = v; else delete r.reason; saveData(); try { if (after) after(); } catch (e) {} showToast("حُفظ سبب الاستئذان"); });
+    return rs;
+  }
+  const stWithReason = r => r && r.status ? statusLabel(r.status) + (r.status === "permission" && r.reason ? " (" + r.reason + ")" : "") : "";
   function ptActions(rec) { return rec ? getMonitorActionSummary({ record: rec }) : "—"; }
   function ptLineup(dateStr) {
-    const rows = data.teachers.map((name, i) => {
+    // الصفوف تُحسب عند الطباعة أيضًا ليظهر آخر ما كُتب (مثل سبب الاستئذان)
+    const build = () => data.teachers.map((name, i) => {
       const r = data.lineupAttendance.find(x => x.date === dateStr && x.teacher === name);
-      return [i + 1, name, r && r.status ? statusLabel(r.status) : "حاضر", ptActions(r)];
+      return [i + 1, name, r && r.status ? stWithReason(r) : "حاضر", ptActions(r)];
     });
-    ptRender("lineupTable", { title: "متابعة حضور الطابور — " + (dayNameFromDate(dateStr) || "") + " " + wpDateParts(dateStr).hijri, headers: ["م", "المعلم", "الحالة", "الإجراء المتخذ"], rows, date: dateStr, fileBase: "الطابور_" + dateStr, sheet: "الطابور" });
+    ptRender("lineupTable", { title: "متابعة حضور الطابور — " + (dayNameFromDate(dateStr) || "") + " " + wpDateParts(dateStr).hijri, headers: ["م", "المعلم", "الحالة", "الإجراء المتخذ"], get rows() { return build(); }, date: dateStr, fileBase: "الطابور_" + dateStr, sheet: "الطابور" });
   }
   function ptDuty(type, date) {
     const label = type === "recess" ? "مناوبة الفسحة" : "مناوبة نهاية الدوام";
     const day = dayNameFromDate(date) || "";
     const roster = dutyRosterFor(type, day);
-    const rows = roster.map((t, i) => { const r = dutyRecord(type, date, t); return [i + 1, t, r && r.status ? statusLabel(r.status) : "لم يُسجَّل", ptActions(r), ""]; });
+    const build = () => roster.map((t, i) => { const r = dutyRecord(type, date, t); return [i + 1, t, r && r.status ? stWithReason(r) : "لم يُسجَّل", ptActions(r), ""]; });
     ptRender(type === "recess" ? "recessTable" : "endTable", {
-      title: label + " — " + day + " " + wpDateParts(date).hijri, headers: ["م", "المعلم", "الحالة", "الإجراء المتخذ", "التوقيع"], rows,
+      title: label + " — " + day + " " + wpDateParts(date).hijri, headers: ["م", "المعلم", "الحالة", "الإجراء المتخذ", "التوقيع"], get rows() { return build(); },
       date, fileBase: (type === "recess" ? "مناوبة_الفسحة_" : "مناوبة_نهاية_الدوام_") + date, sheet: label,
       emptyText: day ? "لم يُضف مناوبون ليوم " + day : "التاريخ المحدد عطلة نهاية أسبوع",
       extraButtons: [{ label: "📅 طباعة جدول الأسبوع", onClick: () => {
@@ -7185,7 +7312,7 @@ ${bodyHTML}
       let diff = "—";
       if (r && r.time && r.status === "permission") diff = "استئذان الساعة " + r.time;
       if (r && r.time && (r.status === "late" || r.status === "early_leave")) {
-        const m = r.status === "late" ? computeLateDiff(r.time) : computeEarlyDiff(r.time);
+        const m = r.status === "late" ? computeLateDiff(r.time, r.date) : computeEarlyDiff(r.time, r.date);
         if (m > 0) diff = formatDurationBadge(m);
       }
       return [i + 1, name, r && r.status ? statusLabel(r.status) : "حاضر", r && r.time ? r.time : "—", diff, ptActions(r)];
@@ -7237,7 +7364,7 @@ ${bodyHTML}
     // المرجع الوحيد هو الحالة في «متابعة الدوام»: غياب ← سجل الغياب، مستأذن ← سجل الاستئذان
     backfillWorkStatus();
     if (mode === "late") {
-      data.workAttendance.filter(r => r.status === "late").forEach(r => add(r.date, r.teacher, r.time, "متابعة الدوام", r.diffMinutes || (r.time ? computeLateDiff(r.time) : 0)));
+      data.workAttendance.filter(r => r.status === "late").forEach(r => add(r.date, r.teacher, r.time, "متابعة الدوام", (r.time ? computeLateDiff(r.time, r.date) : r.diffMinutes || 0)));
       return out;
     }
     const want = mode === "absence" ? "absent" : "permission";
@@ -7436,8 +7563,8 @@ window.addEventListener("load",function(){var go=function(){setTimeout(function(
     if (sec.id === "work") {
       ev = data.workAttendance.filter(r => subs.includes(r.status)).map(r => {
         let minutes = 0;
-        if (r.status === "late") minutes = r.diffMinutes || (r.time ? computeLateDiff(r.time) : 0);
-        if (r.status === "early_leave") minutes = r.diffMinutes || (r.time ? computeEarlyDiff(r.time) : 0);
+        if (r.status === "late") minutes = r.time ? computeLateDiff(r.time, r.date) : (r.diffMinutes || 0);
+        if (r.status === "early_leave") minutes = r.time ? computeEarlyDiff(r.time, r.date) : (r.diffMinutes || 0);
         return { teacher: r.teacher, status: r.status, date: r.date, day: dayNameFromDate(r.date), minutes, note: r.time ? "الساعة " + r.time : "" };
       });
     } else if (sec.id === "lineup") {
@@ -8405,7 +8532,7 @@ ${contentEl.innerHTML}
   }
 
   function dutyDateInput(type) { return document.getElementById(type === "recess" ? "recessDateInput" : "endDateInput"); }
-  function dutyCurrentDate(type) { const el = dutyDateInput(type); if (!el.value) el.value = todayISODate(); return el.value; }
+  function dutyCurrentDate(type) { const el = dutyDateInput(type); if (!el.value) el.value = schoolDayISO(); return el.value; }
   function fillDutyDaySelect(type) { dutyCurrentDate(type); }
   function dutyRosterFor(type, day) {
     return (data.dutyRoster || []).filter(r => r.type === type && r.day === day).map(r => r.teacher).filter(t => data.teachers.includes(t));
@@ -8421,6 +8548,7 @@ ${contentEl.innerHTML}
   function setDutyAttendance(type, date, teacher, status) {
     const r = dutyEnsureRecord(type, date, teacher);
     r.status = status;
+    if (status !== "permission") delete r.reason;
     if (!status && !r.reminderSent && !r.alertSent && !r.inquiryFlagged && !r.inquirySent) data.dutyAttendance = data.dutyAttendance.filter(x => x !== r);
     saveData();
   }
@@ -8506,12 +8634,14 @@ ${contentEl.innerHTML}
         <option value="present" ${value === "present" ? "selected" : ""}>حاضر</option>
         <option value="absent" ${value === "absent" ? "selected" : ""}>غائب</option>
         <option value="late" ${value === "late" ? "selected" : ""}>متأخر</option>
-        <option value="unavailable" ${value === "unavailable" ? "selected" : ""}>غير متواجد</option>`;
+        <option value="unavailable" ${value === "unavailable" ? "selected" : ""}>غير متواجد</option>
+        <option value="permission" ${value === "permission" ? "selected" : ""}>مستأذن</option>`;
       sel.addEventListener("change", () => {
         setDutyAttendance(type, date, record.teacher, sel.value);
         renderDutyDay(type, date);
       });
       right.appendChild(sel);
+      if (value === "permission") right.appendChild(permReasonInput(record, () => dutyRecord(type, date, record.teacher)));
 
       if (record.reminderSent) {
         const sentBadge = document.createElement("span");
@@ -8908,9 +9038,9 @@ ${contentEl.innerHTML}
   }
   function wtPermTime(date, teacher) { const p = wtPermitted(date).find(x => x.teacher === teacher); return p ? p.time : ""; }
   // الحصة لم تنتهِ قبل وقت الاستئذان ← تحتاج منتظراً
-  function wtAfterPerm(period, time) {
+  function wtAfterPerm(period, time, date) {
     if (!time) return true;
-    const pt = (data.periodTimes || [])[period - 1];
+    const pt = (periodTimesFor(date || todayISODate()) || [])[period - 1];
     return !(pt && pt.end && pt.end <= time);
   }
   function wtDates() {
@@ -8973,7 +9103,7 @@ ${contentEl.innerHTML}
     if (!day || !wt.absent) return [];
     const ptime = wt.kind === "permission" ? wtPermTime(wt.date, wt.absent) : "";
     const dropped = (data.waitUncovered || []).filter(u => u.dropped && u.date === wt.date && u.absentTeacher === wt.absent);
-    return data.schedule.filter(s => s.day === day && s.teacher === wt.absent && (wt.kind !== "permission" || wtAfterPerm(Number(s.period), ptime)))
+    return data.schedule.filter(s => s.day === day && s.teacher === wt.absent && (wt.kind !== "permission" || wtAfterPerm(Number(s.period), ptime, wt.date)))
       .filter(s => !dropped.some(u => u.period === Number(s.period) && u.className === s.className))
       .map(s => ({ period: Number(s.period), className: s.className }))
       .sort((a, b) => a.period - b.period || String(a.className).localeCompare(String(b.className), "ar"));
@@ -8983,7 +9113,7 @@ ${contentEl.innerHTML}
     if (t === wt.absent) return wt.kind === "permission" ? "مستأذن" : "غائب";
     if (absentSet.has(t)) return "غائب";
     const pt = wtPermitted(wt.date).find(x => x.teacher === t);
-    if (pt && wtAfterPerm(sl.period, pt.time)) return "مستأذن";
+    if (pt && wtAfterPerm(sl.period, pt.time, wt.date)) return "مستأذن";
     if (getTeachersBusyAt(day, sl.period).includes(t)) return "لديه حصة";
     if (getSubTeachersAlreadyBooked(wt.date, sl.period, sl.className).filter(x => x).some(x => x === t)) {
       const r = data.coverageRecords.find(r => r.date === wt.date && r.period === sl.period && r.subTeacher === t && r.className !== sl.className);
@@ -9435,7 +9565,7 @@ ${contentEl.innerHTML}
       data.schedule.filter(x => x.day === day && x.teacher === w.teacher).forEach(x => {
         const p = Number(x.period);
         if (w.status === "permission") {
-          const pt = (data.periodTimes || [])[p - 1];
+          const pt = (periodTimesFor(w.date) || [])[p - 1];
           if (w.time && pt && pt.end && pt.end <= w.time) return;
         }
         add(w.teacher, w.date, p, x.className, w.status === "absent" ? "غياب" : "استئذان" + (w.time ? " (" + w.time + ")" : ""));
@@ -9759,9 +9889,10 @@ ${contentEl.innerHTML}
   // الوقت الرسمي المرجعي: بداية الدوام للتأخر، نهايته للانصراف المبكر، بداية الحصة للتأخر عن حصة
   function ioRefTime() {
     const t = ioEl("ioType").value;
-    if (t === "late") return (data.workTimes || {}).checkIn || "";
-    if (t === "early") return (data.workTimes || {}).checkOut || "";
-    if (t === "lateClass") { const pt = (data.periodTimes || [])[Number(ioEl("ioPeriod").value) - 1]; return pt ? pt.start : ""; }
+    const dd = ioEl("ioDate").value;
+    if (t === "late") return workTimesFor(dd).checkIn || "";
+    if (t === "early") return workTimesFor(dd).checkOut || "";
+    if (t === "lateClass") { const pt = periodTimesFor(dd)[Number(ioEl("ioPeriod").value) - 1]; return pt ? pt.start : ""; }
     return "";
   }
   function ioMinutes() {
@@ -10070,7 +10201,7 @@ ${contentEl.innerHTML}
     alLateHints();
     const notes = {}, excl = new Set(); alLate.forEach(r => { if (r.note) notes[r.date] = r.note; if (r.inc === false) excl.add(r.date); });
     alLate = (data.workAttendance || []).filter(r => r.teacher === t && r.status === "late" && r.date && (!f || r.date >= f) && (!to || r.date <= to))
-      .map(r => ({ date: r.date, minutes: r.time ? computeLateDiff(r.time) : (r.diffMinutes || 0), note: notes[r.date] || "", inc: !excl.has(r.date) }))
+      .map(r => ({ date: r.date, minutes: r.time ? computeLateDiff(r.time, r.date) : (r.diffMinutes || 0), note: notes[r.date] || "", inc: !excl.has(r.date) }))
       .filter(r => r.minutes > 0).sort((a, b) => a.date.localeCompare(b.date));
     alLateRender();
   }
@@ -10266,7 +10397,7 @@ ${contentEl.innerHTML}
   alEl("alGoSaved").addEventListener("click", () => setTimeout(() => alEl("alSavedHead").scrollIntoView({ behavior: "smooth", block: "start" }), 60));
   alEl("alType").addEventListener("change", () => {
     if (isLH(alEl("alType").value)) {
-      if (!alEl("alDate").value) { const td = todayISODate(); if (dayNameFromDate(td)) { alEl("alDay").value = dayNameFromDate(td); alFillDates(); alEl("alDate").value = td; } }
+      if (!alEl("alDate").value) { const td = schoolDayISO(); if (dayNameFromDate(td)) { alEl("alDay").value = dayNameFromDate(td); alFillDates(); alEl("alDate").value = td; } }
       alLateLoad();
     }
     alSync(true);
@@ -10659,7 +10790,7 @@ ${contentEl.innerHTML}
   const trkTeachersOf = date => data.teachers.filter(t => trkLessons(t, date).length).sort((a, b) => a.localeCompare(b, "ar"));
   const trkPers = date => { const s2 = new Set(); data.schedule.filter(x => x.day === dayNameFromDate(date)).forEach(x => s2.add(Number(x.period))); return [...s2].sort((a, b) => a - b); };
   let trkCur = "";
-  function trkOpen() { const d = document.getElementById("trkDate"); if (!d.value) d.value = todayISODate(); trkCur = ""; trkShow(); showView("trk"); window.scrollTo(0, 0); }
+  function trkOpen() { const d = document.getElementById("trkDate"); if (!d.value) d.value = schoolDayISO(); trkCur = ""; trkShow(); showView("trk"); window.scrollTo(0, 0); }
   function trkShow() {
     document.getElementById("trkFoldBox").style.display = trkCur ? "none" : "";
     document.getElementById("trkSheetBox").style.display = trkCur ? "" : "none";
@@ -10879,7 +11010,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
         ["العذر", r => r.record && ["absent", "late"].includes(r.status) ? (r.record.excuse === "yes" ? "بعذر" : r.record.excuse === "no" ? "بدون عذر" : "") : "", { edit: "excuse" }],
         ["ملاحظات", r => r.record && ["absent", "late"].includes(r.status) ? (r.record.note || "") : "", { edit: "note" }]],
       rows: (seg, ctx) => {
-        const recs = getMonitorTypeRecords("work").map(r => Object.assign({}, r, { lateMin: r.status === "late" ? ((r.record && r.record.time) ? computeLateDiff(r.record.time) : (r.record && r.record.diffMinutes) || 0) : 0 }));
+        const recs = getMonitorTypeRecords("work").map(r => Object.assign({}, r, { lateMin: r.status === "late" ? ((r.record && r.record.time) ? computeLateDiff(r.record.time, r.record.date) : (r.record && r.record.diffMinutes) || 0) : 0 }));
         if (seg !== "status") return recs.filter(r => r.status === seg);
         // جميع المعلمين: «حاضر» هو الافتراضي ويُستكمل لكل معلم في أيام الدوام
         const have = {}; recs.forEach(r => { have[r.date + "|" + r.teacher] = r; });
@@ -10895,9 +11026,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     perm: { t: "سجل الاستئذان", from: "متابعة الدوام", byTeacher: 1,
       cols: [C_DAY, C_DATE, C_GREG, C_T, ["وقت الاستئذان", r => (r.record && r.record.time) || String(r.detail || "").replace(/^الساعة\s*/, "") || "—"], ["سبب الاستئذان", r => (r.record && r.record.reason) || "—"], ["ملاحظات", r => (r.record && r.record.note) || "", { edit: "note" }]],
       rows: () => erWork(["permission"], { permission: "الاستئذان" }) },
-    duty: { t: "سجل المناوبة والإشراف", from: "المناوبة والطابور", segs: [["recess", "مناوبة الفسحة"], ["endOfDay", "مناوبة نهاية الدوام"], ["lineup", "متابعة الطابور"], ["all", "الكل"]],
-      cols: [C_DAY, C_DATE, C_GREG, C_T, C_SEC, C_ST, C_DET],
-      rows: seg => { const out = [], N = { recess: "مناوبة الفسحة", endOfDay: "مناوبة نهاية الدوام", lineup: "الطابور" }; ["recess", "endOfDay", "lineup"].filter(x => seg === "all" || seg === x).forEach(x => getMonitorTypeRecords(x).filter(r => r.status && r.status !== "present").forEach(r => out.push(Object.assign({ sec: N[x] }, r)))); return out; } },
+    duty: { t: "سجل المناوبة والإشراف", from: "المناوبة والطابور", dutyPages: 1, cols: [], rows: () => [] },
     lessons: { t: "سجل متابعة الحصص", from: "سجل متابعة الحصص", segs: [["absent", "الغياب عن الحصة"], ["late", "التأخر عن الحصة"], ["permission", "مستأذن"], ["all", "الكل"]],
       cols: [C_DAY, C_DATE, C_GREG, C_T, ["الحصة", r => shPer(Number(r.period)) || r.period], ["الفصل", r => r.className || "—"], C_ST],
       rows: seg => (data.attendance || []).filter(r => r.status && r.status !== "present" && (seg === "all" || r.status === seg)).map(r => Object.assign({ sec: statusLabel(r.status) }, r)) },
@@ -10972,6 +11101,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     ["erFilt", "erSrcBottom"].forEach(id => { document.getElementById(id).style.display = S.file ? "none" : ""; });
     document.querySelector("#erSrcBox .er-acts").style.display = S.file ? "none" : "";
     if (S.file) { erFileRender(); return; }
+    if (S.dutyPages) { erDutyRender(); return; }
     if (S.folders) { erInqRender(); return; }
     if (S.byTeacher) { erTeachRender(); return; }
     const secs = erSections(), multi = secs.length > 1, groups = erByDay(secs);
@@ -11103,6 +11233,106 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
       const m = erFileMeta(); if (!m) return; delete data.erFiles[erFileKey()]; saveData(); erFileDelChunks(m); erFileRender(); showToast("حُذف الملف");
     }
   });
+  // ===== سجل المناوبة والإشراف: أيقونة لكل نوع، وكل يوم في ورقة =====
+  const ER_DUTY = { lineup: ["🚩", "متابعة الطابور"], recess: ["☕", "مناوبة الفسحة"], endOfDay: ["🔚", "مناوبة نهاية الدوام"] };
+  const ER_DST = [["present", "حاضر"], ["late", "متأخر"], ["absent", "غائب"], ["unavailable", "غير متواجد"], ["permission", "مستأذن"]];
+  let erDutyType = "";
+  const erDRec = (type, d, t) => type === "lineup" ? data.lineupAttendance.find(r => r.date === d && r.teacher === t) : dutyRecord(type, d, t);
+  function erDutyDates(type) {
+    let f = document.getElementById("erFrom").value, t = document.getElementById("erTo").value;
+    if (f && t && t < f) [f, t] = [t, f];
+    let dates = [];
+    if (f || t) {
+      const a = f || t, b0 = t || f, today = todayISODate(), b = b0 < today ? b0 : today;
+      for (const x = new Date(a + "T12:00:00"); x <= new Date(b + "T12:00:00"); x.setDate(x.getDate() + 1)) { const iso = erIso(x.getTime()); if (dayNameFromDate(iso) && !isHoliday(iso)) dates.push(iso); }
+    } else {
+      dates = [...new Set((type === "lineup" ? data.lineupAttendance : data.dutyAttendance.filter(r => r.type === type)).map(r => r.date).filter(Boolean))].filter(d => dayNameFromDate(d) && !isHoliday(d));
+    }
+    return dates.sort();
+  }
+  function erDutyTeachers(type, d) {
+    const tf = document.getElementById("erTeacher").value;
+    let L = type === "lineup" ? data.teachers.slice() : dutyRosterFor(type, dayNameFromDate(d));
+    if (type !== "lineup") data.dutyAttendance.filter(r => r.type === type && r.date === d && r.status).forEach(r => { if (!L.includes(r.teacher)) L.push(r.teacher); });
+    if (tf) L = L.filter(t => t === tf);
+    return L.sort((a, b) => a.localeCompare(b, "ar"));
+  }
+  function erDutyRender() {
+    const box = document.getElementById("erSrcTable");
+    const icons = '<div class="er-dicons">' + Object.keys(ER_DUTY).map(k => '<button type="button" class="er-dicon' + (k === erDutyType ? " on" : "") + '" data-dt="' + k + '"><span>' + ER_DUTY[k][0] + "</span><b>" + ER_DUTY[k][1] + "</b></button>").join("") + "</div>" +
+      '<div class="er-inq-exp"><b>📤 تصدير المناوبات الثلاث</b><small>الطابور ثم الفسحة ثم نهاية الدوام، وقبل كل نوع ورقة فاصلة باسمه</small><div class="er-acts"><button type="button" class="export-btn" data-dx="print">🖨️ طباعة</button><button type="button" class="export-btn" data-dx="pdf">📄 PDF</button><button type="button" class="export-btn" data-dx="word">📝 Word</button></div></div>';
+    if (!erDutyType) { box.innerHTML = icons + '<div class="sched-hint" style="text-align:right;">اختر نوع المناوبة لعرض أوراقه.</div>'; return; }
+    const type = erDutyType, dates = erDutyDates(type);
+    const hint = '<div class="sched-hint" style="text-align:right;">' + (dates.length ? "عدد الأيام: <b>" + dates.length + "</b>" : "لا توجد أيام مسجّلة") + (document.getElementById("erFrom").value || document.getElementById("erTo").value ? "" : " — حدّد «من» و«إلى» لعرض كل أيام الدوام في الفترة") + "</div>";
+    box.innerHTML = icons + hint + dates.map(d => {
+      const q = wpDateParts(d), T = erDutyTeachers(type, d);
+      return '<div class="trk-paper" style="margin-top:10px;"><div class="trk-band"><img src="' + MOE_LOGO + '" alt=""><div><div>المملكة العربية السعودية — وزارة التعليم</div><div>الإدارة العامة للتعليم بالمنطقة الشرقية</div><b>مدرسة عطاء بن أبي رباح المتوسطة</b></div></div>' +
+        '<h3 class="trk-ttl">سجل المناوبة والإشراف — ' + ER_DUTY[type][1] + '</h3><div class="trk-when"><span><b>اليوم:</b> ' + acEsc(q.dayName || "") + "</span><span><b>التاريخ:</b> " + acEsc(q.hijri) + "</span><span><b>الموافق:</b> " + acEsc(erG(d)) + "</span></div>" +
+        (T.length ? '<div style="overflow-x:auto;"><table class="trk-tbl er-dtbl"><thead><tr><th>م</th><th>المعلم</th><th>الحالة</th><th>العذر</th><th>ملاحظات</th></tr></thead><tbody>' + T.map((t, i) => {
+          const r = erDRec(type, d, t) || {}, st = r.status || "present", bad = st !== "present";
+          return '<tr data-d="' + d + '" data-t="' + acEsc(t) + '"><td>' + (i + 1) + '</td><td class="tn">' + acEsc(t) + '</td><td><select class="er-dst st-' + st + '" data-f="status">' + ER_DST.map(x => '<option value="' + x[0] + '"' + (x[0] === st ? " selected" : "") + ">" + x[1] + "</option>").join("") + "</select></td><td>" +
+            (st === "permission" ? '<input type="text" class="er-dnote" data-f="reason" placeholder="سبب الاستئذان" value="' + acEsc(r.reason || "") + '">' : bad ? '<select class="er-dex" data-f="excuse"><option value="">اختر</option><option value="yes"' + (r.excuse === "yes" ? " selected" : "") + '>بعذر</option><option value="no"' + (r.excuse === "no" ? " selected" : "") + ">بدون عذر</option></select>" : "") + '</td><td><input type="text" class="er-dnote" data-f="note" placeholder="…" value="' + acEsc(r.note || "") + '"></td></tr>';
+        }).join("") + "</tbody></table></div>" : '<div class="empty-state">لا يوجد مناوبون في هذا اليوم</div>') +
+        '<div class="trk-sig"><div><b>وكيل الشؤون التعليمية</b><span>موسى آل ضاحي</span></div><div><b>مدير المدرسة</b><span>موسى آل عبيد</span></div></div></div>';
+    }).join("");
+  }
+  document.getElementById("erSrcTable").addEventListener("click", e => {
+    const x = e.target.closest("[data-dx]");
+    if (x) { const d = erDutyAllBuild(); if (!d) return; if (x.dataset.dx === "print") wpOpenDoc(wpShellDoc(d.title, d.pages, {}), d.title.replace(/ /g, "_")); else erExport(x.dataset.dx, d.title, d.pages, false); return; }
+    const b = e.target.closest("[data-dt]"); if (!b) return; erDutyType = b.dataset.dt; erDutyRender();
+  });
+  // تصدير الأنواع الثلاثة: التعريف مرة واحدة، ثم لكل نوع ورقة فاصلة ثم أوراق أيامه
+  function erDutyAllBuild() {
+    const keep = erDutyType, parts = [];
+    try {
+      Object.keys(ER_DUTY).forEach(k => {
+        erDutyType = k; const dates = erDutyDates(k); if (!dates.length) return;
+        const d = erDutyBuild(true);
+        const sep = `<section class="page gen">${wpBandHTML()}<div style="height:150px;"></div><div style="text-align:center; border:3px double #174a59; border-radius:18px; padding:34px 14px; margin:0 30px; color:#174a59;"><div style="font-size:22px; font-weight:700;">سجل المناوبة والإشراف</div><div style="font-size:40px; font-weight:800; margin:14px 0;">${ER_DUTY[k][0]} ${wpEsc(ER_DUTY[k][1])}</div><div style="font-size:17px; color:#4b5b58;">عدد الأيام: ${dates.length}</div></div></section>`;
+        parts.push(sep + d.pages);
+      });
+    } finally { erDutyType = keep; }
+    if (!parts.length) { showToast("لا توجد أيام للتصدير — حدّد الفترة أو سجّل الحالات أولاً"); return null; }
+    const title = "سجل المناوبة والإشراف";
+    return { title, pages: erIntroPage(title, (data.erIntro || {})[erIntroKey()] || "") + parts.join("") };
+  }
+  document.getElementById("erSrcTable").addEventListener("change", e => {
+    const el = e.target.closest(".er-dtbl [data-f]"); if (!el) return;
+    const tr = el.closest("tr"), d = tr.dataset.d, t = tr.dataset.t, type = erDutyType, f = el.dataset.f, v = el.value.trim();
+    if (f === "status") {
+      if (type === "lineup") setLineupAttendance(d, t, v); else setDutyAttendance(type, d, t, v === "present" ? "" : v);
+      if (v === "present") { const r = erDRec(type, d, t); if (r) { delete r.excuse; saveData(); } }
+      erDutyRender(); return;
+    }
+    let r = erDRec(type, d, t);
+    if (!r) {
+      if (!v) return;
+      if (type === "lineup") { r = { date: d, teacher: t, status: "present" }; data.lineupAttendance.push(r); }
+      else r = dutyEnsureRecord(type, d, t);
+    }
+    if (v) r[f] = v; else delete r[f];
+    if (type === "lineup" && r.status === "present" && !r.note && !r.excuse) data.lineupAttendance = data.lineupAttendance.filter(x => x !== r);
+    if (type !== "lineup" && !r.status && !r.note && !r.excuse && !r.reminderSent && !r.alertSent && !r.inquiryFlagged && !r.inquirySent) data.dutyAttendance = data.dutyAttendance.filter(x => x !== r);
+    saveData(); showToast("تم الحفظ");
+  });
+  function erDutyBuild(noIntro) {
+    if (!erDutyType) { showToast("اختر نوع المناوبة أولاً (الطابور أو الفسحة أو نهاية الدوام)"); return null; }
+    const type = erDutyType, dates = erDutyDates(type);
+    if (!dates.length) { showToast("لا توجد أيام للطباعة"); return null; }
+    const title = "سجل المناوبة والإشراف — " + ER_DUTY[type][1];
+    const B = "border:1.5px solid #174a59; padding:7px 4px; text-align:center; font-size:14px;", H = B + " background:#174a59; color:#fff; font-weight:700;";
+    const col = st => ({ present: "#146c3a", late: "#9a5b00", absent: "#b42318", unavailable: "#b42318", permission: "#1f5fa8" })[st] || "#1d2b2a";
+    const pages = dates.map(d => {
+      const q = wpDateParts(d), T = erDutyTeachers(type, d);
+      const rows = T.map((t, i) => { const r = erDRec(type, d, t) || {}, st = r.status || "present"; const ex = st === "present" ? "" : st === "permission" ? (r.reason ? "السبب: " + r.reason : "") : r.excuse === "yes" ? "بعذر" : r.excuse === "no" ? "بدون عذر" : "";
+        return `<tr><td style="${B}">${i + 1}</td><td style="${B} font-weight:700;">${wpEsc(t)}</td><td style="${B} font-weight:700; color:${col(st)};">${wpEsc(statusLabel(st))}</td><td style="${B}">${wpEsc(ex)}</td><td style="${B}">${wpEsc(r.note || "")}</td></tr>`; }).join("");
+      return `<section class="page gen">${wpBandHTML()}<h2>${wpEsc(title)}</h2>
+        <div style="display:flex; justify-content:space-between; gap:10px; border:1.5px solid #174a59; border-radius:8px; padding:7px 12px; margin:4px 0 10px; font-size:15px; background:#f3f8f9;"><div><b style="color:#174a59;">اليوم:</b> ${wpEsc(q.dayName || "")}</div><div><b style="color:#174a59;">التاريخ:</b> ${wpEsc(q.hijri)}</div><div><b style="color:#174a59;">الموافق:</b> ${wpEsc(erG(d))}</div></div>
+        ${T.length ? `<table style="width:100%; border-collapse:collapse;"><tr><th style="${H} width:7%">م</th><th style="${H} width:28%">المعلم</th><th style="${H} width:16%">الحالة</th><th style="${H} width:14%">العذر</th><th style="${H}">ملاحظات</th></tr>${rows}</table>` : `<div style="text-align:center; padding:10px; border:1px dashed #b9c9c6;">لا يوجد مناوبون في هذا اليوم</div>`}
+        <div style="display:flex; justify-content:space-between; margin:26px 20px 0; font-size:15px;"><div style="text-align:center;"><b style="color:#174a59;">وكيل الشؤون التعليمية</b><br>موسى آل ضاحي<br>التوقيع: ....................</div><div style="text-align:center;"><b style="color:#174a59;">مدير المدرسة</b><br>موسى آل عبيد<br>التوقيع: ....................</div></div></section>`;
+    }).join("");
+    return { title, pages: (noIntro ? "" : erIntroPage("سجل المناوبة والإشراف", (data.erIntro || {})[erIntroKey()] || "")) + pages, landscape: false };
+  }
   // سجل لكل معلم: جدول مستقل أعلاه اسم المعلم، وكل حالة في صف (في الطباعة: كل معلم في ورقة)
   function erTeachGroups() {
     const S = ER_SRC[document.getElementById("erNewType").value.slice(4)];
@@ -11182,6 +11412,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   function erSrcBuild() {
     const k = document.getElementById("erNewType").value.slice(4); if (!ER_SRC[k]) return null;
     if (ER_SRC[k].folders) return erInqBuild("");
+    if (ER_SRC[k].dutyPages) return erDutyBuild();
     if (ER_SRC[k].byTeacher) return erTeachBuild();
     const secs = erSections(), { S, f, t, tf } = secs[0], multi = secs.length > 1;
     if (!secs.some(x => x.rows.length)) { showToast("لا توجد سجلات للطباعة"); return null; }
@@ -11371,7 +11602,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     sel.innerHTML = '<option value="">اختر</option>' + data.teachers.slice().sort((a, b) => a.localeCompare(b, "ar")).map(t => '<option value="' + acEsc(t) + '">' + acEsc(t) + "</option>").join("");
     if (data.teachers.includes(cur)) sel.value = cur;
     const d = document.getElementById("tkDate");
-    if (!d.value) d.value = todayISODate();
+    if (!d.value) d.value = schoolDayISO();
     tkDateHint();
     showView("taklif");
   }
@@ -11407,7 +11638,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   document.getElementById("tkClear").addEventListener("click", () => {
     ["tkSubject", "tkTeacher"].forEach(id => document.getElementById(id).value = "");
     document.getElementById("tkBody").value = TK_DEFAULT_BODY;
-    document.getElementById("tkDate").value = todayISODate(); tkDateHint();
+    document.getElementById("tkDate").value = schoolDayISO(); tkDateHint();
   });
   function ackOpenView() {
     ackUi.archive = false;
@@ -11545,7 +11776,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   document.getElementById("lvClearDate").addEventListener("click", () => { lv.from = ""; lv.to = ""; lvSyncDates(); lvRender(); });
   document.getElementById("openClassAttendanceLog").addEventListener("click", () => {
     const dateInput = document.getElementById("calDateInput");
-    if (!dateInput.value) dateInput.value = todayISODate();
+    if (!dateInput.value) dateInput.value = schoolDayISO();
     autoFillPresentDefaults(dateInput.value);
     renderClassAttendanceLog(dateInput.value);
     showView("classAttendanceLog");
@@ -11637,7 +11868,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
 
   function openCoverageView(prefill) {
     const dateInput = document.getElementById("covDateInput");
-    if (!dateInput.value) dateInput.value = todayISODate();
+    if (!dateInput.value) dateInput.value = schoolDayISO();
     fillCoverageStaticSelects();
     if (prefill) {
       if (prefill.absentTeacher) { document.getElementById("covAbsentInput").value = prefill.absentTeacher; document.getElementById("covPermInput").value = ""; }
@@ -11661,7 +11892,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     const day = dayNameFromDate(date);
     if (!day) return { day: null, items: [] };
     const abs = new Set(wtAbsentees(date)), perm = wtPermitted(date);
-    const unavail = (t, p) => abs.has(t) || perm.some(x => x.teacher === t && wtAfterPerm(p, x.time));
+    const unavail = (t, p) => abs.has(t) || perm.some(x => x.teacher === t && wtAfterPerm(p, x.time, date));
     const entries = data.schedule.filter(x => x.day === day).map(x => ({ period: Number(x.period), className: x.className, teacher: x.teacher }));
     const state = {}, occ = {}, absentOf = {};
     entries.forEach(e => {
@@ -12026,7 +12257,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
       const day = shPlan.day, abs = new Set(wtAbsentees(date)), perm = wtPermitted(date);
       data.schedule.filter(e => e.day === day).forEach(e => {
         const t = e.teacher, per = Number(e.period);
-        const st = abs.has(t) ? "غائب" : perm.some(x => x.teacher === t && wtAfterPerm(per, x.time)) ? "مستأذن" : "";
+        const st = abs.has(t) ? "غائب" : perm.some(x => x.teacher === t && wtAfterPerm(per, x.time, date)) ? "مستأذن" : "";
         if (st) { put(t, per, e.className, st); }
       });
       Object.keys(grid).forEach(t => affected.add(t));
@@ -12159,7 +12390,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     }).join("");
     wpOpenDoc(wpShellDoc("ترحيل الحصص - " + date, pages, { fitOnePage: true }), "ترحيل_الحصص_" + date);
   }
-  document.getElementById("openShift").addEventListener("click", () => { const d = document.getElementById("shDate"); if (!d.value) d.value = todayISODate(); shRender(); showView("shift"); });
+  document.getElementById("openShift").addEventListener("click", () => { const d = document.getElementById("shDate"); if (!d.value) d.value = schoolDayISO(); shRender(); showView("shift"); });
   document.getElementById("shDate").addEventListener("change", shRender);
   document.getElementById("shList").addEventListener("change", e => {
     const sel = e.target.closest("select.sh-man"); if (!sel || !shPlan) return;
@@ -12331,11 +12562,11 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   document.getElementById("openWorkTile").addEventListener("click", () => {
     fillWorkTimeInputs();
     const dateInput = document.getElementById("workDateInput");
-    if (!dateInput.value) dateInput.value = todayISODate();
+    if (!dateInput.value) dateInput.value = schoolDayISO();
     renderWorkAttendanceList(dateInput.value);
     showView("workAttendance");
   });
-  document.getElementById("workDateInput").addEventListener("change", e => renderWorkAttendanceList(e.target.value));
+  document.getElementById("workDateInput").addEventListener("change", e => { renderWorkAttendanceList(e.target.value); wtrRender(); });
   document.getElementById("workCheckInInput").addEventListener("change", e => {
     data.workTimes.checkIn = e.target.value;
     saveData();
@@ -12351,7 +12582,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
 
   document.getElementById("openLineupTile").addEventListener("click", () => {
     const dateInput = document.getElementById("lineupDateInput");
-    if (!dateInput.value) dateInput.value = todayISODate();
+    if (!dateInput.value) dateInput.value = schoolDayISO();
     renderLineupList(dateInput.value);
     showView("lineup");
   });
@@ -12492,7 +12723,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   document.getElementById("inqDaySelect").addEventListener("change", renderInquiryResult);
   (function () {
     const di = document.getElementById("inqDateInput");
-    if (!di.value) di.value = todayISODate();
+    if (!di.value) di.value = schoolDayISO();
     di.addEventListener("change", () => {
       const d = dayNameFromDate(di.value);
       if (d) document.getElementById("inqDaySelect").value = d;
@@ -12543,7 +12774,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
 
   loadData();
   fillStaticSelects();
-  document.getElementById("quickDateInput").value = todayISODate();
+  document.getElementById("quickDateInput").value = schoolDayISO();
   fillQuickClassSelect();
   fillInquirySelects();
   renderInquiryResult();
@@ -12586,7 +12817,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-18-14";
+window.APP_BUILD = "2026-11-20-3";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
