@@ -142,6 +142,15 @@
   .tile.monitoring .tile-icon { background: var(--board-5); }
   .tile.duty-manage .tile-icon { background: var(--board-6); }
   .tile.coverage .tile-icon { background: var(--board-7); }
+  .tile.admin-staff .tile-icon { background: var(--board-3); }
+  .as-form { display: flex; flex-direction: column; gap: 7px; border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 10px; margin-bottom: 12px; }
+  .as-form label { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; font-weight: 700; color: #174a59; }
+  .as-form input, .as-form select { font: inherit; font-size: 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+  .as-item { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 9px 11px; margin-bottom: 8px; }
+  .as-item .as-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .as-item b { color: #174a59; font-size: 15px; } .as-item .as-role { font-size: 12.5px; color: #8a5200; font-weight: 700; }
+  .as-item .as-meta { font-size: 12.5px; color: #555; margin-top: 4px; } .as-item .as-acts { display: flex; gap: 6px; }
+  .as-item .as-acts button { border: 1px solid var(--line); background: #f7fbfa; border-radius: 8px; padding: 4px 9px; font: inherit; font-size: 12.5px; cursor: pointer; }
   .tile-icon svg { width: 13px; height: 13px; stroke: var(--brass-soft); fill: none; stroke-width: 2; }
 
   /* ===== ألوان مميزة ومتناسقة للأيقونات ===== */
@@ -596,6 +605,18 @@
   .ph-tbl th { background: #174a59; color: #fff; padding: 6px 4px; }
   .ph-tbl td { border: 1px solid #c9d6d3; padding: 5px 4px; text-align: center; }
   .ph-tbl select { font: inherit; font-size: 12px; width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 4px; background: #fff; }
+  .apw { margin-top: 10px; border: 1px solid #c9dcd8; border-radius: 10px; background: #f7fbfa; padding: 8px 10px; font-size: 13px; color: #174a59; }
+  .apw-ed { border: 0; background: none; color: #1f5fa8; font: inherit; font-size: 12.5px; cursor: pointer; text-decoration: underline; }
+  .apw-form { display: flex; flex-direction: column; gap: 6px; }
+  .apw-form label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 700; }
+  .apw-form input, .apw-form select { font: inherit; font-size: 13px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+  .apw-st { margin-top: 8px; border: 1px dashed #c9b27a; background: #fffaf0; border-radius: 10px; padding: 8px 10px; font-size: 13px; font-weight: 700; color: #8a5200; }
+  .apw-done { margin-top: 8px; border: 1.5px solid #2f9e5a; background: #e9f7ee; border-radius: 10px; padding: 9px 11px; font-size: 14px; color: #146c3a; display: flex; flex-direction: column; gap: 6px; }
+  .apw-done small { font-size: 12px; color: #2b6b45; } .apw-saved { font-size: 12.5px; color: #174a59; font-weight: 700; }
+  .apw-done .export-btn { align-self: flex-start; width: auto; flex: none; padding: 6px 14px; display: inline-block; margin-left: 6px; }
+  .er-pf { margin-top: 8px; border-top: 1px dashed #c9dcd8; padding-top: 6px; } .er-pf-i { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; padding: 4px 0; }
+  .er-pf-i .export-btn { width: auto; flex: none; padding: 4px 10px; font-size: 12.5px; }
+  .apw-st.ok { border-color: #9fd3b0; background: #eef8f1; color: #146c3a; } .apw-st img { height: 50px; background: #fff; border: 1px solid #d6e2df; border-radius: 8px; padding: 2px; margin-top: 6px; }
   .ph-link { margin-top: 10px; border: 1px dashed #9cc3cc; border-radius: 10px; padding: 8px 10px; font-size: 13px; font-weight: 700; color: #174a59; background: #f3f9fa; }
   .ph-link img { height: 54px; background: #fff; border: 1px solid #d6e2df; border-radius: 8px; padding: 2px; margin-top: 6px; }
   .ph-sub { font-weight: 800; color: #174a59; margin: 10px 0 6px; font-size: 13.5px; }
@@ -1046,8 +1067,16 @@
         <div class="tile-icon">
           <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/></svg>
         </div>
-        <h2>إدارة المعلمين</h2>
+        <h2>الهيئة التعليمية</h2>
         <div class="count" id="teacherCount">0 معلم</div>
+      </button>
+
+      <button class="tile admin-staff" id="openAdminStaff">
+        <div class="tile-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 13h18"/></svg>
+        </div>
+        <h2>بيانات الهيئة الإدارية</h2>
+        <div class="count" id="adminStaffCount">0 موظف</div>
       </button>
 
       <button class="tile classes" id="openClasses">
@@ -1211,13 +1240,31 @@
     </div>
   </div>
 
+  <!-- Admin staff -->
+  <div class="detail" id="adminStaffView">
+    <div class="back-row">
+      <button class="back-btn" data-back><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
+    </div>
+    <div class="detail-header"><h2>بيانات الهيئة الإدارية</h2><span class="count-pill" id="asPill">0 موظف</span></div>
+    <div class="sched-hint" style="margin-bottom:10px;">المدير والوكلاء وبقية الهيئة الإدارية. السجل المدني والجوال يُستخدمان لإرسال الروابط (مثل اعتماد الاستئذان لوكيل الشؤون التعليمية).</div>
+    <div class="as-form" id="asForm">
+      <label>الاسم<input type="text" id="asName" maxlength="60" placeholder="اسم الموظف"></label>
+      <label>العمل الحالي<select id="asRole"></select></label>
+      <label id="asRoleOtherL" style="display:none;">اكتب العمل<input type="text" id="asRoleOther" maxlength="40"></label>
+      <label>السجل المدني<input type="text" id="asCivil" inputmode="numeric" maxlength="10"></label>
+      <label>رقم الجوال<input type="tel" id="asPhone" maxlength="15" placeholder="05xxxxxxxx"></label>
+      <div class="export-row"><button type="button" class="export-btn" id="asSave">➕ إضافة</button><button type="button" class="export-btn" id="asCancel" style="display:none;">إلغاء التعديل</button></div>
+    </div>
+    <div id="asList"></div>
+  </div>
+
   <!-- Teachers detail -->
   <div class="detail teachers" id="teachersView">
     <div class="back-row">
       <button class="back-btn" data-back><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الرئيسية</button>
     </div>
     <div class="detail-header">
-      <h2>إدارة المعلمين</h2>
+      <h2>الهيئة التعليمية</h2>
       <div style="display:flex; align-items:center; gap:8px;">
         <button class="settings-btn" id="importTeachersBtn" aria-label="استيراد من ملف" title="استيراد أسماء وأرقام جوال من ملف">
           <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 21h14"/></svg>
@@ -2808,6 +2855,7 @@
     const hashes = ((f.hashes || {}).mapValue || {}).fields || {};
     const mode = (f.mode || {}).stringValue || "";
     const ropts = (((f.options || {}).arrayValue || {}).values || []).map(v => v.stringValue || "").filter(Boolean);
+    const optLabel = (f.optLabel || {}).stringValue || "", replyLabel = (f.replyLabel || {}).stringValue || "", sendLabel = (f.sendLabel || {}).stringValue || "";
     const locked = (f.locked || {}).booleanValue === true, lockedSt = (f.lockedStatus || {}).stringValue || "";
     const atts = (((f.attachments || {}).arrayValue || {}).values || []).map(v => { const m = (v.mapValue || {}).fields || {}; return { name: (m.name || {}).stringValue || "مرفق", type: (m.type || {}).stringValue || "", data: (m.data || {}).stringValue || "" }; }).filter(a => a.data);
     const attHtml = atts.length ? '<div class="ack-atts"><div class="ack-atts-h">📎 المرفقات (' + atts.length + ')</div>' + atts.map((a, i) => /^image\//.test(a.type)
@@ -2819,14 +2867,14 @@
       '<div class="ack-body">' + esc(body).replace(/\n/g, "<br>") + '</div>' + attHtml +
       (mode === "reply"
         ? '<div class="ack-form">' +
-          (ropts.length ? '<label>اختر سبب الغياب</label><div class="ack-opts">' + ropts.map((o, i) => '<label class="ack-opt"><input type="radio" name="ackOpt" value="' + i + '"><span>' + esc(o) + "</span></label>").join("") +
-            '<label class="ack-opt"><input type="radio" name="ackOpt" value=""><span>بدون اختيار</span></label></div>' : "") +
-          '<label for="ackReply">' + (ropts.length ? "إفادة إضافية (اختياري)" : "إفادة المعلم") + '</label>' +
+          (ropts.length ? '<label>' + esc(optLabel || "اختر سبب الغياب") + '</label><div class="ack-opts">' + ropts.map((o, i) => '<label class="ack-opt"><input type="radio" name="ackOpt" value="' + i + '"><span>' + esc(o) + "</span></label>").join("") +
+            (optLabel ? "" : '<label class="ack-opt"><input type="radio" name="ackOpt" value=""><span>بدون اختيار</span></label>') + '</div>' : "") +
+          '<label for="ackReply">' + esc(replyLabel || (ropts.length ? "إفادة إضافية (اختياري)" : "إفادة المعلم")) + '</label>' +
           '<textarea id="ackReply" rows="' + (ropts.length ? 3 : 5) + '" maxlength="2800" placeholder="اكتب إفادتك هنا…"></textarea>' +
           '<div class="ack-pad"><div class="ack-pad-h">✍️ التوقيع — وقّع بإصبعك داخل المربع</div><canvas id="ackPad"></canvas><button type="button" id="ackPadClear" class="ack-pad-clear">🧽 مسح التوقيع</button></div>' +
           '<label for="ackCivil">أدخل رقم السجل المدني للتأكيد</label>' +
           '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
-          '<button id="ackBtn">📤 إرسال الإفادة</button><div class="ack-msg" id="ackMsg"></div></div>'
+          '<button id="ackBtn">' + esc(sendLabel || "📤 إرسال الإفادة") + '</button><div class="ack-msg" id="ackMsg"></div></div>'
         : mode === "wait"
         ? '<div class="ack-form"><label for="ackCivil">أدخل رقم السجل المدني ثم اختر موافقتك على حصة الانتظار</label>' +
           '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
@@ -3166,6 +3214,13 @@
     if (!Array.isArray(out.officialRegs)) out.officialRegs = [];
     if (!out.erIntro || typeof out.erIntro !== "object" || Array.isArray(out.erIntro)) out.erIntro = {};
     if (!out.erFiles || typeof out.erFiles !== "object" || Array.isArray(out.erFiles)) out.erFiles = {};
+    if (!out.approvers || typeof out.approvers !== "object" || Array.isArray(out.approvers)) out.approvers = {};
+    if (!Array.isArray(out.adminStaff)) {
+      out.adminStaff = [{ id: "as1", name: "موسى آل عبيد", role: "مدير المدرسة", civil: "", phone: "" }, { id: "as2", name: "موسى آل ضاحي", role: "وكيل الشؤون التعليمية", civil: "", phone: "" }];
+      const ap = out.approvers.perm;
+      if (ap && ap.name) { const m = out.adminStaff.find(x => x.role === "وكيل الشؤون التعليمية"); Object.assign(m, { name: ap.name, civil: ap.civil || "", phone: ap.phone || "" }); }
+    }
+    out.adminStaff = out.adminStaff.filter(x => x && typeof x === "object" && x.name).map((x, i) => ({ id: String(x.id || "as" + Date.now().toString(36) + i), name: String(x.name), role: String(x.role || ""), civil: String(x.civil || ""), phone: String(x.phone || "") }));
     if (!Array.isArray(out.prepMadFollow)) out.prepMadFollow = [];
     if (!Array.isArray(out.prepDays)) out.prepDays = [...new Set(out.prepMadFollow.map(r => r.date).filter(Boolean))];
     // دمج بيانات النسخة السابقة (سجلان منفصلان) في سجل واحد
@@ -10142,7 +10197,7 @@ ${contentEl.innerHTML}
   function ioEditNote() {
     const r = ioCurId && (data.officialInq || []).find(x => x.id === ioCurId);
     ioEl("ioEditing").style.display = r ? "" : "none";
-    ioEl("ioEditing").textContent = r ? "✏️ تعدّل مساءلة محفوظة: " + r.title + " — " + r.teacher + " — " + (r.hijri || "") + " (اضغط «مساءلة جديدة» لبدء مساءلة أخرى)" : "";
+    ioEl("ioEditing").textContent = r ? "✏️ تعدّل مساءلة محفوظة: " + r.title + " — " + r.teacher + " — " + (r.hijri || "") + (r.editAt ? " — بعد الحفظ أرسل الرابط للمعلم من جديد، ثم أرسلها للمدير بعد توقيعه." : " (اضغط «مساءلة جديدة» لبدء مساءلة أخرى)") : "";
   }
   function ioPrintRec(v, asPage) {
     const T = Object.assign({}, IO_TYPES[v.type] || { cls: false }, { title: ioTitleOf(v) }), body = v.body || "";
@@ -10182,11 +10237,13 @@ ${contentEl.innerHTML}
       </div>
       <div style="margin:14px 4px 0; border:1.5px solid #174a59; border-radius:8px; padding:10px 14px; break-inside:avoid;">
         <div style="font-weight:700; color:#174a59; margin-bottom:8px;">رأي مدير المدرسة:</div>
+        ${(() => { const mg = rsrc && rsrc.mgrAt ? rsrc : null; if (!mg) return ""; const dec = String(mg.mgrReply || "").split("\n"), note = dec.slice(1).join(" ").trim(), mp = (data.adminStaff || []).find(x => x.role === "مدير المدرسة");
+          return `<div style="font-size:15px; line-height:2;">${apprOptions("inq", v, "mgr").map(o => (dec[0] === o ? "( ✓ ) " : "( &nbsp; ) ") + wpEsc(o)).join(" &nbsp;&nbsp;&nbsp; ")}</div>${note ? '<div style="font-size:15px; line-height:2; border-bottom:1.5px dotted #174a59;">' + wpEsc(note) + "</div>" : ""}<div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:15px;"><div><b style="color:#174a59;">مدير المدرسة:</b> ${wpEsc(mp ? mp.name : "موسى آل عبيد")}</div><div>التوقيع: ${mg.mgrSig ? '<img src="' + mg.mgrSig + '" alt="توقيع" style="height:44px; vertical-align:middle;">' : "...................."}</div><div>التاريخ: ${wpEsc(wpDateParts(String(mg.mgrAt).slice(0, 10)).hijri || "")}</div></div></div><div style="display:none">`; })()}
         <div style="font-size:15px; line-height:2;">${T.ifada ? "( &nbsp; ) الإفادة مقبولة &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) الإفادة غير مقبولة، ويرجى عمل الآتي:" : v.type === "absence" ? "( &nbsp; ) العذر مقبول &nbsp;&nbsp;&nbsp; ( &nbsp; ) العذر غير مقبول ويتم الحسم &nbsp;&nbsp;&nbsp; ( &nbsp; ) تُحسب من إجازة الموظف الاضطرارية" : "( &nbsp; ) العذر مقبول &nbsp;&nbsp;&nbsp;&nbsp; ( &nbsp; ) العذر غير مقبول، وتعتبر ساعات مهدرة"}</div>
         ${T.ifada ? line + line : ""}${line}
         <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:15px;">
-          <div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
-        </div>
+          <div><b style="color:#174a59;">مدير المدرسة:</b> ${wpEsc(((data.adminStaff || []).find(x => x.role === "مدير المدرسة") || {}).name || "موسى آل عبيد")}</div><div>التوقيع: ....................</div><div>التاريخ: ......./......./.......</div>
+        </div>${rsrc && rsrc.mgrAt ? "</div>" : ""}
       </div>`;
     if (asPage) return wpGenericPage(T.title, inner, date);
     wpOpenDoc(wpShellDoc(T.title, wpGenericPage(T.title, inner, date), { fitOnePage: true }), T.title.replace(/ /g, "_") + (v.teacher ? "_" + v.teacher : ""));
@@ -10802,6 +10859,147 @@ ${contentEl.innerHTML}
     })().catch(e => { console.error(e); try { if (w && !w.closed) w.close(); } catch (x) {} showToast(/permission/i.test((e && (e.code || e.message)) || "") ? "رفضت السحابة إنشاء الرابط — تحقق من قواعد Firebase" : "تعذر إنشاء الرابط — تحقق من الاتصال"); });
   }
   function linkIds(r) { return [...new Set([...(r.ackIds || []), r.ackId].filter(Boolean))]; }
+  /* ===== إرسال الرابط للمعتمِد (الوكيل/المدير) بعد توقيع المعلم ===== */
+  const APPR_P = who => who === "mgr" ? "mgr" : "appr";
+  const APPR_ROLE = who => who === "mgr" ? "مدير المدرسة" : "وكيل الشؤون التعليمية";
+  const apprIds = (r, who) => { const P = APPR_P(who); return [...new Set([...(r[P + "AckIds"] || []), r[P + "AckId"]].filter(Boolean))]; };
+  const apprAllIds = r => [...apprIds(r, "dep"), ...apprIds(r, "mgr")];
+  const apprGet = (kind, who) => (data.adminStaff || []).find(x => x.role === APPR_ROLE(who)) || null;
+  // نموذج تعريف المعتمِد: يظهر أسفل الزر أول مرة، ويمكن تعديله لاحقًا
+  function apprWidget(kind, onSaved) {
+    const a = apprGet(kind), id = "apw_" + kind;
+    if (a && !apprEditing[kind]) return '<div class="apw" id="' + id + '">👤 المعتمِد: <b>' + acEsc(a.name) + "</b> — " + acEsc(a.role) + ' <button type="button" class="apw-ed" data-apw-edit="' + kind + '">✏️ تعديل</button></div>';
+    const v = a || { name: "موسى آل ضاحي", role: "وكيل الشؤون التعليمية", civil: "", phone: "" };
+    return '<div class="apw apw-form" id="' + id + '"><b>👤 تعريف المعتمِد الذي يُرسل له الرابط بعد توقيع المعلم</b>' +
+      '<label>الاسم<input type="text" data-apw="name" value="' + acEsc(v.name) + '"></label>' +
+      '<label>الصفة<select data-apw="role"><option' + (v.role === "وكيل الشؤون التعليمية" ? " selected" : "") + '>وكيل الشؤون التعليمية</option><option' + (v.role === "مدير المدرسة" ? " selected" : "") + ">مدير المدرسة</option></select></label>" +
+      '<label>السجل المدني<input type="text" inputmode="numeric" maxlength="10" data-apw="civil" value="' + acEsc(v.civil) + '"></label>' +
+      '<label>رقم الجوال<input type="tel" maxlength="15" data-apw="phone" value="' + acEsc(v.phone) + '"></label>' +
+      '<button type="button" class="export-btn" data-apw-save="' + kind + '">💾 حفظ المعتمِد</button></div>';
+  }
+  const apprEditing = {};
+  document.addEventListener("click", e => {
+    const ed = e.target.closest("[data-apw-edit]");
+    if (ed) { apprEditing[ed.dataset.apwEdit] = true; apprRefresh(); return; }
+    const sv = e.target.closest("[data-apw-save]"); if (!sv) return;
+    const box = sv.closest(".apw-form"), kind = sv.dataset.apwSave, g = k => box.querySelector('[data-apw="' + k + '"]').value.trim();
+    const civil = ackNormCivil(g("civil")), rec = { name: g("name"), role: g("role"), civil, phone: g("phone") };
+    if (!rec.name) { showToast("اكتب اسم المعتمِد"); return; }
+    if (!/^\d{10}$/.test(civil)) { showToast("السجل المدني للمعتمِد يجب أن يكون 10 أرقام"); return; }
+    if (!/^0?5\d{8}$|^9665\d{8}$/.test(rec.phone.replace(/\D/g, ""))) { showToast("رقم الجوال غير صحيح"); return; }
+    if (!data.approvers || typeof data.approvers !== "object") data.approvers = {};
+    data.approvers[kind] = rec; apprEditing[kind] = false; saveData(); apprRefresh(); showToast("تم حفظ المعتمِد");
+  });
+  function apprRefresh() { try { if (document.getElementById("permHubView").classList.contains("active")) phRender(); } catch (e) {} try { if (laRecords().length) laRender(); } catch (e) {} }
+  function apprOptions(kind, r, who) {
+    if (kind === "perm") return who === "mgr" ? ["يُعتمد", "لا يُعتمد"] : ["موافق", "غير موافق"];
+    const T = IO_TYPES[r.type] || {};
+    return T.ifada ? ["الإفادة مقبولة", "الإفادة غير مقبولة"] : r.type === "absence" ? ["العذر مقبول", "العذر غير مقبول ويتم الحسم", "تُحسب من إجازة الموظف الاضطرارية"] : ["العذر مقبول", "العذر غير مقبول، وتعتبر ساعات مهدرة"];
+  }
+  function apprSend(kind, r, files, who) {
+    const a = apprGet(kind, who), P = APPR_P(who);
+    if (!a || !/^\d{10}$/.test(a.civil) || !a.phone) { showToast("أكمل بيانات " + APPR_ROLE(who) + " (السجل المدني والجوال) في «بيانات الهيئة الإدارية»"); asOpen(a && a.id); if (!a) { const sel = document.getElementById("asRole"); sel.value = APPR_ROLE(who); } return; }
+    if (!(window.__fbdb && window.__fbauth && window.__fbauth.currentUser)) { showToast("إرسال الرابط يحتاج الاتصال بالسحابة وتسجيل الدخول"); return; }
+    if (!r.replyAt && !r.teacherSig) { showToast("لم يوقّع المعلم بعد — حدّث حالة التوقيع أولاً"); return; }
+    const title = (kind === "perm" ? "اعتماد استمارة استئذان" : "اعتماد " + (r.title || ioTitleOf(r))) + " — " + r.teacher;
+    let w = null; try { w = window.open("", "_blank"); } catch (e) {}
+    const go = url => { if (w && !w.closed) w.location.href = url; else openExternalLink(url); };
+    (async () => {
+      const id = Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-6);
+      const h = await ackHash(a.civil, id), dp = wpDateParts(todayISODate());
+      const body = "المكرم " + a.role + " / " + a.name + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\n" +
+        (kind === "perm" ? "نرفق لكم استمارة استئذان المعلم ( " + r.teacher + " ) ليوم " + (r.day || "") + " " + (r.hijri || "") + (r.time ? "\nوقت الخروج: " + r.time : "") + (r.reason ? "\nسبب الاستئذان: " + r.reason : "")
+          : "نرفق لكم (" + (r.title || ioTitleOf(r)) + ") للمعلم ( " + r.teacher + " )" + (r.hijri ? " بتاريخ " + r.hijri : "") + (r.teacherReply ? "\n\nإفادة المعلم:\n" + r.teacherReply : "")) +
+        "\n\nحالة المعلم: " + (r.teacherSig ? "وقّع المعلم ✓" : r.teacherSigned ? "موقّع ✓" : "اطّلع ولم يوقّع") +
+        (who === "mgr" && r.apprAt ? "\nرأي وكيل الشؤون التعليمية: " + String(r.apprReply || "").split("\n")[0] : "") +
+        "\n\nنأمل اختيار القرار والتوقيع داخل المربع.";
+      const doc = { title, body, dateText: (dp.dayName || "") + " " + dp.hijri + " — " + dp.greg, hashes: { [h]: a.name }, createdAt: new Date().toISOString(), mode: "reply", options: apprOptions(kind, r, who), optLabel: "القرار", replyLabel: "ملاحظات (اختياري)", sendLabel: "📤 إرسال القرار والتوقيع" };
+      if (files && files.length) doc.attachments = files.map(x => ({ name: x.name, type: x.type, data: x.data }));
+      await window.__fbdb.collection("notices").doc(id).set(doc);
+      if (!Array.isArray(data.notices)) data.notices = [];
+      data.notices.unshift({ id, title, date: todayISODate(), createdAt: Date.now(), recipients: { [a.name]: h }, acks: {}, single: true, src: kind + "-" + P, srcId: r.id });
+      r[P + "AckId"] = id; r[P + "AckIds"] = [...new Set([...(r[P + "AckIds"] || []), id])]; r[P + "SentAt"] = Date.now();
+      saveData(); apprRefresh(); try { if (document.getElementById("inqAckView") && document.getElementById("inqAckView").classList.contains("active")) laRender(); } catch (e) {}
+      const link = ackBaseUrl() + "?ack=" + id;
+      const msg = "السلام عليكم ورحمة الله وبركاته\nالمكرم " + a.role + " / " + a.name + "\n\nنأمل الاطلاع على (" + (kind === "perm" ? "استمارة استئذان" : (r.title || ioTitleOf(r))) + ") للمعلم " + r.teacher + " واعتمادها والتوقيع عبر الرابط:\n" + link;
+      go("https://wa.me/" + nfWaPhone(a.phone) + "?text=" + encodeURIComponent(msg));
+    })().catch(e => { console.error(e); try { if (w && !w.closed) w.close(); } catch (x) {} showToast("تعذر إنشاء رابط الاعتماد — تحقق من الاتصال"); });
+  }
+  const apprStatusHtml = (r, who) => { const P = APPR_P(who), R = who === "mgr" ? "مدير المدرسة" : "وكيل الشؤون التعليمية";
+    return !apprIds(r, who).length ? "" : r[P + "At"] ? '<div class="apw-st ok">🏁 قرار ' + R + ': <b>' + acEsc(String(r[P + "Reply"] || "").split("\n")[0] || "—") + "</b>" + (r[P + "Sig"] ? '<br><img src="' + r[P + "Sig"] + '" alt="توقيع">' : "") + "</div>" : '<div class="apw-st">⏳ أُرسل ل' + R + " — بانتظار القرار</div>"; };
+  const apprDec = (r, P) => String(r[P + "Reply"] || "").split("\n")[0];
+  const APPR_FIELDS = ["ackId", "ackIds", "teacherReply", "teacherSigned", "teacherSig", "replyAt", "approved", "approvedAt"].concat(...["appr", "mgr"].map(P => ["AckId", "AckIds", "SentAt", "Reply", "Signed", "Sig", "At"].map(k => P + k)));
+  // لقطة النسخة المحفوظة (تبقى في السجل حتى تُعتمد وتُحفظ النسخة المعدلة)
+  function apprSnapSave(r) { const c = JSON.parse(JSON.stringify(r)); delete c.savedSnap; delete c.prevRounds; r.savedAt = Date.now(); c.savedAt = r.savedAt; r.savedSnap = c; r.editAt = null; }
+  // بدء التعديل: تُلغى التوقيعات والروابط الحالية، ويلزم إعادة الإرسال للمعلم ثم للوكيل والمدير
+  function apprStartEdit(r, kind) {
+    const who = kind === "perm" ? "وكيل الشؤون التعليمية ثم مدير المدرسة" : "مدير المدرسة";
+    if (!confirm("بدء التعديل؟\nستُلغى توقيعات المعلم و" + (kind === "perm" ? "الوكيل والمدير" : "المدير") + " الحالية، ويلزم إعادة إرسال الرابط للمعلم ثم إرساله إلى " + who + " بعد توقيعه.\nالنسخة المحفوظة تبقى في السجل حتى تُعتمد النسخة المعدلة وتُحفظ مكانها.")) return false;
+    r.prevRounds = (r.prevRounds || []).concat([{ at: Date.now(), ids: linkIds(r), appr: apprIds(r, "dep"), mgr: apprIds(r, "mgr") }]);
+    APPR_FIELDS.forEach(k => delete r[k]); r.editAt = Date.now(); saveData(); return true;
+  }
+  const apprEditNote = (r, kind) => r.editAt ? '<div class="apw-st" style="border-color:#7aa7c9; background:#eef5fb; color:#1f4f7a;">✏️ وضع التعديل — ' + (kind === "perm" ? "عدّل البيانات (التأمين هنا، والوقت والسبب من متابعة الدوام)" : "عدّل المساءلة") + " ثم أعد إرسال الرابط للمعلم، وبعد توقيعه " + (kind === "perm" ? "أرسله لوكيل الشؤون التعليمية ثم لمدير المدرسة." : "أرسلها لمدير المدرسة.") + (r.savedAt ? " النسخة المحفوظة السابقة باقية في السجل حتى تحفظ المعدلة." : "") + "</div>" : "";
+  function apprDoneHtml(r, kind, btnAttr, editAttr) {
+    if (!(r.apprAt || r.mgrAt)) return "";
+    const parts = []; if (r.apprAt && kind === "perm") parts.push("الوكيل: " + apprDec(r, "appr")); if (r.mgrAt) parts.push("المدير: " + apprDec(r, "mgr"));
+    const where = kind === "perm" ? "سجل الاستئذان — مجلد المعلم" : "مجلد المعلم في سجل المسائلات";
+    return '<div class="apw-done"><div>✅ <b>تم اعتماده</b>' + (parts.length ? " <small>(" + acEsc(parts.join(" · ")) + ")</small>" : "") + "</div>" +
+      (r.savedAt ? '<div class="apw-saved">📁 محفوظ في ' + where + " — " + acEsc(ioStamp(r.savedAt)) + "</div>" : "") +
+      '<button type="button" class="export-btn" ' + btnAttr + ">💾 " + (r.savedAt ? "تحديث الحفظ" : "حفظ في " + (kind === "perm" ? "سجل الاستئذان" : "مجلد المعلم")) + "</button>" + (editAttr ? '<button type="button" class="export-btn" ' + editAttr + ">✏️ تعديل</button>" : "") + "</div>";
+  }
+  /* ===== بيانات الهيئة الإدارية ===== */
+  const AS_ROLES = ["مدير المدرسة", "وكيل الشؤون التعليمية", "وكيل شؤون الطلاب", "وكيل الشؤون المدرسية", "الموجه الطلابي", "رائد النشاط", "محضر المختبر", "أمين مصادر التعلم", "مساعد إداري", "سكرتير", "أخرى"];
+  const asUi = { edit: null };
+  function asOpen(editId) { showView("adminStaff"); asFormReset(); asRender(); if (editId) asEdit(editId); }
+  function asCount() { const n = (data.adminStaff || []).length, t = n + " موظف"; ["adminStaffCount", "asPill"].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = t; }); }
+  function asRender() {
+    const sel = document.getElementById("asRole");
+    if (!sel.options.length) sel.innerHTML = AS_ROLES.map(r => "<option>" + r + "</option>").join("");
+    const list = (data.adminStaff || []).slice().sort((a, b) => { const ia = AS_ROLES.indexOf(a.role), ib = AS_ROLES.indexOf(b.role); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+    const miss = '<span style="color:#b42318;">غير مدخل</span>';
+    document.getElementById("asList").innerHTML = list.length ? list.map(x => '<div class="as-item"><div class="as-h"><div><b>' + acEsc(x.name) + '</b><div class="as-role">' + acEsc(x.role || "—") + '</div></div><div class="as-acts"><button type="button" data-as-edit="' + x.id + '">✏️ تعديل</button><button type="button" data-as-del="' + x.id + '" style="color:#b42318;">🗑️</button></div></div>' +
+      '<div class="as-meta">السجل المدني: ' + (x.civil ? acEsc(x.civil) : miss) + " — الجوال: " + (x.phone ? acEsc(x.phone) : miss) + "</div></div>").join("") : '<div class="empty-state">لا يوجد موظفون بعد</div>';
+    asCount();
+  }
+  function asFormReset() {
+    asUi.edit = null; ["asName", "asCivil", "asPhone", "asRoleOther"].forEach(id => document.getElementById(id).value = "");
+    const sel = document.getElementById("asRole"); if (!sel.options.length) sel.innerHTML = AS_ROLES.map(r => "<option>" + r + "</option>").join("");
+    sel.selectedIndex = 0; document.getElementById("asRoleOtherL").style.display = "none";
+    document.getElementById("asSave").textContent = "➕ إضافة"; document.getElementById("asCancel").style.display = "none";
+  }
+  function asEdit(id) {
+    const x = (data.adminStaff || []).find(v => v.id === id); if (!x) return;
+    asUi.edit = id; document.getElementById("asName").value = x.name; document.getElementById("asCivil").value = x.civil; document.getElementById("asPhone").value = x.phone;
+    const known = AS_ROLES.includes(x.role) && x.role !== "أخرى";
+    document.getElementById("asRole").value = known ? x.role : "أخرى"; document.getElementById("asRoleOther").value = known ? "" : x.role;
+    document.getElementById("asRoleOtherL").style.display = known ? "none" : "";
+    document.getElementById("asSave").textContent = "💾 حفظ التعديل"; document.getElementById("asCancel").style.display = "";
+    try { document.getElementById("asForm").scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {}
+  }
+  document.getElementById("openAdminStaff").addEventListener("click", () => asOpen());
+  document.getElementById("asRole").addEventListener("change", e => document.getElementById("asRoleOtherL").style.display = e.target.value === "أخرى" ? "" : "none");
+  document.getElementById("asCancel").addEventListener("click", asFormReset);
+  document.getElementById("asSave").addEventListener("click", () => {
+    const name = document.getElementById("asName").value.trim(), rs = document.getElementById("asRole").value;
+    const role = rs === "أخرى" ? (document.getElementById("asRoleOther").value.trim() || "أخرى") : rs;
+    const civil = ackNormCivil(document.getElementById("asCivil").value), phone = document.getElementById("asPhone").value.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^\d+]/g, "");
+    if (!name) { showToast("اكتب اسم الموظف"); return; }
+    if (civil && !/^\d{10}$/.test(civil)) { showToast("السجل المدني يجب أن يكون 10 أرقام"); return; }
+    if (phone && !/^0?5\d{8}$|^(\+?966)5\d{8}$/.test(phone)) { showToast("رقم الجوال غير صحيح"); return; }
+    if (!Array.isArray(data.adminStaff)) data.adminStaff = [];
+    if ((role === "مدير المدرسة" || role === "وكيل الشؤون التعليمية") && data.adminStaff.some(x => x.role === role && x.id !== asUi.edit)) { showToast("يوجد موظف مسجّل بعمل «" + role + "» — عدّل بياناته بدل إضافة آخر"); return; }
+    if (asUi.edit) Object.assign(data.adminStaff.find(x => x.id === asUi.edit) || {}, { name, role, civil, phone });
+    else data.adminStaff.push({ id: "as" + Date.now().toString(36), name, role, civil, phone });
+    saveData(); asFormReset(); asRender(); showToast("تم الحفظ");
+  });
+  document.getElementById("asList").addEventListener("click", e => {
+    const ed = e.target.closest("[data-as-edit]"); if (ed) { asEdit(ed.dataset.asEdit); return; }
+    const dl = e.target.closest("[data-as-del]"); if (!dl) return;
+    const x = (data.adminStaff || []).find(v => v.id === dl.dataset.asDel); if (!x) return;
+    if (!confirm("حذف «" + x.name + "» من الهيئة الإدارية؟")) return;
+    data.adminStaff = data.adminStaff.filter(v => v.id !== x.id); saveData(); asRender();
+  });
+  setTimeout(asCount, 0);
   // تحديث حالات التأكيد من السحابة لكل روابط المساءلات والتنبيهات (يُظهر سبب الخطأ إن فشل)
   let linkSyncBusy = false;
   async function linkSyncAll(quiet) {
@@ -10809,13 +11007,15 @@ ${contentEl.innerHTML}
     if (!window.__fbdb) { if (!quiet) showToast("التحديث يحتاج الاتصال بالسحابة"); return; }
     const ids = new Set();
     const permRecs = (data.workAttendance || []).filter(r => r.status === "permission" && (r.ackId || r.ackIds));
-    [...(data.officialInq || []), ...(data.officialAlerts || []), ...permRecs].forEach(r => linkIds(r).forEach(i => ids.add(i)));
+    const permRecs2 = (data.workAttendance || []).filter(r => r.status === "permission" && (r.apprAckId || r.apprAckIds || r.mgrAckId || r.mgrAckIds));
+    [...(data.officialInq || []), ...(data.officialAlerts || []), ...permRecs, ...permRecs2].forEach(r => { linkIds(r).forEach(i => ids.add(i)); apprAllIds(r).forEach(i => ids.add(i)); });
     if (!ids.size) return;
     linkSyncBusy = true;
     let fail = null;
     try {
       const owner = {};
-      [...(data.officialInq || []), ...(data.officialAlerts || []), ...permRecs].forEach(r => linkIds(r).forEach(i => owner[i] = r));
+      const apprOwner = {};
+      [...(data.officialInq || []), ...(data.officialAlerts || []), ...permRecs, ...permRecs2].forEach(r => { linkIds(r).forEach(i => owner[i] = r); apprIds(r, "dep").forEach(i => apprOwner[i] = [r, "appr"]); apprIds(r, "mgr").forEach(i => apprOwner[i] = [r, "mgr"]); });
       for (const id of ids) {
         let n = (data.notices || []).find(x => x.id === id);
         if (!n) continue;
@@ -10825,6 +11025,7 @@ ${contentEl.innerHTML}
           n.acks = n.acks || {};
           snap.forEach(d => { const a = d.data(), t = byHash[a.h], at = toIsoAny(a.at) || "?";
             if (t && !n.acks[t]) n.acks[t] = at;
+            if (apprOwner[id]) { const [ar, P] = apprOwner[id]; if (!ar[P + "At"] || at >= ar[P + "At"]) { ar[P + "Reply"] = a.reply || ""; ar[P + "Signed"] = !!a.signed; ar[P + "Sig"] = typeof a.sig === "string" && /^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(a.sig) ? a.sig : ""; ar[P + "At"] = at; if (P === "mgr" && ar.ackId) { ar.approved = true; ar.approvedAt = Date.parse(at) || Date.now(); } } return; }
             const r = owner[id];
             if (r && (a.reply != null || a.signed != null) && (!r.replyAt || at >= r.replyAt)) { r.teacherReply = a.reply || ""; r.teacherSigned = !!a.signed; r.teacherSig = typeof a.sig === "string" && /^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(a.sig) ? a.sig : ""; r.replyAt = at; }
           });
@@ -10872,7 +11073,8 @@ ${contentEl.innerHTML}
         '<div class="la-step ' + (s.appr ? "ok" : "") + '"><b>🏁 الاعتماد</b><label><input type="checkbox" data-appr' + (s.appr ? " checked" : "") + (s.conf ? "" : " disabled") + "> " + (s.appr ? "معتمد" : "اعتماد") + "</label>" + (s.appr && r.approvedAt ? "<br>" + acEsc(ioStamp(r.approvedAt)) : "") + "</div>" +
       "</div>" +
       (r.replyAt ? '<div class="io-reply"><b>إفادة المعلم:</b> ' + acEsc(r.teacherReply || "") + '<div style="margin-top:4px; font-weight:800; color:' + (r.teacherSigned ? "#146c3a" : "#9a2f23") + ';">' + (r.teacherSigned ? "✍️ موقّع ✓" : "لم يوقّع المعلم") + "</div>" + (r.teacherSig ? '<img src="' + r.teacherSig + '" alt="توقيع المعلم" style="height:60px; margin-top:6px; background:#fff; border:1px solid #d6e2df; border-radius:8px; padding:2px;">' : "") + "</div>" : (r.teacherSig ? '<div class="io-reply"><b>توقيع المعلم:</b><br><img src="' + r.teacherSig + '" alt="توقيع المعلم" style="height:60px; margin-top:6px; background:#fff; border:1px solid #d6e2df; border-radius:8px; padding:2px;"></div>' : "")) +
-      '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="resend">📱 إعادة إرسال الرابط</button><button class="export-btn" data-act="print">🖨️ طباعة</button></div></div>').join("");
+      (la.kind === "inq" ? apprStatusHtml(r, "mgr") + apprDoneHtml(r, "inq", 'data-act="save"', 'data-act="edit"') : "") +
+      '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="resend">📱 إعادة إرسال الرابط</button>' + (la.kind === "inq" && r.replyAt ? '<button class="export-btn" data-act="mgr">📤 ' + (apprIds(r, "mgr").length ? "إعادة إرسالها لمدير المدرسة" : "إرسالها لمدير المدرسة") + "</button>" : "") + '<button class="export-btn" data-act="print">🖨️ طباعة</button></div></div>').join("");
   }
   document.getElementById("laList").addEventListener("change", e => {
     const cb = e.target.closest("input[data-appr]"); if (!cb) return;
@@ -10882,6 +11084,9 @@ ${contentEl.innerHTML}
   document.getElementById("laList").addEventListener("click", e => {
     const btn = e.target.closest("button[data-act]"); if (!btn) return;
     const r = laRecords().find(x => x.id === btn.closest(".ack-item").dataset.id); if (!r) return;
+    if (btn.dataset.act === "save") { const upd = !!r.savedAt; apprSnapSave(r); saveData(); laRender(); showToast((upd ? "حُدّثت المساءلة المعدلة" : "حُفظت المساءلة") + " في مجلد " + r.teacher + " بسجل المسائلات"); return; }
+    if (btn.dataset.act === "edit") { if (!apprStartEdit(r, "inq")) return; ioOpen(); setTimeout(() => { ioLoad(r.id); showToast("وضع التعديل — عدّل المساءلة واحفظها ثم أرسل الرابط للمعلم"); }, 50); return; }
+    if (btn.dataset.act === "mgr") { let files = []; try { const at = docAttachment("inq", r); if (at) files = [at]; } catch (e) {} apprSend("inq", r, files, "mgr"); return; }
     if (btn.dataset.act === "print") { if (la.kind === "alert") { alPrintRec(r); alMark(r.id, "printed"); } else { ioPrintRec(r); ioMarkPrinted(r.id); } }
     else if (btn.dataset.act === "resend") {
       if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "سبق الإرسال — اضغط للتأكيد"; setTimeout(() => { btn.dataset.confirm = ""; btn.textContent = "📱 إعادة إرسال الرابط"; }, 5000); return; }
@@ -11164,7 +11369,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
         return out;
       } },
     perm: { t: "سجل الاستئذان", from: "متابعة الدوام", byTeacher: 1,
-      cols: [C_DAY, C_DATE, C_GREG, C_T, ["وقت الاستئذان", r => (r.record && r.record.time) || String(r.detail || "").replace(/^الساعة\s*/, "") || "—"], ["سبب الاستئذان", r => (r.record && r.record.reason) || "—"], ["ملاحظات", r => (r.record && r.record.note) || "", { edit: "note" }]],
+      cols: [C_DAY, C_DATE, C_GREG, C_T, ["وقت الاستئذان", r => (r.record && r.record.time) || String(r.detail || "").replace(/^الساعة\s*/, "") || "—"], ["سبب الاستئذان", r => (r.record && r.record.reason) || "—"], ["الاعتماد", r => { const x = (r.record && (r.record.savedSnap || r.record)) || {}, a = []; if (x.apprAt) a.push("الوكيل: " + String(x.apprReply || "").split("\n")[0]); if (x.mgrAt) a.push("المدير: " + String(x.mgrReply || "").split("\n")[0]); return a.join(" / ") || "—"; }], ["ملاحظات", r => (r.record && r.record.note) || "", { edit: "note" }]],
       rows: () => erWork(["permission"], { permission: "الاستئذان" }) },
     duty: { t: "سجل المناوبة والإشراف", from: "المناوبة والطابور", dutyPages: 1, cols: [], rows: () => [] },
     lessons: { t: "سجل متابعة الحصص", from: "سجل متابعة الحصص", segs: [["absent", "الغياب عن الحصة"], ["late", "التأخر عن الحصة"], ["permission", "مستأذن"], ["all", "الكل"]],
@@ -11181,8 +11386,8 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
       cols: [C_DAY, C_DATE, C_GREG, ["الغائب/المستأذن", r => (r.absent || []).join("، ") || "—"], ["حصص مرحّلة", r => String((r.items || []).filter(i => i.type === "shift").length)], ["انتظار يدوي", r => String((r.items || []).filter(i => i.type === "manual").length)], ["تحتاج منتظر", r => String((r.items || []).filter(i => i.type === "wait").length)]],
       rows: () => Object.values(data.shiftArchive || {}).map(r => Object.assign({ tset: r.absent || [] }, r)) },
     inq: { t: "سجل المسائلات", from: "المسائلات المحفوظة", folders: 1,
-      cols: [C_DATE, C_GREG, C_T, ["المساءلة", r => r.title || "—"], ["الرابط", erSent], ["الطباعة", r => r.printedAt ? "طُبعت" : "—"], ["التسليم", r => r.delivered ? "سُلّمت" : "—"]],
-      rows: () => (data.officialInq || []).map(r => Object.assign({}, r, { date: r.dateIso || erIso(r.createdAt) })) },
+      cols: [C_DATE, C_GREG, C_T, ["المساءلة", r => r.title || "—"], ["الرابط", erSent], ["الطباعة", r => r.printedAt ? "طُبعت" : "—"], ["التسليم", r => r.delivered ? "سُلّمت" : "—"], ["الاعتماد", r => r.mgrAt ? "معتمدة (" + String(r.mgrReply || "").split("\n")[0] + ")" : "—"]],
+      rows: () => (data.officialInq || []).filter(r => r.savedAt || !(r.mgrAckId || r.mgrAckIds || r.prevRounds)).map(r => { const b = r.savedSnap || r; return Object.assign({}, b, { id: r.id, printedAt: r.printedAt, delivered: r.delivered, date: b.dateIso || erIso(b.createdAt) }); }) },
     alerts: { t: "سجل التنبيهات", from: "التنبيهات المحفوظة",
       cols: [C_DATE, C_GREG, C_T, ["التنبيه", r => r.title || "—"], ["الرابط", erSent], ["الطباعة", r => r.printedAt ? "طُبع" : "—"], ["التسليم", r => r.delivered ? "سُلّم" : "—"]],
       rows: () => (data.officialAlerts || []).map(r => Object.assign({}, r, { date: r.dateIso || (/^\d{4}-\d\d-\d\d$/.test(r.date || "") ? r.date : "") || erIso(r.createdAt) })) }
@@ -11488,8 +11693,16 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     box.innerHTML = '<div class="sched-hint" style="text-align:right;">المصدر: ' + acEsc(S.from) + " — عدد المعلمين: <b>" + list.length + "</b> — في الطباعة كل معلم في ورقة مستقلة.</div>" + list.map(g =>
       '<div class="er-day"><div class="er-day-h"><span><b>المعلم:</b> ' + acEsc(g.t) + "</span><span>العدد: " + g.rows.length + "</span></div>" +
       '<table class="er-src"><thead><tr><th>م</th>' + cols.map(c => "<th>" + acEsc(c[0]) + "</th>").join("") + "</tr></thead><tbody>" +
-      g.rows.map((r, i) => "<tr><td>" + (i + 1) + "</td>" + cols.map(c => "<td" + (c[2] && c[2].st ? ' class="st-' + acEsc(r.status) + '"' : "") + ">" + erCell(c, r) + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>").join("");
+      g.rows.map((r, i) => "<tr><td>" + (i + 1) + "</td>" + cols.map(c => "<td" + (c[2] && c[2].st ? ' class="st-' + acEsc(r.status) + '"' : "") + ">" + erCell(c, r) + "</td>").join("") + "</tr>").join("") + "</tbody></table>" + erPermForms(S, g) + "</div>").join("");
   }
+  const erSavedForms = (S, g) => S === ER_SRC.perm ? g.rows.filter(r => r.record && r.record.savedAt).sort((a, b) => a.date.localeCompare(b.date)) : [];
+  const erPermSnap = r => r.record.savedSnap || r.record;
+  function erPermForms(S, g) {
+    const L = erSavedForms(S, g); if (!L.length) return "";
+    return '<div class="er-pf"><b style="color:#174a59; font-size:13px;">📁 الاستمارات المعتمدة المحفوظة (' + L.length + ")</b>" + L.map(r => { const p = wpDateParts(r.date);
+      return '<div class="er-pf-i"><span>📄 استمارة استئذان — ' + acEsc((p.dayName || dayNameFromDate(r.date)) + " " + p.hijri) + '</span><button type="button" class="export-btn" data-pf-d="' + acEsc(r.date) + '" data-pf-t="' + acEsc(r.teacher) + '">🖨️ طباعة</button></div>' + (r.record.editAt ? '<div style="font-size:11.5px; color:#1f4f7a;">✏️ قيد التعديل — تظهر النسخة المحفوظة حتى تُعتمد المعدلة وتُحفظ</div>' : ""); }).join("") + "</div>";
+  }
+  document.getElementById("erSrcTable").addEventListener("click", e => { const b = e.target.closest("[data-pf-d]"); if (!b) return; const rec = (data.workAttendance || []).find(x => x.date === b.dataset.pfD && x.teacher === b.dataset.pfT && x.status === "permission"); phPrintForm(b.dataset.pfD, b.dataset.pfT, false, rec && rec.savedSnap); });
   function erTeachBuild() {
     const { S, R, cols, list } = erTeachGroups();
     if (!list.length) { showToast("لا توجد سجلات للطباعة"); return null; }
@@ -11501,7 +11714,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
       <div style="display:flex; justify-content:space-between; border:1.5px solid #174a59; border-radius:8px; padding:8px 14px; margin:4px 0 10px; font-size:16px; background:#f3f8f9;"><div><b style="color:#174a59;">المعلم:</b> ${wpEsc(g.t)}</div><div><b style="color:#174a59;">العدد:</b> ${g.rows.length}</div></div>
       <table style="width:100%; border-collapse:collapse;"><tr><th style="${H} width:6%">م</th>${cols.map(c => `<th style="${H}">${wpEsc(c[0])}</th>`).join("")}</tr>
       ${g.rows.map((r, i) => `<tr><td style="${B}">${i + 1}</td>${cols.map(c => `<td style="${B}${c[2] && c[2].st ? " font-weight:700; color:#9a5b00;" : ""}">${wpEsc(c[1](r))}</td>`).join("")}</tr>`).join("")}</table>
-      <div style="display:flex; justify-content:space-between; margin:24px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div></section>`).join("");
+      <div style="display:flex; justify-content:space-between; margin:24px 20px 0; font-size:15px;"><div><b style="color:#174a59;">وكيل الشؤون التعليمية:</b> موسى آل ضاحي</div><div><b style="color:#174a59;">مدير المدرسة:</b> موسى آل عبيد</div></div></section>` + erSavedForms(S, g).map(r => phPrintForm(r.date, r.teacher, true, erPermSnap(r))).join("")).join("");
     return { title, pages: erIntroPage(title, (data.erIntro || {})[erIntroKey()] || "") + pages, landscape: false };
   }
   function erInqRender() {
@@ -11518,7 +11731,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     if (xb) { if (xb.dataset.x === "xlsx") erInqExcel(); else { const d = erInqBuild(""); if (d) erExport(xb.dataset.x, d.title, d.pages, false); } return; }
     const fold = e.target.closest(".er-fold"); if (!fold) return;
     const b = e.target.closest("button[data-a]"), t = fold.dataset.t;
-    if (b && b.dataset.a === "p1") { const r = (data.officialInq || []).find(x => x.id === b.closest(".er-fold-i").dataset.id); if (r) { ioPrintRec(r); ioMarkPrinted(r.id); erInqRender(); } return; }
+    if (b && b.dataset.a === "p1") { const r0 = (data.officialInq || []).find(x => x.id === b.closest(".er-fold-i").dataset.id), r = r0 && r0.savedSnap ? Object.assign({}, r0.savedSnap, { id: r0.id }) : r0; if (r) { ioPrintRec(r); ioMarkPrinted(r.id); erInqRender(); } return; }
     if (b && b.dataset.a === "pf") { const d = erInqBuild(t); if (d) wpOpenDoc(wpShellDoc(d.title, d.pages, { fitOnePage: true }), d.title.replace(/ /g, "_")); return; }
     if (e.target.closest(".er-fold-h")) { fold.classList.toggle("open"); if (fold.classList.contains("open")) erInqOpen.add(t); else erInqOpen.delete(t); }
   });
@@ -11833,6 +12046,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     document.getElementById("shiftView").classList.toggle("active", view === "shift");
     document.getElementById("shiftArchView").classList.toggle("active", view === "shiftArch");
     document.getElementById("permHubView").classList.toggle("active", view === "permHub");
+    document.getElementById("adminStaffView").classList.toggle("active", view === "adminStaff");
     document.getElementById("waitDesignView").classList.toggle("active", view === "waitDesign");
     document.getElementById("waitCountView").classList.toggle("active", view === "waitCount");
     document.getElementById("ackView").classList.toggle("active", view === "ack");
@@ -12048,8 +12262,18 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
       (after.length ? '<table class="ph-tbl"><thead><tr><th>الحصة</th><th>الفصل</th><th>التأمين</th></tr></thead><tbody>' + after.map(x => { const cv = (r.cover || {})[x.period] || ""; return "<tr><td><b>" + acEsc(shPer(Number(x.period)) || x.period) + "</b></td><td>" + acEsc(x.className) + '</td><td><select class="ph-cov" data-p="' + acEsc(x.period) + '"><option value="">اختر</option><option value="teacher"' + (cv === "teacher" ? " selected" : "") + '>تم تأمينها من قبل المعلم</option><option value="admin"' + (cv === "admin" ? " selected" : "") + ">تم تأمينها من قبل الإدارة</option></select></td></tr>"; }).join("") + "</tbody></table>" : '<div class="sched-hint" style="text-align:right;">لا توجد حصص وقت الاستئذان.</div>') +
       (() => { const st = r.ackId ? linkState(r) : null;
         return '<div class="ph-link">' + (!r.ackId ? "📱 لم يُرسل رابط للمعلم بعد" : r.teacherSig ? '✅ وقّع المعلم على الاستمارة<br><img src="' + r.teacherSig + '" alt="توقيع المعلم">' : r.replyAt && r.teacherSigned === false ? "👁️ اطّلع المعلم ولم يوقّع" : st && st.conf ? "✅ اطّلع المعلم" : "⏳ أُرسل الرابط — بانتظار توقيع المعلم") + "</div>"; })() +
-      '<div class="er-acts" style="margin-top:10px;"><button type="button" class="export-btn" id="phPrint">🖨️ طباعة استمارة الاستئذان</button><button type="button" class="export-btn" id="phLink">📱 ' + (r.ackId ? "إعادة إرسال الرابط" : "إرسال رابط للمعلم") + "</button>" + (r.ackId ? '<button type="button" class="export-btn" id="phSync">🔄 تحديث حالة التوقيع</button>' : "") + '<button type="button" class="export-btn" id="phGoWait">📋 فتح جدول الانتظار لهذا المستأذن</button></div></div>';
+      '<div class="er-acts" style="margin-top:10px;"><button type="button" class="export-btn" id="phPrint">🖨️ طباعة استمارة الاستئذان</button><button type="button" class="export-btn" id="phLink">📱 ' + (r.ackId ? "إعادة إرسال الرابط" : "إرسال رابط للمعلم") + "</button>" + (r.ackId ? '<button type="button" class="export-btn" id="phSync">🔄 تحديث حالة التوقيع</button><button type="button" class="export-btn" id="phAppr">📤 ' + (apprIds(r, "dep").length ? "إعادة إرساله لوكيل الشؤون التعليمية" : "إرساله لوكيل الشؤون التعليمية") + "</button>" + (r.apprAt ? '<button type="button" class="export-btn" id="phMgr">📤 ' + (apprIds(r, "mgr").length ? "إعادة إرساله لمدير المدرسة" : "إرساله لمدير المدرسة") + "</button>" : "") : "") + '<button type="button" class="export-btn" id="phGoWait">📋 فتح جدول الانتظار لهذا المستأذن</button></div></div>';
+    box.insertAdjacentHTML("beforeend", apprEditNote(r, "perm") + apprStatusHtml(r, "dep") + apprStatusHtml(r, "mgr") + apprDoneHtml(r, "perm", 'id="phSave"', 'id="phEdit"'));
+    if (document.getElementById("phSave")) document.getElementById("phSave").addEventListener("click", () => { const upd = !!r.savedAt; apprSnapSave(r); saveData(); phRender(); showToast((upd ? "حُدّثت الاستمارة المعدلة" : "حُفظت الاستمارة") + " في سجل الاستئذان — مجلد " + t); });
+    if (document.getElementById("phEdit")) document.getElementById("phEdit").addEventListener("click", () => { if (apprStartEdit(r, "perm")) { phRender(); showToast("وضع التعديل — عدّل ثم أرسل الرابط للمعلم"); } });
     document.getElementById("phLink").addEventListener("click", () => phSendLink(d, t));
+    const phSendTo = who => {
+      r.hijri = wpDateParts(d).hijri; r.day = dayNameFromDate(d);
+      let files = []; try { const cv = docCanvas(permDocSpec(d, t, r)); files = [{ name: "استمارة استئذان.jpg", type: "image/jpeg", data: cv.toDataURL("image/jpeg", 0.8).split(",")[1] }]; } catch (e) {}
+      apprSend("perm", r, files, who);
+    };
+    if (document.getElementById("phAppr")) document.getElementById("phAppr").addEventListener("click", () => phSendTo("dep"));
+    if (document.getElementById("phMgr")) document.getElementById("phMgr").addEventListener("click", () => phSendTo("mgr"));
     if (document.getElementById("phSync")) document.getElementById("phSync").addEventListener("click", () => linkSyncAll(false));
     document.getElementById("phPrint").addEventListener("click", () => phPrintForm(d, t));
     box.querySelectorAll(".ph-cov").forEach(sel => sel.addEventListener("change", () => {
@@ -12082,8 +12306,8 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     linkSend("perm", r, files);
   }
   // استمارة استئذان رسمية بالترويسة يوقّع عليها المعلم (t فارغ = استمارة فارغة للتعبئة باليد)
-  function phPrintForm(d, t) {
-    const r = t ? ((data.workAttendance || []).find(x => x.date === d && x.teacher === t && x.status === "permission") || {}) : {};
+  function phPrintForm(d, t, asPage, rOv) {
+    const r = rOv ? rOv : t ? ((data.workAttendance || []).find(x => x.date === d && x.teacher === t && x.status === "permission") || {}) : {};
     const q = d && t ? wpDateParts(d) : null, civil = t ? ((data.teacherCivil || {})[t] || "") : "";
     const dots = "..............................";
     const day = d && t ? dayNameFromDate(d) : null;
@@ -12113,13 +12337,16 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
       <table style="width:100%; border-collapse:collapse;"><tr><th style="${H} width:6%">م</th><th style="${H} width:13%">الحصة</th><th style="${H} width:11%">الفصل</th><th style="${H} width:27%">التأمين</th><th style="${H}">المعلم المنتظر</th><th style="${H} width:17%">توقيع المنتظر</th></tr>${rowsLes}</table>
       <div style="display:flex; gap:12px; margin-top:16px;">
         <div style="flex:1; border:1.5px solid #174a59; border-radius:10px; padding:12px 14px; font-size:14.5px; line-height:2.1;">
-          <b style="color:#174a59;">رأي وكيل الشؤون التعليمية</b><br>☐ موافق &nbsp;&nbsp; ☐ غير موافق<br>الاسم: موسى آل ضاحي<br>التوقيع: ....................
+          ${(() => { const ap = (data.adminStaff || []).find(x => x.role === "وكيل الشؤون التعليمية"), dec = String(r.apprReply || "").split("\n")[0], ok = dec === "موافق", no = dec === "غير موافق";
+            return `<b style="color:#174a59;">رأي وكيل الشؤون التعليمية</b><br>${ok ? "☑" : "☐"} موافق &nbsp;&nbsp; ${no ? "☑" : "☐"} غير موافق<br>الاسم: ${wpEsc(ap ? ap.name : "موسى آل ضاحي")}<br>التوقيع: ${r.apprSig ? '<img src="' + r.apprSig + '" alt="توقيع" style="height:44px; vertical-align:middle;">' : "...................."}`; })()}
         </div>
         <div style="flex:1; border:1.5px solid #174a59; border-radius:10px; padding:12px 14px; font-size:14.5px; line-height:2.1;">
-          <b style="color:#174a59;">اعتماد مدير المدرسة</b><br>☐ يُعتمد &nbsp;&nbsp; ☐ لا يُعتمد<br>الاسم: موسى آل عبيد<br>التوقيع: ....................
+          ${(() => { const mp = (data.adminStaff || []).find(x => x.role === "مدير المدرسة"), dec = String(r.mgrReply || "").split("\n")[0];
+            return `<b style="color:#174a59;">اعتماد مدير المدرسة</b><br>${dec === "يُعتمد" ? "☑" : "☐"} يُعتمد &nbsp;&nbsp; ${dec === "لا يُعتمد" ? "☑" : "☐"} لا يُعتمد<br>الاسم: ${wpEsc(mp ? mp.name : "موسى آل عبيد")}<br>التوقيع: ${r.mgrSig ? '<img src="' + r.mgrSig + '" alt="توقيع" style="height:44px; vertical-align:middle;">' : "...................."}`; })()}
         </div>
       </div>`;
     const title = "استمارة استئذان";
+    if (asPage) return wpGenericPage(title, '<div style="zoom:0.72;">' + inner + "</div>", d);
     const page = t ? wpGenericPage(title, inner, d) : `<section class="page gen">${wpBandHTML()}<h2>${wpEsc(title)}</h2>${inner}</section>`;
     wpOpenDoc(wpShellDoc(title, page, { fitOnePage: true }), "استمارة_استئذان" + (t ? "_" + t : ""));
   }
@@ -13046,7 +13273,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-22-10";
+window.APP_BUILD = "2026-11-22-17";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
