@@ -585,7 +585,25 @@
   .work-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   .work-grp { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: #174a59; }
   .work-grp span { min-width: 54px; } .work-grp select { min-width: 110px; padding: 6px 8px 6px 22px; font-size: 12.5px; }
+  .ampm { display: inline-flex; align-items: center; gap: 2px; direction: ltr; border: 1px solid var(--line); border-radius: 9px; background: #fff; padding: 2px 4px; }
+  .ampm select { font: inherit; font-size: 12.5px; border: 0; background: transparent; padding: 4px 2px; direction: rtl; }
+  .ampm select[data-p="ap"] { color: #174a59; font-weight: 700; border-inline-start: 1px solid var(--line); margin-inline-start: 2px; padding-inline-start: 4px; }
+  .ampm-sep { font-weight: 800; color: #66736f; }
   .work-line input[type=time] { font: inherit; font-size: 12.5px; padding: 5px 6px; border: 1px solid var(--line); border-radius: 8px; }
+  .ph-card { border: 1.5px solid #9cc3cc; border-radius: 14px; background: #fff; padding: 10px 12px; }
+  .ph-row { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px dashed #dbe5e3; font-size: 13.5px; } .ph-row span { color: #66736f; }
+  .ph-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .ph-tbl th { background: #174a59; color: #fff; padding: 6px 4px; }
+  .ph-tbl td { border: 1px solid #c9d6d3; padding: 5px 4px; text-align: center; }
+  .ph-tbl select { font: inherit; font-size: 12px; width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 4px; background: #fff; }
+  .ph-link { margin-top: 10px; border: 1px dashed #9cc3cc; border-radius: 10px; padding: 8px 10px; font-size: 13px; font-weight: 700; color: #174a59; background: #f3f9fa; }
+  .ph-link img { height: 54px; background: #fff; border: 1px solid #d6e2df; border-radius: 8px; padding: 2px; margin-top: 6px; }
+  .ph-sub { font-weight: 800; color: #174a59; margin: 10px 0 6px; font-size: 13.5px; }
+  .ph-les { display: flex; flex-wrap: wrap; gap: 6px; } .ph-les span { background: #fff4df; border: 1px solid #f0d49b; border-radius: 9px; padding: 5px 9px; font-size: 13px; display: flex; flex-direction: column; align-items: center; } .ph-les b { font-size: 11.5px; color: #8a5200; }
+  .date-hj { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .date-hj .date-input { flex: 1 1 150px; }
+  .date-hj-txt { flex: 1 1 150px; background: #eef7f5; border: 1px solid #c9e2dc; border-radius: 10px; padding: 8px 10px; font-size: 13px; color: #174a59; display: flex; gap: 6px; align-items: center; min-height: 38px; }
+  .date-hj-txt:empty { display: none; }
   .work-excuse { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: #174a59; }
   .work-excuse select { min-width: 96px; padding: 6px 8px 6px 22px; font-size: 12px; }
   .work-excuse.off { opacity: .45; }
@@ -1863,8 +1881,11 @@
     </div>
     <div class="sched-hint" id="wtrNow" style="text-align:right; margin:0 0 10px;"></div>
     <div class="field" style="margin-bottom:14px;">
-      <label for="workDateInput">التاريخ</label>
-      <input type="date" id="workDateInput" class="date-input">
+      <label for="workDateInput">التاريخ (ميلادي)</label>
+      <div class="date-hj">
+        <input type="date" id="workDateInput" class="date-input">
+        <span id="workDateHijri" class="date-hj-txt"></span>
+      </div>
     </div>
     <div id="workHolidayBar"></div>
     <div id="workAttendanceList"></div>
@@ -2005,21 +2026,17 @@
         <h2>تعيين المنتظرين</h2>
         <div class="count">منتظر 1 / 2 / 3 لكل حصة</div>
       </button>
-      <button class="tile reports" id="openWaitCount">
-        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg></div>
-        <h2>حصر حصص الانتظار</h2>
-        <div class="count">ما حضره كل معلم</div>
+      <button class="tile reports" id="openPermHub">
+        <div class="tile-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/><path d="M16 3l2 2"/></svg></div>
+        <h2>الاستئذان</h2>
+        <div class="count">المستأذنون من متابعة الدوام</div>
       </button>
       <button class="tile coverage" id="openShift">
         <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M21 7H9a4 4 0 0 0-4 4v1"/><path d="M7 21l-4-4 4-4"/><path d="M3 17h12a4 4 0 0 0 4-4v-1"/></svg></div>
         <h2>ترحيل الحصص</h2>
         <div class="count">نقل الحصص الأخيرة لسد حصص الغائب</div>
       </button>
-      <button class="tile reports" id="openShiftArch">
-        <div class="tile-icon"><svg viewBox="0 0 24 24"><path d="M3 7h18v13H3z"/><path d="M3 7l2-4h14l2 4"/><path d="M10 12h4"/></svg></div>
-        <h2>الترحيلات المحفوظة</h2>
-        <div class="count" id="shArchCount">حسب تاريخ الغياب</div>
-      </button>
+
     </div>
   </div>
 
@@ -2054,10 +2071,28 @@
     </div>
   </div>
 
+  <!-- الاستئذان (من سجل الانتظار) -->
+  <div class="detail" id="permHubView">
+    <div class="back-row">
+      <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
+    </div>
+    <div class="detail-header"><h2>الاستئذان</h2><button type="button" class="export-btn" id="phGoWork" style="flex:none; width:auto; padding:6px 12px;">🕘 فتح متابعة الدوام</button></div>
+    <div class="field" style="margin-bottom:10px;">
+      <label for="phDate">التاريخ (ميلادي)</label>
+      <div class="date-hj"><input type="date" id="phDate" class="date-input"><span id="phDateH" class="date-hj-txt"></span></div>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label for="phTeacher">المعلم المستأذن</label>
+      <select id="phTeacher" class="select-styled"></select>
+    </div>
+    <div id="phInfo"></div>
+    <button type="button" class="export-btn" id="phBlank" style="width:100%; margin-top:10px;">📄 طباعة استمارة استئذان فارغة</button>
+  </div>
+
   <!-- الترحيلات المحفوظة -->
   <div class="detail" id="shiftArchView">
     <div class="back-row">
-      <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
+      <button class="back-btn" data-back="shift"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>ترحيل الحصص</button>
     </div>
     <div class="detail-header"><h2>الترحيلات المحفوظة</h2></div>
     <div class="sched-hint" style="text-align:right;">الترحيلات التي حُفظت بزر «💾 حفظ»، مرتبة حسب تاريخ الغياب (الأحدث أولًا).</div>
@@ -2069,7 +2104,7 @@
     <div class="back-row">
       <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
     </div>
-    <div class="detail-header"><h2>ترحيل الحصص</h2></div>
+    <div class="detail-header"><h2>ترحيل الحصص</h2><button type="button" class="export-btn" id="openShiftArch" style="flex:none; width:auto; padding:6px 12px;">📁 الترحيلات المحفوظة <span id="shArchCount" class="count-pill" style="margin-inline-start:4px;">0</span></button></div>
     <div class="sched-form">
       <div class="field" style="margin-bottom:8px;">
         <label for="shDate">التاريخ</label>
@@ -2331,7 +2366,7 @@
   <!-- حصر حصص الانتظار -->
   <div class="detail" id="waitCountView">
     <div class="back-row">
-      <button class="back-btn" data-back="waitHub"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>سجل الانتظار</button>
+      <button class="back-btn" data-back="assignmentLog"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>الجداول المحفوظة</button>
     </div>
     <div class="detail-header"><h2>حصر حصص الانتظار</h2></div>
     <div class="sched-form">
@@ -2562,7 +2597,7 @@
       </div>
     </div>
     <div class="sched-hint" style="text-align:right; margin-bottom:8px;">تُضاف جداول الانتظار هنا عند حفظها. تُنقل تلقائياً إلى الأرشيف بنهاية دوام الخميس الساعة 2:00 ظهراً.</div>
-    <div class="export-row"><button class="export-btn" id="openArchiveInline">🗄️ الأرشيف</button><button class="export-btn" id="openDeletedSheets">♻️ المحذوفة</button><button class="export-btn" id="archivePastSheetsBtn">📦 أرشفة جداول الأيام السابقة</button></div>
+    <div class="export-row"><button class="export-btn" id="openArchiveInline">🗄️ الأرشيف</button><button class="export-btn" id="openDeletedSheets">♻️ المحذوفة</button><button class="export-btn" id="archivePastSheetsBtn">📦 أرشفة جداول الأيام السابقة</button><button class="export-btn" id="openWaitCount">📊 حصر حصص الانتظار</button></div>
     <div class="name-list" id="assignmentLogList"></div>
     <div id="assignmentLogViewer"></div>
   </div>
@@ -5198,6 +5233,23 @@
   const WORK_GROUP = { absent: "main", late: "late", permission: "leave", early_leave: "leave" };
   const workRecs = (date, teacher) => (data.workAttendance || []).filter(r => r.date === date && r.teacher === teacher);
   const workRec = (date, teacher, status) => (data.workAttendance || []).find(r => r.date === date && r.teacher === teacher && r.status === status);
+  // اختيار الوقت: ساعة ودقيقة و«صباحًا» افتراضيًا مع إمكانية «مساءً»؛ القيمة تُحفظ بنظام 24 ساعة
+  function ampmPicker(value, title, onChange) {
+    const w = document.createElement("span"); w.className = "ampm"; w.title = title || "";
+    let h = "", m = "", ap = "AM";
+    if (/^\d{1,2}:\d{2}/.test(value || "")) { const H = Number(value.split(":")[0]); m = value.split(":")[1].slice(0, 2); ap = H >= 12 ? "PM" : "AM"; h = String(H % 12 === 0 ? 12 : H % 12); }
+    const opt = (v, t, sel) => '<option value="' + v + '"' + (sel ? " selected" : "") + ">" + t + "</option>";
+    w.innerHTML = '<select data-p="h"><option value="">الساعة</option>' + Array.from({ length: 12 }, (_, i) => opt(String(i + 1), String(i + 1), String(i + 1) === h)).join("") + "</select>" +
+      '<span class="ampm-sep">:</span><select data-p="m"><option value="">الدقيقة</option>' + Array.from({ length: 60 }, (_, i) => { const v = String(i).padStart(2, "0"); return opt(v, v, v === m); }).join("") + "</select>" +
+      '<select data-p="ap">' + opt("AM", "صباحًا", ap === "AM") + opt("PM", "مساءً", ap === "PM") + "</select>";
+    w.addEventListener("change", () => {
+      const hv = w.querySelector('[data-p="h"]').value, mv = w.querySelector('[data-p="m"]').value || (hv ? "00" : ""), av = w.querySelector('[data-p="ap"]').value;
+      if (!hv) { if (!mv) onChange(""); return; }
+      let H = Number(hv) % 12; if (av === "PM") H += 12;
+      onChange(String(H).padStart(2, "0") + ":" + mv);
+    });
+    return w;
+  }
   function setWorkGroup(date, teacher, group, status, time) {
     const old = workRecs(date, teacher).find(r => WORK_GROUP[r.status] === group);
     data.workAttendance = data.workAttendance.filter(r => !(r.date === date && r.teacher === teacher && WORK_GROUP[r.status] === group));
@@ -5245,7 +5297,13 @@
     const b = el.querySelector("button[data-hol]");
     if (b) b.addEventListener("click", () => { toggleHoliday(d); showToast(isHoliday(d) ? "سُجّل اليوم إجازة" : "أُعيد اليوم يوم دوام"); after(); });
   }
+  function workDateHijriShow(dateStr) {
+    const el = document.getElementById("workDateHijri"); if (!el) return;
+    const p = dateStr ? wpDateParts(dateStr) : null;
+    el.innerHTML = p ? "<b>" + acEsc(p.dayName || "") + "</b>" + acEsc(p.hijri) : "";
+  }
   function renderWorkAttendanceList(dateStr) {
+    workDateHijriShow(dateStr);
     bindHolidayBar("workHolidayBar", dateStr, () => renderWorkAttendanceList(dateStr));
     try { ptWork(dateStr); } catch (e) { console.error(e); }
     const listEl = document.getElementById("workAttendanceList");
@@ -5280,11 +5338,7 @@
         es.addEventListener("change", () => { const r = workRec(dateStr, name, rec.status); if (!r) return; if (es.value) r.excuse = es.value; else delete r.excuse; saveData(); rerender(); });
         return ex;
       };
-      const timeIn = (rec, ph) => {
-        const t = document.createElement("input"); t.type = "time"; t.value = rec.time || ""; t.title = ph;
-        t.addEventListener("change", () => { setWorkGroup(dateStr, name, WORK_GROUP[rec.status], rec.status, t.value); rerender(); });
-        return t;
-      };
+      const timeIn = (rec, ph) => ampmPicker(rec.time || "", ph, v => { setWorkGroup(dateStr, name, WORK_GROUP[rec.status], rec.status, v); rerender(); });
       const badge = rec => {
         if (!rec.time || rec.status === "permission") return null;
         const m = rec.status === "late" ? computeLateDiff(rec.time, rec.date) : computeEarlyDiff(rec.time, rec.date);
@@ -10684,6 +10738,11 @@ ${contentEl.innerHTML}
   }
   function linkBody(kind, r) {
     const lines = [];
+    if (kind === "perm") {
+      const q = wpDateParts(r.date);
+      return "المكرم المعلم / " + r.teacher + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\nالتاريخ: " + (q.dayName || "") + " " + q.hijri + " — " + erG(r.date) + (r.time ? "\nوقت الخروج: " + r.time : "") + (r.reason ? "\nسبب الاستئذان: " + r.reason : "") +
+        "\n\nنأمل الاطلاع على استمارة الاستئذان المرفقة، والتوقيع داخل المربع ثم اختيار «تم العلم والتوقيع» ليظهر توقيعكم في الاستمارة.\n\nوكيل الشؤون التعليمية: موسى آل ضاحي";
+    }
     if (kind === "alert" && isLH(r.type)) {
       { const rg = alLateRange(r); if (rg) lines.push(rg); }
       alLateInc(r.lateRows).forEach((x, i) => { const p = wpDateParts(x.date); lines.push((i + 1) + "- " + (p.dayName || "") + " " + p.hijri + " — " + x.minutes + " دقيقة" + (x.note ? " (" + x.note + ")" : "")); });
@@ -10705,7 +10764,7 @@ ${contentEl.innerHTML}
   const IO_ABSENCE_OPTIONS = ["إجازة اضطرارية وتم رفعها في فارس", "إجازة اضطرارية وسأرفعها في فارس", "إجازة مرضية وتم رفعها في فارس", "إجازة مرضية وسأرفعها في فارس", "إجازة مرافق وتم رفعها في فارس", "إجازة مرافق وسأرفعها في فارس", "موعد"];
   const IO_REPLY_TYPES = ["absence", "missClass", "lateClass", "missWait", "refuseWait", "lineup", "lateLineup", "late"];
   const linkIsReply = (kind, r) => kind === "inq" && IO_REPLY_TYPES.includes(r.type);
-  function linkTitle(kind, r) { return kind === "alert" ? (isLH(r.type) ? r.typeName : "تنبيه — " + (r.typeName || "")) : (r.title || ioTitleOf(r)); }
+  function linkTitle(kind, r) { if (kind === "perm") return "استمارة استئذان"; return kind === "alert" ? (isLH(r.type) ? r.typeName : "تنبيه — " + (r.typeName || "")) : (r.title || ioTitleOf(r)); }
   // ينشئ رابط الاطلاع (أو يعيد استخدام السابق) ثم يفتح واتساب المعلم
   function linkSend(kind, r, files) {
     const phone = (data.teacherPhones[r.teacher] || "").trim();
@@ -10715,14 +10774,14 @@ ${contentEl.innerHTML}
     if (files && files.reduce((n, a) => n + a.data.length, 0) > LINK_MAX) { showToast("حجم المرفقات مع الورقة كبير — أزل بعض المرفقات أو ألغِ إرفاق الورقة"); return; }
     const title = linkTitle(kind, r);
     const msg = link => "السلام عليكم ورحمة الله وبركاته\nالمكرم المعلم / " + r.teacher + " وفقه الله\n\nنفيدكم بصدور (" + title + ")" + (r.hijri ? " بتاريخ " + r.hijri : "") +
-      (linkIsReply(kind, r) ? "، نأمل الاطلاع عليها وكتابة إفادتكم وتوقيعها برقم السجل المدني عبر الرابط:\n" : "، نأمل الاطلاع عليها وتأكيد الاستلام برقم السجل المدني عبر الرابط:\n") + link + "\n\nإدارة مدرسة عطاء بن أبي رباح المتوسطة";
+      (kind === "perm" ? "، نأمل الاطلاع عليها وتوقيعها برقم السجل المدني عبر الرابط:\n" : linkIsReply(kind, r) ? "، نأمل الاطلاع عليها وكتابة إفادتكم وتوقيعها برقم السجل المدني عبر الرابط:\n" : "، نأمل الاطلاع عليها وتأكيد الاستلام برقم السجل المدني عبر الرابط:\n") + link + "\n\nإدارة مدرسة عطاء بن أبي رباح المتوسطة";
     let w = null; try { w = window.open("", "_blank"); } catch (e) {}
     const go = url => { if (w && !w.closed) w.location.href = url; else openExternalLink(url); };
     const wa = link => "https://wa.me/" + nfWaPhone(phone) + "?text=" + encodeURIComponent(msg(link));
     const done = (id, link) => {
       r.ackId = id; r.ackIds = [...new Set([...(r.ackIds || []), id])]; r.linkSentAt = Date.now(); r.linkSentCount = (r.linkSentCount || 0) + 1;
       if (files && files.length) r.attachNames = files.map(a => a.name);
-      saveData(); try { ioRenderSaved(); alRenderSaved(); laRender(); } catch (e) {}
+      saveData(); try { ioRenderSaved(); alRenderSaved(); laRender(); } catch (e) {} try { if (kind === "perm") phRender(); } catch (e) {}
       go(wa(link));
     };
     const n = r.ackId && (data.notices || []).find(x => x.id === r.ackId);
@@ -10733,7 +10792,7 @@ ${contentEl.innerHTML}
       const dp = wpDateParts(todayISODate());
       const doc = { title, body: linkBody(kind, r), dateText: (dp.dayName || "") + " " + dp.hijri + " — " + dp.greg, hashes: { [h]: r.teacher }, createdAt: new Date().toISOString() };
       if (files && files.length) doc.attachments = files.map(a => ({ name: a.name, type: a.type, data: a.data }));
-      if (kind === "alert" && isLH(r.type)) doc.mode = "sign";
+      if ((kind === "alert" && isLH(r.type)) || kind === "perm") doc.mode = "sign";
       if (linkIsReply(kind, r)) { doc.mode = "reply"; if (r.type === "absence") doc.options = IO_ABSENCE_OPTIONS.slice(); }
       await window.__fbdb.collection("notices").doc(id).set(doc);
       if (!Array.isArray(data.notices)) data.notices = [];
@@ -10749,13 +10808,14 @@ ${contentEl.innerHTML}
     if (linkSyncBusy) return;
     if (!window.__fbdb) { if (!quiet) showToast("التحديث يحتاج الاتصال بالسحابة"); return; }
     const ids = new Set();
-    [...(data.officialInq || []), ...(data.officialAlerts || [])].forEach(r => linkIds(r).forEach(i => ids.add(i)));
+    const permRecs = (data.workAttendance || []).filter(r => r.status === "permission" && (r.ackId || r.ackIds));
+    [...(data.officialInq || []), ...(data.officialAlerts || []), ...permRecs].forEach(r => linkIds(r).forEach(i => ids.add(i)));
     if (!ids.size) return;
     linkSyncBusy = true;
     let fail = null;
     try {
       const owner = {};
-      [...(data.officialInq || []), ...(data.officialAlerts || [])].forEach(r => linkIds(r).forEach(i => owner[i] = r));
+      [...(data.officialInq || []), ...(data.officialAlerts || []), ...permRecs].forEach(r => linkIds(r).forEach(i => owner[i] = r));
       for (const id of ids) {
         let n = (data.notices || []).find(x => x.id === id);
         if (!n) continue;
@@ -10773,6 +10833,7 @@ ${contentEl.innerHTML}
       saveData();
     } finally { linkSyncBusy = false; }
     try { laRender(); ioRenderSaved(); alRenderSaved(); } catch (e) {}
+    try { if (document.getElementById("permHubView").classList.contains("active")) phRender(); } catch (e) {}
     if (fail) showToast("تعذر قراءة حالات التأكيد من السحابة (" + ((fail && (fail.code || fail.message)) || "خطأ") + ") — تأكد من تسجيل الدخول بحساب المدرسة وقواعد Firebase");
     else if (!quiet) showToast("تم تحديث حالات الاطلاع");
   }
@@ -11771,6 +11832,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     document.getElementById("waitAckView").classList.toggle("active", view === "waitAck");
     document.getElementById("shiftView").classList.toggle("active", view === "shift");
     document.getElementById("shiftArchView").classList.toggle("active", view === "shiftArch");
+    document.getElementById("permHubView").classList.toggle("active", view === "permHub");
     document.getElementById("waitDesignView").classList.toggle("active", view === "waitDesign");
     document.getElementById("waitCountView").classList.toggle("active", view === "waitCount");
     document.getElementById("ackView").classList.toggle("active", view === "ack");
@@ -11966,6 +12028,106 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   document.getElementById("openWaitTable").addEventListener("click", wtOpen);
   document.getElementById("openWaitLog").addEventListener("click", () => { renderAssignmentLogList(); showView("assignmentLog"); });
   document.getElementById("openWaitCount").addEventListener("click", wcOpen);
+  /* ===== الاستئذان (من سجل الانتظار): المستأذنون المسجّلون في متابعة الدوام ===== */
+  function phOpen() { const d = document.getElementById("phDate"); if (!d.value) d.value = schoolDayISO(); phRender(); showView("permHub"); window.scrollTo(0, 0); }
+  function phRender() {
+    const d = document.getElementById("phDate").value, p = d ? wpDateParts(d) : null;
+    document.getElementById("phDateH").innerHTML = p ? "<b>" + acEsc(p.dayName || "") + "</b>" + acEsc(p.hijri) : "";
+    const sel = document.getElementById("phTeacher"), cur = sel.value, L = d ? wtPermitted(d) : [];
+    sel.innerHTML = '<option value="">' + (L.length ? "اختر" : "لا يوجد مستأذنون في هذا اليوم") + "</option>" + L.map(x => '<option value="' + acEsc(x.teacher) + '">' + acEsc(x.teacher) + (x.time ? "  (" + x.time + ")" : "") + "</option>").join("");
+    sel.disabled = !L.length; if (L.some(x => x.teacher === cur)) sel.value = cur;
+    const box = document.getElementById("phInfo");
+    if (!L.length) { box.innerHTML = '<div class="empty-state">لم يُسجَّل أي معلم «مستأذن» في متابعة الدوام لهذا التاريخ — لتسجيل مستأذن اضغط «🕘 فتح متابعة الدوام».</div>'; return; }
+    const t = sel.value;
+    if (!t) { box.innerHTML = '<div class="sched-hint" style="text-align:right;">عدد المستأذنين في هذا اليوم: <b>' + L.length + "</b> — اختر المعلم لعرض التفاصيل وطباعة استمارته.</div>"; return; }
+    const r = (data.workAttendance || []).find(x => x.date === d && x.teacher === t && x.status === "permission") || {};
+    const day = dayNameFromDate(d), les = data.schedule.filter(x => x.day === day && x.teacher === t).sort((a, b) => Number(a.period) - Number(b.period));
+    const after = les.filter(x => wtAfterPerm(Number(x.period), r.time, d));
+    box.innerHTML = '<div class="ph-card"><div class="ph-row"><span>المعلم</span><b>' + acEsc(t) + '</b></div><div class="ph-row"><span>وقت الاستئذان</span><b>' + acEsc(r.time || "لم يُحدَّد") + '</b></div><div class="ph-row"><span>سبب الاستئذان</span><b>' + acEsc(r.reason || "—") + "</b></div>" +
+      '<div class="ph-sub">حصص المعلم وقت الاستئذان (' + after.length + ")</div>" +
+      (after.length ? '<table class="ph-tbl"><thead><tr><th>الحصة</th><th>الفصل</th><th>التأمين</th></tr></thead><tbody>' + after.map(x => { const cv = (r.cover || {})[x.period] || ""; return "<tr><td><b>" + acEsc(shPer(Number(x.period)) || x.period) + "</b></td><td>" + acEsc(x.className) + '</td><td><select class="ph-cov" data-p="' + acEsc(x.period) + '"><option value="">اختر</option><option value="teacher"' + (cv === "teacher" ? " selected" : "") + '>تم تأمينها من قبل المعلم</option><option value="admin"' + (cv === "admin" ? " selected" : "") + ">تم تأمينها من قبل الإدارة</option></select></td></tr>"; }).join("") + "</tbody></table>" : '<div class="sched-hint" style="text-align:right;">لا توجد حصص وقت الاستئذان.</div>') +
+      (() => { const st = r.ackId ? linkState(r) : null;
+        return '<div class="ph-link">' + (!r.ackId ? "📱 لم يُرسل رابط للمعلم بعد" : r.teacherSig ? '✅ وقّع المعلم على الاستمارة<br><img src="' + r.teacherSig + '" alt="توقيع المعلم">' : r.replyAt && r.teacherSigned === false ? "👁️ اطّلع المعلم ولم يوقّع" : st && st.conf ? "✅ اطّلع المعلم" : "⏳ أُرسل الرابط — بانتظار توقيع المعلم") + "</div>"; })() +
+      '<div class="er-acts" style="margin-top:10px;"><button type="button" class="export-btn" id="phPrint">🖨️ طباعة استمارة الاستئذان</button><button type="button" class="export-btn" id="phLink">📱 ' + (r.ackId ? "إعادة إرسال الرابط" : "إرسال رابط للمعلم") + "</button>" + (r.ackId ? '<button type="button" class="export-btn" id="phSync">🔄 تحديث حالة التوقيع</button>' : "") + '<button type="button" class="export-btn" id="phGoWait">📋 فتح جدول الانتظار لهذا المستأذن</button></div></div>';
+    document.getElementById("phLink").addEventListener("click", () => phSendLink(d, t));
+    if (document.getElementById("phSync")) document.getElementById("phSync").addEventListener("click", () => linkSyncAll(false));
+    document.getElementById("phPrint").addEventListener("click", () => phPrintForm(d, t));
+    box.querySelectorAll(".ph-cov").forEach(sel => sel.addEventListener("change", () => {
+      const rec = (data.workAttendance || []).find(x => x.date === d && x.teacher === t && x.status === "permission"); if (!rec) return;
+      rec.cover = rec.cover || {}; if (sel.value) rec.cover[sel.dataset.p] = sel.value; else delete rec.cover[sel.dataset.p];
+      if (!Object.keys(rec.cover).length) delete rec.cover;
+      saveData(); showToast("تم الحفظ");
+    }));
+    document.getElementById("phGoWait").addEventListener("click", () => { wt.date = d; wt.absent = t; wt.kind = "permission"; wtRefresh(true); showView("waitTable"); window.scrollTo(0, 0); });
+  }
+  // صورة الاستمارة لإرفاقها في رابط المعلم
+  function permDocSpec(d, t, r) {
+    const q = wpDateParts(d), day = dayNameFromDate(d), dots = "...................";
+    const COV = { teacher: "تم تأمينها من قبل المعلم", admin: "تم تأمينها من قبل الإدارة" };
+    const les = data.schedule.filter(x => x.day === day && x.teacher === t).sort((a, b) => Number(a.period) - Number(b.period)).filter(x => wtAfterPerm(Number(x.period), r.time, d));
+    const sub = x => { const c = (data.coverageRecords || []).find(c => c.date === d && c.absentTeacher === t && Number(c.period) === Number(x.period)); return c && c.subTeacher ? c.subTeacher : ""; };
+    return { title: "استمارة استئذان", dateIso: d, blocks: [
+      { t: "table", groups: [[["اسم المعلم", t, 1], ["السجل المدني", (data.teacherCivil || {})[t] || "", 1]], [["اليوم", q.dayName || ""], ["التاريخ", q.hijri + "\n" + erG(d)], ["وقت الخروج", r.time || ""], ["وقت العودة", ""]], [["سبب الاستئذان", r.reason || ""]]],
+        body: "السلام عليكم ورحمة الله وبركاته\nآمل الموافقة على طلب الاستئذان المقدم حسب البيانات الموضحة في الجدول أعلاه\nولكم جزيل الشكر" },
+      { t: "grid", headers: ["م", "الحصة", "الفصل", "التأمين", "المعلم المنتظر"], widths: [1, 2, 1.6, 4, 3], rows: les.map((x, i) => [String(i + 1), shPer(Number(x.period)) || String(x.period), x.className, COV[(r.cover || {})[x.period]] || "", sub(x)]) },
+      { t: "sig", items: ["وكيل الشؤون التعليمية: موسى آل ضاحي", "مدير المدرسة: موسى آل عبيد"] }
+    ] };
+  }
+  function phSendLink(d, t) {
+    const r = (data.workAttendance || []).find(x => x.date === d && x.teacher === t && x.status === "permission"); if (!r) return;
+    if (!r.id) { r.id = "pm" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); saveData(); }
+    r.hijri = wpDateParts(d).hijri; r.day = dayNameFromDate(d);
+    let files = [];
+    try { const cv = docCanvas(permDocSpec(d, t, r)); files = [{ name: "استمارة استئذان.jpg", type: "image/jpeg", data: cv.toDataURL("image/jpeg", 0.8).split(",")[1] }]; } catch (e) { console.error(e); }
+    linkSend("perm", r, files);
+  }
+  // استمارة استئذان رسمية بالترويسة يوقّع عليها المعلم (t فارغ = استمارة فارغة للتعبئة باليد)
+  function phPrintForm(d, t) {
+    const r = t ? ((data.workAttendance || []).find(x => x.date === d && x.teacher === t && x.status === "permission") || {}) : {};
+    const q = d && t ? wpDateParts(d) : null, civil = t ? ((data.teacherCivil || {})[t] || "") : "";
+    const dots = "..............................";
+    const day = d && t ? dayNameFromDate(d) : null;
+    const les = t && day ? data.schedule.filter(x => x.day === day && x.teacher === t).sort((a, b) => Number(a.period) - Number(b.period)).filter(x => wtAfterPerm(Number(x.period), r.time, d)) : [];
+    const sub = x => { const c = (data.coverageRecords || []).find(c => c.date === d && c.absentTeacher === t && Number(c.period) === Number(x.period)); return c && c.subTeacher ? c.subTeacher : ""; };
+    const B = "border:1.5px solid #174a59; padding:9px 8px; font-size:15px;", L = B + " background:#eef5f6; color:#174a59; font-weight:800; width:22%;", H = B + " background:#174a59; color:#fff; font-weight:700; text-align:center;";
+    const v = x => x ? wpEsc(x) : '<span style="color:#9aa5a2;">' + dots + "</span>";
+    const COV = { teacher: "تم تأمينها من قبل المعلم", admin: "تم تأمينها من قبل الإدارة" };
+    const cov = x => COV[(r.cover || {})[x.period]] || "";
+    const rowsLes = les.length ? les.map((x, i) => `<tr><td style="${B} text-align:center;">${i + 1}</td><td style="${B} text-align:center;">${wpEsc(shPer(Number(x.period)) || x.period)}</td><td style="${B} text-align:center;">${wpEsc(x.className)}</td><td style="${B} text-align:center; font-size:13.5px;">${wpEsc(cov(x))}</td><td style="${B} text-align:center;">${sub(x) ? wpEsc(sub(x)) : ""}</td><td style="${B}"></td></tr>`).join("")
+      : Array.from({ length: t ? 1 : 4 }, (_, i) => `<tr><td style="${B} text-align:center;">${t ? "—" : i + 1}</td><td style="${B}"></td><td style="${B}"></td><td style="${B}" colspan="2">${t ? '<span style="color:#66736f;">لا توجد حصص وقت الاستئذان</span>' : ""}</td><td style="${B}"></td></tr>`).join("");
+    const inner = `
+      <table style="width:100%; border-collapse:collapse; margin-top:4px;">
+        <tr><td style="${L}">اسم المعلم</td><td style="${B}" colspan="3"><b>${v(t)}</b></td></tr>
+        <tr><td style="${L}">السجل المدني</td><td style="${B}">${v(civil)}</td><td style="${L}">العمل الحالي</td><td style="${B}">معلم</td></tr>
+        <tr><td style="${L}">اليوم</td><td style="${B}">${v(q && q.dayName)}</td><td style="${L}">التاريخ</td><td style="${B}">${q ? wpEsc(q.hijri) : v("")}${q ? '<br><span style="font-size:12.5px; color:#4b5b58;">الموافق ' + wpEsc(erG(d)) + "</span>" : ""}</td></tr>
+        <tr><td style="${L}">وقت الخروج</td><td style="${B}">${v(r.time)}</td><td style="${L}">وقت العودة</td><td style="${B}">${v("")}</td></tr>
+        <tr><td style="${L}">سبب الاستئذان</td><td style="${B} height:60px;" colspan="3">${v(r.reason)}</td></tr>
+      </table>
+      <div style="border:1.5px solid #174a59; border-radius:10px; padding:12px 14px; margin-top:14px; font-size:15px; line-height:2;">
+        <div>السلام عليكم ورحمة الله وبركاته</div>
+        <div>آمل الموافقة على طلب الاستئذان المقدم حسب البيانات الموضحة في الجدول أعلاه</div>
+        <div style="text-align:center;">ولكم جزيل الشكر</div>
+        <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:10px;"><div><b style="color:#174a59;">التوقيع:</b> ${r.teacherSig ? '<img src="' + r.teacherSig + '" alt="توقيع" style="height:50px; vertical-align:middle;">' : r.replyAt && r.teacherSigned === false ? '<b style="color:#9a5b00;">تم العلم ولم يوقّع</b>' : dots}</div></div>
+      </div>
+      <div style="font-weight:800; color:#174a59; margin:14px 0 6px; font-size:15.5px;">حصص المعلم</div>
+      <table style="width:100%; border-collapse:collapse;"><tr><th style="${H} width:6%">م</th><th style="${H} width:13%">الحصة</th><th style="${H} width:11%">الفصل</th><th style="${H} width:27%">التأمين</th><th style="${H}">المعلم المنتظر</th><th style="${H} width:17%">توقيع المنتظر</th></tr>${rowsLes}</table>
+      <div style="display:flex; gap:12px; margin-top:16px;">
+        <div style="flex:1; border:1.5px solid #174a59; border-radius:10px; padding:12px 14px; font-size:14.5px; line-height:2.1;">
+          <b style="color:#174a59;">رأي وكيل الشؤون التعليمية</b><br>☐ موافق &nbsp;&nbsp; ☐ غير موافق<br>الاسم: موسى آل ضاحي<br>التوقيع: ....................
+        </div>
+        <div style="flex:1; border:1.5px solid #174a59; border-radius:10px; padding:12px 14px; font-size:14.5px; line-height:2.1;">
+          <b style="color:#174a59;">اعتماد مدير المدرسة</b><br>☐ يُعتمد &nbsp;&nbsp; ☐ لا يُعتمد<br>الاسم: موسى آل عبيد<br>التوقيع: ....................
+        </div>
+      </div>`;
+    const title = "استمارة استئذان";
+    const page = t ? wpGenericPage(title, inner, d) : `<section class="page gen">${wpBandHTML()}<h2>${wpEsc(title)}</h2>${inner}</section>`;
+    wpOpenDoc(wpShellDoc(title, page, { fitOnePage: true }), "استمارة_استئذان" + (t ? "_" + t : ""));
+  }
+  document.getElementById("phDate").addEventListener("change", phRender);
+  document.getElementById("phBlank").addEventListener("click", () => phPrintForm("", ""));
+  document.getElementById("phTeacher").addEventListener("change", phRender);
+  document.getElementById("phGoWork").addEventListener("click", () => { const d = document.getElementById("phDate").value; if (d) document.getElementById("workDateInput").value = d; document.getElementById("openWorkTile").click(); window.scrollTo(0, 0); });
+  document.getElementById("openPermHub").addEventListener("click", phOpen);
   /* ===== ترحيل الحصص: سدّ حصص الغائب بنقل الحصص الأخيرة وحذف آخر حصة للفصل ===== */
   let shPlan = null;
   function shCompute(date) {
@@ -12165,7 +12327,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     else if (b.id === "shSave") shSave();
   });
   // ===== الترحيلات المحفوظة =====
-  function shArchCount() { const n = Object.keys(data.shiftArchive || {}).length; const el = document.getElementById("shArchCount"); if (el) el.textContent = n ? n + " ترحيل محفوظ" : "حسب تاريخ الغياب"; }
+  function shArchCount() { const n = Object.keys(data.shiftArchive || {}).length; const el = document.getElementById("shArchCount"); if (el) el.textContent = n; }
   function shWithPlan(snap, fn) {
     const keep = shPlan;
     shPlan = Object.assign({ freeAt: () => [], unavail: () => false }, snap);
@@ -12884,7 +13046,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-20-11";
+window.APP_BUILD = "2026-11-22-10";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
