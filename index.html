@@ -611,6 +611,19 @@
   .apw-form label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 700; }
   .apw-form input, .apw-form select { font: inherit; font-size: 13px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
   .apw-st { margin-top: 8px; border: 1px dashed #c9b27a; background: #fffaf0; border-radius: 10px; padding: 8px 10px; font-size: 13px; font-weight: 700; color: #8a5200; }
+  .tk-flow { border: 1.5px solid #c9dcd8; border-radius: 14px; background: #fff; padding: 10px; }
+  .tk-title { font-size: 13.5px; color: #174a59; margin-bottom: 8px; }
+  .tk-step { border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px; margin-bottom: 8px; background: #fbfcfc; }
+  .tk-step.done { border-color: #9fd3b0; background: #f1faf4; }
+  .tk-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; color: #174a59; margin-bottom: 6px; }
+  .tk-n { width: 22px; height: 22px; border-radius: 50%; background: #174a59; color: #fff; display: grid; place-items: center; font-size: 12px; flex: none; }
+  .tk-ok { color: #146c3a; font-weight: 700; font-size: 12.5px; } .tk-wait { color: #8a5200; font-weight: 700; font-size: 12.5px; } .tk-no { color: #b42318; font-weight: 700; font-size: 12.5px; } .tk-off { color: #889; font-size: 12.5px; }
+  .tk-sig { display: block; height: 50px; background: #fff; border: 1px solid #d6e2df; border-radius: 8px; padding: 2px; margin: 0 0 6px; }
+  .tk-step .export-btn { width: auto; flex: none; padding: 6px 12px; } .tk-step .export-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .tk-item { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 9px 11px; margin-bottom: 8px; } .tk-item.cur { border-color: #174a59; box-shadow: 0 0 0 2px #174a5922; }
+  .tk-ih b { display: block; color: #174a59; } .tk-ih small { color: #66736f; font-size: 12px; }
+  .tk-chips { display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap; } .tk-chip { font-size: 11.5px; border: 1px solid #ddd; border-radius: 20px; padding: 2px 9px; color: #889; } .tk-chip.ok { border-color: #9fd3b0; background: #eef8f1; color: #146c3a; font-weight: 700; }
+  .tk-acts { display: flex; gap: 6px; } .tk-acts button { border: 1px solid var(--line); background: #f7fbfa; border-radius: 8px; padding: 4px 10px; font: inherit; font-size: 12.5px; cursor: pointer; }
   .apw-done { margin-top: 8px; border: 1.5px solid #2f9e5a; background: #e9f7ee; border-radius: 10px; padding: 9px 11px; font-size: 14px; color: #146c3a; display: flex; flex-direction: column; gap: 6px; }
   .apw-done small { font-size: 12px; color: #2b6b45; } .apw-saved { font-size: 12.5px; color: #174a59; font-weight: 700; }
   .apw-done .export-btn { align-self: flex-start; width: auto; flex: none; padding: 6px 14px; display: inline-block; margin-left: 6px; }
@@ -2391,8 +2404,15 @@
         <button class="export-btn" id="tkPrint">🖨️ طباعة التكليف</button>
         <button class="export-btn" id="tkClear">↺ مسح وإرجاع النص الافتراضي</button>
       </div>
+      <div class="export-row" style="margin-top:8px;">
+        <button class="export-btn" id="tkSave" style="background:#174a59; color:#fff; border-color:#174a59;">💾 حفظ التكليف وإنشاء روابط التوقيع</button>
+        <button class="export-btn" id="tkNew" style="display:none;">➕ تكليف جديد</button>
+      </div>
+      <div id="tkFlow" style="margin-top:10px;"></div>
       <div class="sched-hint" style="text-align:right; margin-top:8px;">يظهر الموضوع عنوانًا أعلى الورقة. إذا تُرك المعلم «اختر» يُطبع مكان الاسم فارغًا للكتابة باليد.</div>
     </div>
+    <div class="detail-header" style="margin-top:16px;"><h2 style="font-size:17px;">📁 التكليفات المحفوظة</h2><span class="count-pill" id="tkSavedN">0</span></div>
+    <div id="tkSaved"></div>
   </div>
 
   <!-- متابعة الاطلاع -->
@@ -2855,6 +2875,7 @@
     const hashes = ((f.hashes || {}).mapValue || {}).fields || {};
     const mode = (f.mode || {}).stringValue || "";
     const ropts = (((f.options || {}).arrayValue || {}).values || []).map(v => v.stringValue || "").filter(Boolean);
+    const askLabel = (f.askLabel || {}).stringValue || "";
     const optLabel = (f.optLabel || {}).stringValue || "", replyLabel = (f.replyLabel || {}).stringValue || "", sendLabel = (f.sendLabel || {}).stringValue || "";
     const locked = (f.locked || {}).booleanValue === true, lockedSt = (f.lockedStatus || {}).stringValue || "";
     const atts = (((f.attachments || {}).arrayValue || {}).values || []).map(v => { const m = (v.mapValue || {}).fields || {}; return { name: (m.name || {}).stringValue || "مرفق", type: (m.type || {}).stringValue || "", data: (m.data || {}).stringValue || "" }; }).filter(a => a.data);
@@ -2883,6 +2904,7 @@
           '<div class="ack-msg" id="ackMsg"></div><button id="ackBtn" hidden></button></div>'
         : '<div class="ack-form"><label for="ackCivil">' + (mode === "sign" ? "أدخل رقم السجل المدني ثم اختر «تم العلم والتوقيع» أو «تم العلم — بدون توقيع»" : "أدخل رقم السجل المدني لتأكيد اطلاعك على الإشعار") + '</label>' +
           '<input id="ackCivil" type="text" inputmode="numeric" maxlength="10" placeholder="رقم السجل المدني" autocomplete="off">' +
+          (mode === "sign" && askLabel ? '<label for="ackAsk">' + esc(askLabel) + '</label><textarea id="ackAsk" rows="3" maxlength="300" placeholder="اكتب السبب هنا…"></textarea>' : "") +
           (mode === "sign" ? '<div class="ack-pad"><div class="ack-pad-h">✍️ التوقيع — وقّع بإصبعك داخل المربع</div><canvas id="ackPad"></canvas><button type="button" id="ackPadClear" class="ack-pad-clear">🧽 مسح التوقيع</button></div>' : "") +
           '<button id="ackBtn">' + (mode === "sign" ? "✍️ تم العلم والتوقيع" : "✅ أؤكد اطلاعي على الإشعار") + '</button>' +
           (mode === "sign" ? '<button id="ackBtnNo" class="ack-no-sign">👁️ تم العلم — بدون توقيع</button>' : "") +
@@ -2934,14 +2956,16 @@
         const civil = ackNormCivil(document.getElementById("ackCivil").value);
         if (!/^\d{10}$/.test(civil)) { msg("أدخل رقم السجل المدني كاملاً (10 أرقام)"); return; }
         if (signed && pad && !pad.has()) { msg("وقّع بإصبعك داخل مربع التوقيع أولاً"); return; }
+        const askEl = document.getElementById("ackAsk"), ask = askEl ? askEl.value.trim() : "";
+        if (askEl && !ask) { msg("اكتب سبب الاستئذان أولاً"); askEl.focus(); return; }
         const b1 = document.getElementById("ackBtn"), b2 = document.getElementById("ackBtnNo");
         b1.disabled = b2.disabled = true; msg("جاري التسجيل…", true);
         try {
           const h = await ackHash(civil, id);
           if (!hashes[h]) { msg("رقم السجل المدني غير مسجل لهذا التنبيه — تأكد من الرقم أو راجع إدارة المدرسة"); b1.disabled = b2.disabled = false; return; }
           const sig = signed && pad ? pad.data() : "";
-          const res = await postAck(h, Object.assign({ signed: { booleanValue: signed } }, sig ? { sig: { stringValue: sig } } : {}));
-          if (res.ok) { if (pad) pad.lock(); msg("شكراً " + (hashes[h].stringValue || "") + " — تم تسجيل: " + (signed ? "تم العلم والتوقيع ✓" : "تم العلم ولم يوقّع"), signed); document.getElementById("ackCivil").disabled = true; return; }
+          const res = await postAck(h, Object.assign({ signed: { booleanValue: signed } }, sig ? { sig: { stringValue: sig } } : {}, ask ? { reply: { stringValue: ask } } : {}));
+          if (res.ok) { if (pad) pad.lock(); if (askEl) askEl.disabled = true; msg("شكراً " + (hashes[h].stringValue || "") + " — تم تسجيل: " + (signed ? "تم العلم والتوقيع ✓" : "تم العلم ولم يوقّع"), signed); document.getElementById("ackCivil").disabled = true; return; }
           if (res.status === 409) { msg("سبق تسجيل ردّك على هذا التنبيه", true); return; }
           msg(res.status === 403 ? "تعذر التسجيل (403) — أبلغ إدارة المدرسة" : "تعذر التسجيل (" + res.status + ") — حاول لاحقاً");
         } catch (e) { msg("تعذر الاتصال — تحقق من الإنترنت وحاول مرة أخرى"); }
@@ -3215,6 +3239,7 @@
     if (!out.erIntro || typeof out.erIntro !== "object" || Array.isArray(out.erIntro)) out.erIntro = {};
     if (!out.erFiles || typeof out.erFiles !== "object" || Array.isArray(out.erFiles)) out.erFiles = {};
     if (!out.approvers || typeof out.approvers !== "object" || Array.isArray(out.approvers)) out.approvers = {};
+    if (!Array.isArray(out.taklifs)) out.taklifs = [];
     if (!Array.isArray(out.adminStaff)) {
       out.adminStaff = [{ id: "as1", name: "موسى آل عبيد", role: "مدير المدرسة", civil: "", phone: "" }, { id: "as2", name: "موسى آل ضاحي", role: "وكيل الشؤون التعليمية", civil: "", phone: "" }];
       const ap = out.approvers.perm;
@@ -10199,7 +10224,8 @@ ${contentEl.innerHTML}
     ioEl("ioEditing").style.display = r ? "" : "none";
     ioEl("ioEditing").textContent = r ? "✏️ تعدّل مساءلة محفوظة: " + r.title + " — " + r.teacher + " — " + (r.hijri || "") + (r.editAt ? " — بعد الحفظ أرسل الرابط للمعلم من جديد، ثم أرسلها للمدير بعد توقيعه." : " (اضغط «مساءلة جديدة» لبدء مساءلة أخرى)") : "";
   }
-  function ioPrintRec(v, asPage) {
+  function ioPrintRec(v, asPage, draft) {
+    if (!draft && v && v.editAt && v.savedSnap) v = Object.assign({}, v.savedSnap, { id: v.id });
     const T = Object.assign({}, IO_TYPES[v.type] || { cls: false }, { title: ioTitleOf(v) }), body = v.body || "";
     const rsrc = v.replyAt ? v : (data.officialInq || []).find(x => x.id === (v.id || ioCurId));
     const rp = rsrc && rsrc.replyAt ? rsrc : null;
@@ -10301,12 +10327,12 @@ ${contentEl.innerHTML}
     const names = Object.keys(groups).filter(n => !q || normalizeArabicText(n).includes(q)).sort((a, b) => a.localeCompare(b, "ar"));
     if (!names.length) { box.innerHTML = '<div class="empty-state">' + (all.length ? "لا توجد نتائج" : "لا توجد مساءلات محفوظة بعد — تُحفظ عند الضغط على «حفظ» أو «طباعة»") + "</div>"; return; }
     box.innerHTML = names.map(n => {
-      const list = groups[n].slice().sort((a, b) => String(b.dateIso || "").localeCompare(String(a.dateIso || "")) || b.createdAt - a.createdAt);
+      const list = groups[n].map(r0 => r0.editAt && r0.savedSnap ? Object.assign({}, r0.savedSnap, { id: r0.id, printedAt: r0.printedAt, printCount: r0.printCount, delivered: r0.delivered, signed: r0.signed, editAt: r0.editAt }) : r0).sort((a, b) => String(b.dateIso || "").localeCompare(String(a.dateIso || "")) || b.createdAt - a.createdAt);
       return '<div class="ack-card2' + (ioOpenFolders.has(n) ? " open" : "") + '" data-t="' + acEsc(n) + '"><div class="hd"><span class="ic">📁</span><span class="tx"><b>' + acEsc(n) + '</b><span class="sub">آخر مساءلة: ' + acEsc(list[0].hijri || "—") + '</span></span><span class="pill part">' + list.length + "</span>" + (list.some(r => !r.signed) ? '<span class="pill none">' + list.filter(r => !r.signed).length + " غير موقّعة</span>" : "") + "</div>" +
         '<div class="ack-rows">' + list.map(r => '<div class="ack-item" data-id="' + r.id + '"><div class="hd"><b>' + acEsc(ioTitleOf(r)) + '</b><span class="pill">' + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + "</span></div>" +
           '<div class="sub" style="font-size:12px; color:var(--ink-soft); margin-top:4px;">' + acEsc((r.body || "").slice(0, 110)) + (r.body && r.body.length > 110 ? "…" : "") + "</div>" +
           (r.replyAt ? '<div class="io-reply"><b>إفادة المعلم:</b> ' + acEsc(r.teacherReply || "") + "</div>" : "") +
-          '<div class="io-st">' +
+          '<div class="io-st">' + (r.editAt ? '<span class="io-b no">✏️ نسخة معدلة قيد الاستكمال — المعروضة هي المعتمدة السابقة</span>' : "") +
             (r.printedAt ? '<span class="io-b ok">🖨️ تمت الطباعة' + (r.printCount === 2 ? " (مرتين)" : r.printCount > 2 && r.printCount <= 10 ? " (" + r.printCount + " مرات)" : r.printCount > 10 ? " (" + r.printCount + " مرة)" : "") + " — " + acEsc(ioStamp(r.printedAt)) + "</span>" : '<span class="io-b no">لم تُطبع بعد</span>') +
             (r.ackId ? (linkState(r).conf ? '<span class="io-b ok">✅ اطّلع وأكّد</span>' : '<span class="io-b no">🔗 أُرسل الرابط — بانتظار التأكيد</span>') : "") +
             (r.replyAt ? '<span class="io-b ' + (r.teacherSigned ? "ok" : "no") + '">' + (r.teacherSigned ? "✍️ أفاد المعلم ووقّع" : "✍️ أفاد المعلم — لم يوقّع") + "</span>" : "") +
@@ -10795,6 +10821,7 @@ ${contentEl.innerHTML}
   }
   function linkBody(kind, r) {
     const lines = [];
+    if (kind === "taklif") return "المكرم المعلم / " + r.teacher + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\n" + (r.body || "") + "\n\nشاكرين لكم تعاونكم، والله يحفظكم ويرعاكم.\n\nنأمل الاطلاع على التكليف المرفق، والتوقيع داخل المربع ثم اختيار «تم العلم والتوقيع».";
     if (kind === "perm") {
       const q = wpDateParts(r.date);
       return "المكرم المعلم / " + r.teacher + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\nالتاريخ: " + (q.dayName || "") + " " + q.hijri + " — " + erG(r.date) + (r.time ? "\nوقت الخروج: " + r.time : "") + (r.reason ? "\nسبب الاستئذان: " + r.reason : "") +
@@ -10831,14 +10858,14 @@ ${contentEl.innerHTML}
     if (files && files.reduce((n, a) => n + a.data.length, 0) > LINK_MAX) { showToast("حجم المرفقات مع الورقة كبير — أزل بعض المرفقات أو ألغِ إرفاق الورقة"); return; }
     const title = linkTitle(kind, r);
     const msg = link => "السلام عليكم ورحمة الله وبركاته\nالمكرم المعلم / " + r.teacher + " وفقه الله\n\nنفيدكم بصدور (" + title + ")" + (r.hijri ? " بتاريخ " + r.hijri : "") +
-      (kind === "perm" ? "، نأمل الاطلاع عليها وتوقيعها برقم السجل المدني عبر الرابط:\n" : linkIsReply(kind, r) ? "، نأمل الاطلاع عليها وكتابة إفادتكم وتوقيعها برقم السجل المدني عبر الرابط:\n" : "، نأمل الاطلاع عليها وتأكيد الاستلام برقم السجل المدني عبر الرابط:\n") + link + "\n\nإدارة مدرسة عطاء بن أبي رباح المتوسطة";
+      (kind === "perm" ? "، نأمل الاطلاع عليها وتوقيعها برقم السجل المدني عبر الرابط:\n" : kind === "taklif" ? "، نأمل الاطلاع عليه وتوقيعه برقم السجل المدني عبر الرابط:\n" : linkIsReply(kind, r) ? "، نأمل الاطلاع عليها وكتابة إفادتكم وتوقيعها برقم السجل المدني عبر الرابط:\n" : "، نأمل الاطلاع عليها وتأكيد الاستلام برقم السجل المدني عبر الرابط:\n") + link + "\n\nإدارة مدرسة عطاء بن أبي رباح المتوسطة";
     let w = null; try { w = window.open("", "_blank"); } catch (e) {}
     const go = url => { if (w && !w.closed) w.location.href = url; else openExternalLink(url); };
     const wa = link => "https://wa.me/" + nfWaPhone(phone) + "?text=" + encodeURIComponent(msg(link));
     const done = (id, link) => {
       r.ackId = id; r.ackIds = [...new Set([...(r.ackIds || []), id])]; r.linkSentAt = Date.now(); r.linkSentCount = (r.linkSentCount || 0) + 1;
       if (files && files.length) r.attachNames = files.map(a => a.name);
-      saveData(); try { ioRenderSaved(); alRenderSaved(); laRender(); } catch (e) {} try { if (kind === "perm") phRender(); } catch (e) {}
+      saveData(); try { ioRenderSaved(); alRenderSaved(); laRender(); } catch (e) {} try { if (kind === "perm") phRender(); if (kind === "taklif") tkRender(); } catch (e) {}
       go(wa(link));
     };
     const n = r.ackId && (data.notices || []).find(x => x.id === r.ackId);
@@ -10849,7 +10876,8 @@ ${contentEl.innerHTML}
       const dp = wpDateParts(todayISODate());
       const doc = { title, body: linkBody(kind, r), dateText: (dp.dayName || "") + " " + dp.hijri + " — " + dp.greg, hashes: { [h]: r.teacher }, createdAt: new Date().toISOString() };
       if (files && files.length) doc.attachments = files.map(a => ({ name: a.name, type: a.type, data: a.data }));
-      if ((kind === "alert" && isLH(r.type)) || kind === "perm") doc.mode = "sign";
+      if ((kind === "alert" && isLH(r.type)) || kind === "perm" || kind === "taklif") doc.mode = "sign";
+      if (kind === "perm") doc.askLabel = "سبب الاستئذان — اكتبه بنفسك ليظهر في الاستمارة";
       if (linkIsReply(kind, r)) { doc.mode = "reply"; if (r.type === "absence") doc.options = IO_ABSENCE_OPTIONS.slice(); }
       await window.__fbdb.collection("notices").doc(id).set(doc);
       if (!Array.isArray(data.notices)) data.notices = [];
@@ -10890,7 +10918,7 @@ ${contentEl.innerHTML}
     if (!data.approvers || typeof data.approvers !== "object") data.approvers = {};
     data.approvers[kind] = rec; apprEditing[kind] = false; saveData(); apprRefresh(); showToast("تم حفظ المعتمِد");
   });
-  function apprRefresh() { try { if (document.getElementById("permHubView").classList.contains("active")) phRender(); } catch (e) {} try { if (laRecords().length) laRender(); } catch (e) {} }
+  function apprRefresh() { try { if (document.getElementById("permHubView").classList.contains("active")) phRender(); } catch (e) {} try { if (document.getElementById("taklifView").classList.contains("active")) tkRender(); } catch (e) {} try { if (laRecords().length) laRender(); } catch (e) {} }
   function apprOptions(kind, r, who) {
     if (kind === "perm") return who === "mgr" ? ["يُعتمد", "لا يُعتمد"] : ["موافق", "غير موافق"];
     const T = IO_TYPES[r.type] || {};
@@ -10900,8 +10928,9 @@ ${contentEl.innerHTML}
     const a = apprGet(kind, who), P = APPR_P(who);
     if (!a || !/^\d{10}$/.test(a.civil) || !a.phone) { showToast("أكمل بيانات " + APPR_ROLE(who) + " (السجل المدني والجوال) في «بيانات الهيئة الإدارية»"); asOpen(a && a.id); if (!a) { const sel = document.getElementById("asRole"); sel.value = APPR_ROLE(who); } return; }
     if (!(window.__fbdb && window.__fbauth && window.__fbauth.currentUser)) { showToast("إرسال الرابط يحتاج الاتصال بالسحابة وتسجيل الدخول"); return; }
-    if (!r.replyAt && !r.teacherSig) { showToast("لم يوقّع المعلم بعد — حدّث حالة التوقيع أولاً"); return; }
-    const title = (kind === "perm" ? "اعتماد استمارة استئذان" : "اعتماد " + (r.title || ioTitleOf(r))) + " — " + r.teacher;
+    if (kind === "taklif") { if (who === "mgr" && !(r.apprAt && r.apprSigned)) { showToast("لم يوقّع وكيل الشؤون التعليمية بعد — حدّث حالة التوقيع أولاً"); return; } }
+    else if (!r.replyAt && !r.teacherSig) { showToast("لم يوقّع المعلم بعد — حدّث حالة التوقيع أولاً"); return; }
+    const title = kind === "taklif" ? "توقيع تكليف — " + r.subject + " — " + r.teacher : (kind === "perm" ? "اعتماد استمارة استئذان" : "اعتماد " + (r.title || ioTitleOf(r))) + " — " + r.teacher;
     let w = null; try { w = window.open("", "_blank"); } catch (e) {}
     const go = url => { if (w && !w.closed) w.location.href = url; else openExternalLink(url); };
     (async () => {
@@ -10914,6 +10943,8 @@ ${contentEl.innerHTML}
         (who === "mgr" && r.apprAt ? "\nرأي وكيل الشؤون التعليمية: " + String(r.apprReply || "").split("\n")[0] : "") +
         "\n\nنأمل اختيار القرار والتوقيع داخل المربع.";
       const doc = { title, body, dateText: (dp.dayName || "") + " " + dp.hijri + " — " + dp.greg, hashes: { [h]: a.name }, createdAt: new Date().toISOString(), mode: "reply", options: apprOptions(kind, r, who), optLabel: "القرار", replyLabel: "ملاحظات (اختياري)", sendLabel: "📤 إرسال القرار والتوقيع" };
+      if (kind === "taklif") { doc.mode = "sign"; ["options", "optLabel", "replyLabel", "sendLabel"].forEach(k => delete doc[k]);
+        doc.body = "المكرم " + a.role + " / " + a.name + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\nنرفق لكم تكليف المعلم ( " + r.teacher + " ) بشأن: " + r.subject + (r.hijri ? "\nالتاريخ: " + (r.day ? r.day + " " : "") + r.hijri : "") + "\n\nنص التكليف:\n" + (r.body || "") + (who === "mgr" ? "\n\nوقّع وكيل الشؤون التعليمية ✓" : "") + "\n\nنأمل الاطلاع والتوقيع داخل المربع ثم اختيار «تم العلم والتوقيع»."; }
       if (files && files.length) doc.attachments = files.map(x => ({ name: x.name, type: x.type, data: x.data }));
       await window.__fbdb.collection("notices").doc(id).set(doc);
       if (!Array.isArray(data.notices)) data.notices = [];
@@ -10921,7 +10952,7 @@ ${contentEl.innerHTML}
       r[P + "AckId"] = id; r[P + "AckIds"] = [...new Set([...(r[P + "AckIds"] || []), id])]; r[P + "SentAt"] = Date.now();
       saveData(); apprRefresh(); try { if (document.getElementById("inqAckView") && document.getElementById("inqAckView").classList.contains("active")) laRender(); } catch (e) {}
       const link = ackBaseUrl() + "?ack=" + id;
-      const msg = "السلام عليكم ورحمة الله وبركاته\nالمكرم " + a.role + " / " + a.name + "\n\nنأمل الاطلاع على (" + (kind === "perm" ? "استمارة استئذان" : (r.title || ioTitleOf(r))) + ") للمعلم " + r.teacher + " واعتمادها والتوقيع عبر الرابط:\n" + link;
+      const msg = "السلام عليكم ورحمة الله وبركاته\nالمكرم " + a.role + " / " + a.name + "\n\nنأمل الاطلاع على (" + (kind === "perm" ? "استمارة استئذان" : kind === "taklif" ? "تكليف: " + r.subject : (r.title || ioTitleOf(r))) + ") للمعلم " + r.teacher + (kind === "taklif" ? " والتوقيع عليه عبر الرابط:\n" : " واعتمادها والتوقيع عبر الرابط:\n") + link;
       go("https://wa.me/" + nfWaPhone(a.phone) + "?text=" + encodeURIComponent(msg));
     })().catch(e => { console.error(e); try { if (w && !w.closed) w.close(); } catch (x) {} showToast("تعذر إنشاء رابط الاعتماد — تحقق من الاتصال"); });
   }
@@ -11008,14 +11039,14 @@ ${contentEl.innerHTML}
     const ids = new Set();
     const permRecs = (data.workAttendance || []).filter(r => r.status === "permission" && (r.ackId || r.ackIds));
     const permRecs2 = (data.workAttendance || []).filter(r => r.status === "permission" && (r.apprAckId || r.apprAckIds || r.mgrAckId || r.mgrAckIds));
-    [...(data.officialInq || []), ...(data.officialAlerts || []), ...permRecs, ...permRecs2].forEach(r => { linkIds(r).forEach(i => ids.add(i)); apprAllIds(r).forEach(i => ids.add(i)); });
+    [...(data.officialInq || []), ...(data.officialAlerts || []), ...permRecs, ...permRecs2, ...(data.taklifs || [])].forEach(r => { linkIds(r).forEach(i => ids.add(i)); apprAllIds(r).forEach(i => ids.add(i)); });
     if (!ids.size) return;
     linkSyncBusy = true;
     let fail = null;
     try {
       const owner = {};
       const apprOwner = {};
-      [...(data.officialInq || []), ...(data.officialAlerts || []), ...permRecs, ...permRecs2].forEach(r => { linkIds(r).forEach(i => owner[i] = r); apprIds(r, "dep").forEach(i => apprOwner[i] = [r, "appr"]); apprIds(r, "mgr").forEach(i => apprOwner[i] = [r, "mgr"]); });
+      [...(data.officialInq || []), ...(data.officialAlerts || []), ...permRecs, ...permRecs2, ...(data.taklifs || [])].forEach(r => { linkIds(r).forEach(i => owner[i] = r); apprIds(r, "dep").forEach(i => apprOwner[i] = [r, "appr"]); apprIds(r, "mgr").forEach(i => apprOwner[i] = [r, "mgr"]); });
       for (const id of ids) {
         let n = (data.notices || []).find(x => x.id === id);
         if (!n) continue;
@@ -11027,7 +11058,7 @@ ${contentEl.innerHTML}
             if (t && !n.acks[t]) n.acks[t] = at;
             if (apprOwner[id]) { const [ar, P] = apprOwner[id]; if (!ar[P + "At"] || at >= ar[P + "At"]) { ar[P + "Reply"] = a.reply || ""; ar[P + "Signed"] = !!a.signed; ar[P + "Sig"] = typeof a.sig === "string" && /^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(a.sig) ? a.sig : ""; ar[P + "At"] = at; if (P === "mgr" && ar.ackId) { ar.approved = true; ar.approvedAt = Date.parse(at) || Date.now(); } } return; }
             const r = owner[id];
-            if (r && (a.reply != null || a.signed != null) && (!r.replyAt || at >= r.replyAt)) { r.teacherReply = a.reply || ""; r.teacherSigned = !!a.signed; r.teacherSig = typeof a.sig === "string" && /^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(a.sig) ? a.sig : ""; r.replyAt = at; }
+            if (r && (a.reply != null || a.signed != null) && (!r.replyAt || at >= r.replyAt)) { r.teacherReply = a.reply || ""; r.teacherSigned = !!a.signed; r.teacherSig = typeof a.sig === "string" && /^data:image\/png;base64,[A-Za-z0-9+\/=]+$/.test(a.sig) ? a.sig : ""; r.replyAt = at; if (r.status === "permission" && String(a.reply || "").trim()) r.reason = String(a.reply).trim().slice(0, 300); }
           });
         } catch (e) { fail = e; console.error("ackFetch", id, e); }
       }
@@ -11073,8 +11104,8 @@ ${contentEl.innerHTML}
         '<div class="la-step ' + (s.appr ? "ok" : "") + '"><b>🏁 الاعتماد</b><label><input type="checkbox" data-appr' + (s.appr ? " checked" : "") + (s.conf ? "" : " disabled") + "> " + (s.appr ? "معتمد" : "اعتماد") + "</label>" + (s.appr && r.approvedAt ? "<br>" + acEsc(ioStamp(r.approvedAt)) : "") + "</div>" +
       "</div>" +
       (r.replyAt ? '<div class="io-reply"><b>إفادة المعلم:</b> ' + acEsc(r.teacherReply || "") + '<div style="margin-top:4px; font-weight:800; color:' + (r.teacherSigned ? "#146c3a" : "#9a2f23") + ';">' + (r.teacherSigned ? "✍️ موقّع ✓" : "لم يوقّع المعلم") + "</div>" + (r.teacherSig ? '<img src="' + r.teacherSig + '" alt="توقيع المعلم" style="height:60px; margin-top:6px; background:#fff; border:1px solid #d6e2df; border-radius:8px; padding:2px;">' : "") + "</div>" : (r.teacherSig ? '<div class="io-reply"><b>توقيع المعلم:</b><br><img src="' + r.teacherSig + '" alt="توقيع المعلم" style="height:60px; margin-top:6px; background:#fff; border:1px solid #d6e2df; border-radius:8px; padding:2px;"></div>' : "")) +
-      (la.kind === "inq" ? apprStatusHtml(r, "mgr") + apprDoneHtml(r, "inq", 'data-act="save"', 'data-act="edit"') : "") +
-      '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="resend">📱 إعادة إرسال الرابط</button>' + (la.kind === "inq" && r.replyAt ? '<button class="export-btn" data-act="mgr">📤 ' + (apprIds(r, "mgr").length ? "إعادة إرسالها لمدير المدرسة" : "إرسالها لمدير المدرسة") + "</button>" : "") + '<button class="export-btn" data-act="print">🖨️ طباعة</button></div></div>').join("");
+      (la.kind === "inq" ? apprStatusHtml(r, "mgr") + apprDoneHtml(r, "inq", 'data-act="save"') : "") +
+      '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="resend">📱 إعادة إرسال الرابط</button>' + (la.kind === "inq" && (r.mgrAt || r.savedAt) && !r.editAt ? '<button class="export-btn" data-act="edit" style="background:#eef5fb; border-color:#7aa7c9; color:#1f4f7a;">✏️ تعديل المساءلة</button>' : "") + (la.kind === "inq" && r.replyAt ? '<button class="export-btn" data-act="mgr">📤 ' + (apprIds(r, "mgr").length ? "إعادة إرسالها لمدير المدرسة" : "إرسالها لمدير المدرسة") + "</button>" : "") + '<button class="export-btn" data-act="print">🖨️ طباعة</button></div></div>').join("");
   }
   document.getElementById("laList").addEventListener("change", e => {
     const cb = e.target.closest("input[data-appr]"); if (!cb) return;
@@ -11084,7 +11115,7 @@ ${contentEl.innerHTML}
   document.getElementById("laList").addEventListener("click", e => {
     const btn = e.target.closest("button[data-act]"); if (!btn) return;
     const r = laRecords().find(x => x.id === btn.closest(".ack-item").dataset.id); if (!r) return;
-    if (btn.dataset.act === "save") { const upd = !!r.savedAt; apprSnapSave(r); saveData(); laRender(); showToast((upd ? "حُدّثت المساءلة المعدلة" : "حُفظت المساءلة") + " في مجلد " + r.teacher + " بسجل المسائلات"); return; }
+    if (btn.dataset.act === "save") { const upd = !!r.savedAt; apprSnapSave(r); saveData(); laRender(); showToast("حُفظت المساءلة" + " في مجلد " + r.teacher + " بسجل المسائلات"); return; }
     if (btn.dataset.act === "edit") { if (!apprStartEdit(r, "inq")) return; ioOpen(); setTimeout(() => { ioLoad(r.id); showToast("وضع التعديل — عدّل المساءلة واحفظها ثم أرسل الرابط للمعلم"); }, 50); return; }
     if (btn.dataset.act === "mgr") { let files = []; try { const at = docAttachment("inq", r); if (at) files = [at]; } catch (e) {} apprSend("inq", r, files, "mgr"); return; }
     if (btn.dataset.act === "print") { if (la.kind === "alert") { alPrintRec(r); alMark(r.id, "printed"); } else { ioPrintRec(r); ioMarkPrinted(r.id); } }
@@ -11957,7 +11988,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     if (data.teachers.includes(cur)) sel.value = cur;
     const d = document.getElementById("tkDate");
     if (!d.value) d.value = schoolDayISO();
-    tkDateHint();
+    tkDateHint(); tkRender();
     showView("taklif");
   }
   function tkDateHint() {
@@ -11993,7 +12024,114 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     ["tkSubject", "tkTeacher"].forEach(id => document.getElementById(id).value = "");
     document.getElementById("tkBody").value = TK_DEFAULT_BODY;
     document.getElementById("tkDate").value = schoolDayISO(); tkDateHint();
+  });  /* ===== مسار اعتماد التكليف: الوكيل ← المدير ← المعلم (توقيع داخل مربع) ===== */
+  let tkCurId = "";
+  const tkCur = () => tkCurId && (data.taklifs || []).find(x => x.id === tkCurId);
+  function tkCollect() {
+    return { subject: document.getElementById("tkSubject").value.trim(), teacher: document.getElementById("tkTeacher").value, body: document.getElementById("tkBody").value.trim(), date: document.getElementById("tkDate").value || todayISODate() };
+  }
+  const tkSigned = r => ({ dep: !!(r.apprAt && r.apprSigned), mgr: !!(r.mgrAt && r.mgrSigned), tch: !!r.teacherSig });
+  function tkSave() {
+    const v = tkCollect();
+    if (!v.subject) { showToast("اكتب الموضوع أولاً"); document.getElementById("tkSubject").focus(); return null; }
+    if (!v.teacher) { showToast("اختر المعلم المكلف أولاً"); document.getElementById("tkTeacher").focus(); return null; }
+    if (!Array.isArray(data.taklifs)) data.taklifs = [];
+    let r = tkCur();
+    const p = wpDateParts(v.date);
+    if (r) {
+      const changed = r.subject !== v.subject || r.teacher !== v.teacher || r.body !== v.body || r.date !== v.date;
+      if (changed && (apprAllIds(r).length || linkIds(r).length)) {
+        if (!confirm("تعديل التكليف بعد إرسال روابطه يلغي التوقيعات الحالية، ويلزم إعادة إرساله للوكيل ثم المدير ثم المعلم. متابعة؟")) return null;
+        r.prevRounds = (r.prevRounds || []).concat([{ at: Date.now(), ids: linkIds(r), appr: apprIds(r, "dep"), mgr: apprIds(r, "mgr") }]);
+        APPR_FIELDS.forEach(k => delete r[k]);
+      }
+      Object.assign(r, v, { title: v.subject, hijri: p.hijri, day: p.dayName || "", updatedAt: Date.now() });
+    } else {
+      r = Object.assign({ id: "tk" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), createdAt: Date.now() }, v, { title: v.subject, hijri: p.hijri, day: p.dayName || "" });
+      data.taklifs.push(r); tkCurId = r.id;
+    }
+    saveData(); tkRender(); return r;
+  }
+  function tkDocSpec(r) {
+    const ap = (data.adminStaff || []).find(x => x.role === "وكيل الشؤون التعليمية"), mp = (data.adminStaff || []).find(x => x.role === "مدير المدرسة");
+    return { title: r.subject, dateIso: r.date, blocks: [
+      { t: "text", text: "المكرم المعلم / " + r.teacher + "   وفقه الله", font: "700 31px " },
+      { t: "text", text: "السلام عليكم ورحمة الله وبركاته" },
+      { t: "text", text: r.body || "" },
+      { t: "text", text: "شاكرين لكم تعاونكم، والله يحفظكم ويرعاكم.", align: "center", gap: 30 },
+      { t: "sig", items: ["وكيل الشؤون التعليمية: " + (ap ? ap.name : "موسى آل ضاحي"), "مدير المدرسة: " + (mp ? mp.name : "موسى آل عبيد")] }
+    ] };
+  }
+  function tkFiles(r) { try { const cv = docCanvas(tkDocSpec(r)); return [{ name: "تكليف.jpg", type: "image/jpeg", data: cv.toDataURL("image/jpeg", 0.8).split(",")[1] }]; } catch (e) { console.error(e); return []; } }
+  const tkSigImg = s => s ? '<img src="' + s + '" alt="توقيع" style="height:46px; vertical-align:middle;">' : "....................";
+  function tkPrintRec(r) {
+    const ap = (data.adminStaff || []).find(x => x.role === "وكيل الشؤون التعليمية"), mp = (data.adminStaff || []).find(x => x.role === "مدير المدرسة");
+    const teacher = r.teacher, body = r.body;
+    const name = teacher ? "<b>" + wpEsc(teacher) + "</b>" : '<span style="display:inline-block;min-width:55%;border-bottom:1.5px dotted #174a59;">&nbsp;</span>';
+    const inner = `<div class="letter" style="margin-top:10px;">
+        <p class="to" style="margin-bottom:10px !important;">المكرم المعلم / ${name} &nbsp; وفقه الله</p>
+        <p class="salam">السلام عليكم ورحمة الله وبركاته</p>
+        ${body ? '<p class="body" style="white-space:pre-line;">' + wpEsc(body) + "</p>" : '<div style="height:170px;border-bottom:1.5px dotted #174a59;"></div>'}
+        <p class="body" style="text-align:center; margin-top:10px;">شاكرين لكم تعاونكم، والله يحفظكم ويرعاكم.</p>
+      </div>
+      <div style="margin:26px 20px 0; font-size:15px; line-height:2.2; break-inside:avoid;">
+        <div>اسم المعلم: ${teacher ? wpEsc(teacher) : "...................................."} &nbsp;&nbsp;&nbsp; التوقيع: ${tkSigImg(r.teacherSig)}</div>
+      </div>
+      <div class="sigs" style="margin-top:34px;">
+        <div class="sig"><div class="t">وكيل الشؤون التعليمية</div><div class="n">الاسم: ${wpEsc(ap ? ap.name : "موسى آل ضاحي")}</div><div class="n" style="margin-top:14px;">التوقيع: ${tkSigImg(r.apprSigned && r.apprSig)}</div></div>
+        <div class="sig"><div class="t">مدير المدرسة</div><div class="n">الاسم: ${wpEsc(mp ? mp.name : "موسى آل عبيد")}</div><div class="n" style="margin-top:14px;">التوقيع: ${tkSigImg(r.mgrSigned && r.mgrSig)}</div></div>
+      </div>`;
+    wpOpenDoc(wpShellDoc(r.subject, wpGenericPage(r.subject, inner, r.date)), "تكليف" + (teacher ? "_" + teacher : ""));
+  }
+  function tkStep(n, label, sentIds, at, signed, sig, canSend, btnId, sendLabel) {
+    const st = signed ? '<span class="tk-ok">✅ وقّع</span>' : at ? '<span class="tk-no">👁️ اطّلع ولم يوقّع</span>' : sentIds ? '<span class="tk-wait">⏳ أُرسل — بانتظار التوقيع</span>' : '<span class="tk-off">لم يُرسل بعد</span>';
+    return '<div class="tk-step' + (signed ? " done" : "") + '"><div class="tk-h"><span class="tk-n">' + n + "</span><b>" + label + "</b>" + st + "</div>" +
+      (sig ? '<img class="tk-sig" src="' + sig + '" alt="توقيع">' : "") +
+      '<button type="button" class="export-btn" id="' + btnId + '"' + (canSend ? "" : " disabled") + ">📤 " + (sentIds ? "إعادة " : "") + sendLabel + "</button></div>";
+  }
+  function tkRender() {
+    const box = document.getElementById("tkFlow"), r = tkCur();
+    document.getElementById("tkNew").style.display = r ? "" : "none";
+    if (!r) { box.innerHTML = '<div class="sched-hint" style="text-align:right;">احفظ التكليف أولاً، ثم يُرسل رابطه للوكيل، وبعد توقيعه للمدير، وبعد توقيع المدير للمعلم.</div>'; tkSavedRender(); return; }
+    const s = tkSigned(r);
+    box.innerHTML = '<div class="tk-flow"><div class="tk-title">🔗 مسار اعتماد التكليف: <b>' + acEsc(r.subject) + "</b> — " + acEsc(r.teacher) + "</div>" +
+      tkStep(1, "وكيل الشؤون التعليمية", apprIds(r, "dep").length, r.apprAt, s.dep, r.apprSigned && r.apprSig, true, "tkSendDep", "إرساله لوكيل الشؤون التعليمية") +
+      tkStep(2, "مدير المدرسة", apprIds(r, "mgr").length, r.mgrAt, s.mgr, r.mgrSigned && r.mgrSig, s.dep, "tkSendMgr", "إرساله لمدير المدرسة") +
+      tkStep(3, "المعلم المكلف", linkIds(r).length, r.replyAt, s.tch, r.teacherSig, s.mgr, "tkSendTch", "إرساله للمعلم") +
+      '<div class="export-row" style="margin-top:8px;"><button type="button" class="export-btn" id="tkSync">🔄 تحديث حالة التوقيع</button><button type="button" class="export-btn" id="tkPrintRec">🖨️ طباعة التكليف بالتواقيع</button></div>' +
+      (s.dep && s.mgr && s.tch ? '<div class="apw-done"><div>✅ <b>اكتمل التكليف</b> — وقّع الوكيل والمدير والمعلم</div></div>' : "") + "</div>";
+    document.getElementById("tkSendDep").addEventListener("click", () => apprSend("taklif", r, tkFiles(r), "dep"));
+    document.getElementById("tkSendMgr").addEventListener("click", () => apprSend("taklif", r, tkFiles(r), "mgr"));
+    document.getElementById("tkSendTch").addEventListener("click", () => linkSend("taklif", r, tkFiles(r)));
+    document.getElementById("tkSync").addEventListener("click", () => Promise.resolve(linkSyncAll(false)).then(tkRender));
+    document.getElementById("tkPrintRec").addEventListener("click", () => tkPrintRec(r));
+    tkSavedRender();
+  }
+  function tkSavedRender() {
+    const L = (data.taklifs || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.createdAt - a.createdAt), box = document.getElementById("tkSaved");
+    document.getElementById("tkSavedN").textContent = L.length;
+    box.innerHTML = L.length ? L.map(r => { const s = tkSigned(r), c = (ok, t) => '<span class="tk-chip' + (ok ? " ok" : "") + '">' + (ok ? "✓ " : "") + t + "</span>";
+      return '<div class="tk-item' + (r.id === tkCurId ? " cur" : "") + '" data-id="' + r.id + '"><div class="tk-ih"><b>' + acEsc(r.subject) + "</b><small>" + acEsc(r.teacher) + " — " + acEsc((r.day ? r.day + " " : "") + (r.hijri || "")) + "</small></div>" +
+        '<div class="tk-chips">' + c(s.dep, "الوكيل") + c(s.mgr, "المدير") + c(s.tch, "المعلم") + "</div>" +
+        '<div class="tk-acts"><button type="button" data-tk="open">📂 فتح</button><button type="button" data-tk="print">🖨️ طباعة</button><button type="button" data-tk="del" style="color:#b42318;">🗑️</button></div></div>'; }).join("") : '<div class="empty-state">لا توجد تكليفات محفوظة بعد</div>';
+  }
+  function tkLoad(id) {
+    const r = (data.taklifs || []).find(x => x.id === id); if (!r) return;
+    tkCurId = r.id;
+    const sel = document.getElementById("tkTeacher"); if (r.teacher && ![...sel.options].some(o => o.value === r.teacher)) sel.insertAdjacentHTML("beforeend", '<option value="' + acEsc(r.teacher) + '">' + acEsc(r.teacher) + "</option>");
+    document.getElementById("tkSubject").value = r.subject; sel.value = r.teacher; document.getElementById("tkBody").value = r.body; document.getElementById("tkDate").value = r.date; tkDateHint();
+    tkRender(); window.scrollTo(0, 0);
+  }
+  document.getElementById("tkSave").addEventListener("click", () => { const isNew = !tkCur(); if (tkSave()) showToast(isNew ? "حُفظ التكليف — أرسله الآن لوكيل الشؤون التعليمية" : "حُفظ التكليف"); });
+  document.getElementById("tkNew").addEventListener("click", () => { tkCurId = ""; document.getElementById("tkClear").click(); tkRender(); });
+  document.getElementById("tkSaved").addEventListener("click", e => {
+    const b = e.target.closest("[data-tk]"); if (!b) return;
+    const id = b.closest(".tk-item").dataset.id, r = (data.taklifs || []).find(x => x.id === id); if (!r) return;
+    if (b.dataset.tk === "open") tkLoad(id);
+    else if (b.dataset.tk === "print") tkPrintRec(r);
+    else if (b.dataset.tk === "del") { if (!confirm("حذف التكليف «" + r.subject + "» — " + r.teacher + "؟")) return; data.taklifs = data.taklifs.filter(x => x.id !== id); if (tkCurId === id) tkCurId = ""; saveData(); tkRender(); }
   });
+
   function ackOpenView() {
     ackUi.archive = false;
     const f = document.getElementById("ackFilter");
@@ -12262,9 +12400,9 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
       (after.length ? '<table class="ph-tbl"><thead><tr><th>الحصة</th><th>الفصل</th><th>التأمين</th></tr></thead><tbody>' + after.map(x => { const cv = (r.cover || {})[x.period] || ""; return "<tr><td><b>" + acEsc(shPer(Number(x.period)) || x.period) + "</b></td><td>" + acEsc(x.className) + '</td><td><select class="ph-cov" data-p="' + acEsc(x.period) + '"><option value="">اختر</option><option value="teacher"' + (cv === "teacher" ? " selected" : "") + '>تم تأمينها من قبل المعلم</option><option value="admin"' + (cv === "admin" ? " selected" : "") + ">تم تأمينها من قبل الإدارة</option></select></td></tr>"; }).join("") + "</tbody></table>" : '<div class="sched-hint" style="text-align:right;">لا توجد حصص وقت الاستئذان.</div>') +
       (() => { const st = r.ackId ? linkState(r) : null;
         return '<div class="ph-link">' + (!r.ackId ? "📱 لم يُرسل رابط للمعلم بعد" : r.teacherSig ? '✅ وقّع المعلم على الاستمارة<br><img src="' + r.teacherSig + '" alt="توقيع المعلم">' : r.replyAt && r.teacherSigned === false ? "👁️ اطّلع المعلم ولم يوقّع" : st && st.conf ? "✅ اطّلع المعلم" : "⏳ أُرسل الرابط — بانتظار توقيع المعلم") + "</div>"; })() +
-      '<div class="er-acts" style="margin-top:10px;"><button type="button" class="export-btn" id="phPrint">🖨️ طباعة استمارة الاستئذان</button><button type="button" class="export-btn" id="phLink">📱 ' + (r.ackId ? "إعادة إرسال الرابط" : "إرسال رابط للمعلم") + "</button>" + (r.ackId ? '<button type="button" class="export-btn" id="phSync">🔄 تحديث حالة التوقيع</button><button type="button" class="export-btn" id="phAppr">📤 ' + (apprIds(r, "dep").length ? "إعادة إرساله لوكيل الشؤون التعليمية" : "إرساله لوكيل الشؤون التعليمية") + "</button>" + (r.apprAt ? '<button type="button" class="export-btn" id="phMgr">📤 ' + (apprIds(r, "mgr").length ? "إعادة إرساله لمدير المدرسة" : "إرساله لمدير المدرسة") + "</button>" : "") : "") + '<button type="button" class="export-btn" id="phGoWait">📋 فتح جدول الانتظار لهذا المستأذن</button></div></div>';
-    box.insertAdjacentHTML("beforeend", apprEditNote(r, "perm") + apprStatusHtml(r, "dep") + apprStatusHtml(r, "mgr") + apprDoneHtml(r, "perm", 'id="phSave"', 'id="phEdit"'));
-    if (document.getElementById("phSave")) document.getElementById("phSave").addEventListener("click", () => { const upd = !!r.savedAt; apprSnapSave(r); saveData(); phRender(); showToast((upd ? "حُدّثت الاستمارة المعدلة" : "حُفظت الاستمارة") + " في سجل الاستئذان — مجلد " + t); });
+      '<div class="er-acts" style="margin-top:10px;"><button type="button" class="export-btn" id="phPrint">🖨️ ' + (r.editAt && r.savedSnap ? "طباعة الاستمارة المعتمدة الحالية" : "طباعة استمارة الاستئذان") + "</button>" + (r.editAt && r.savedSnap ? '<button type="button" class="export-btn" id="phDraft">👁️ معاينة الاستمارة المعدلة (قيد الاستكمال)</button>' : "") + '<button type="button" class="export-btn" id="phLink">📱 ' + (r.ackId ? "إعادة إرسال الرابط" : "إرسال رابط للمعلم") + "</button>" + ((r.apprAt || r.mgrAt || r.savedAt) && !r.editAt ? '<button type="button" class="export-btn" id="phEdit" style="background:#eef5fb; border-color:#7aa7c9; color:#1f4f7a;">✏️ تعديل الاستمارة</button>' : "") + (r.ackId ? '<button type="button" class="export-btn" id="phSync">🔄 تحديث حالة التوقيع</button><button type="button" class="export-btn" id="phAppr">📤 ' + (apprIds(r, "dep").length ? "إعادة إرساله لوكيل الشؤون التعليمية" : "إرساله لوكيل الشؤون التعليمية") + "</button>" + (r.apprAt ? '<button type="button" class="export-btn" id="phMgr">📤 ' + (apprIds(r, "mgr").length ? "إعادة إرساله لمدير المدرسة" : "إرساله لمدير المدرسة") + "</button>" : "") : "") + '<button type="button" class="export-btn" id="phGoWait">📋 فتح جدول الانتظار لهذا المستأذن</button></div></div>';
+    box.insertAdjacentHTML("beforeend", apprEditNote(r, "perm") + apprStatusHtml(r, "dep") + apprStatusHtml(r, "mgr") + apprDoneHtml(r, "perm", 'id="phSave"'));
+    if (document.getElementById("phSave")) document.getElementById("phSave").addEventListener("click", () => { const upd = !!r.savedAt; apprSnapSave(r); saveData(); phRender(); showToast("حُفظت الاستمارة" + " في سجل الاستئذان — مجلد " + t); });
     if (document.getElementById("phEdit")) document.getElementById("phEdit").addEventListener("click", () => { if (apprStartEdit(r, "perm")) { phRender(); showToast("وضع التعديل — عدّل ثم أرسل الرابط للمعلم"); } });
     document.getElementById("phLink").addEventListener("click", () => phSendLink(d, t));
     const phSendTo = who => {
@@ -12276,6 +12414,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     if (document.getElementById("phMgr")) document.getElementById("phMgr").addEventListener("click", () => phSendTo("mgr"));
     if (document.getElementById("phSync")) document.getElementById("phSync").addEventListener("click", () => linkSyncAll(false));
     document.getElementById("phPrint").addEventListener("click", () => phPrintForm(d, t));
+    if (document.getElementById("phDraft")) document.getElementById("phDraft").addEventListener("click", () => phPrintForm(d, t, false, null, true));
     box.querySelectorAll(".ph-cov").forEach(sel => sel.addEventListener("change", () => {
       const rec = (data.workAttendance || []).find(x => x.date === d && x.teacher === t && x.status === "permission"); if (!rec) return;
       rec.cover = rec.cover || {}; if (sel.value) rec.cover[sel.dataset.p] = sel.value; else delete rec.cover[sel.dataset.p];
@@ -12306,8 +12445,10 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     linkSend("perm", r, files);
   }
   // استمارة استئذان رسمية بالترويسة يوقّع عليها المعلم (t فارغ = استمارة فارغة للتعبئة باليد)
-  function phPrintForm(d, t, asPage, rOv) {
-    const r = rOv ? rOv : t ? ((data.workAttendance || []).find(x => x.date === d && x.teacher === t && x.status === "permission") || {}) : {};
+  function phPrintForm(d, t, asPage, rOv, draft) {
+    const live = t ? ((data.workAttendance || []).find(x => x.date === d && x.teacher === t && x.status === "permission") || {}) : {};
+    // أثناء التعديل تبقى النسخة المعتمدة السابقة هي المعروضة حتى تكتمل المعدلة وتُحفظ
+    const r = rOv ? rOv : (!draft && live.editAt && live.savedSnap) ? live.savedSnap : live;
     const q = d && t ? wpDateParts(d) : null, civil = t ? ((data.teacherCivil || {})[t] || "") : "";
     const dots = "..............................";
     const day = d && t ? dayNameFromDate(d) : null;
@@ -13273,7 +13414,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-22-17";
+window.APP_BUILD = "2026-11-22-22";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
