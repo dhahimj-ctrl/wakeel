@@ -608,6 +608,8 @@
   .perm-ft { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; } .perm-ft > b { font-size: 12.5px; color: #174a59; }
   .perm-end { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 700; color: #174a59; border: 1px solid var(--line); border-radius: 9px; padding: 5px 9px; background: #fff; cursor: pointer; white-space: nowrap; }
   .perm-end.on { background: #eef5fb; border-color: #7aa7c9; color: #1f4f7a; } .perm-end input { margin: 0; }
+  .ph-ret { margin-top: 10px; border: 1.5px solid #9fd3b0; background: #f1faf4; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; color: #146c3a; font-size: 14px; }
+  .ph-ret .export-btn { width: auto; flex: none; padding: 6px 14px; }
   .apw { margin-top: 10px; border: 1px solid #c9dcd8; border-radius: 10px; background: #f7fbfa; padding: 8px 10px; font-size: 13px; color: #174a59; }
   .apw-ed { border: 0; background: none; color: #1f5fa8; font: inherit; font-size: 12.5px; cursor: pointer; text-decoration: underline; }
   .apw-form { display: flex; flex-direction: column; gap: 6px; }
@@ -12417,11 +12419,30 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
       (after.length ? '<table class="ph-tbl"><thead><tr><th>الحصة</th><th>الفصل</th><th>التأمين</th></tr></thead><tbody>' + after.map(x => { const cv = (r.cover || {})[x.period] || ""; return "<tr><td><b>" + acEsc(shPer(Number(x.period)) || x.period) + "</b></td><td>" + acEsc(x.className) + '</td><td><select class="ph-cov" data-p="' + acEsc(x.period) + '"><option value="">اختر</option><option value="teacher"' + (cv === "teacher" ? " selected" : "") + '>تم تأمينها من قبل المعلم</option><option value="admin"' + (cv === "admin" ? " selected" : "") + ">تم تأمينها من قبل الإدارة</option></select></td></tr>"; }).join("") + "</tbody></table>" : '<div class="sched-hint" style="text-align:right;">لا توجد حصص وقت الاستئذان.</div>') +
       (() => { const st = r.ackId ? linkState(r) : null;
         return '<div class="ph-link">' + (!r.ackId ? "📱 لم يُرسل رابط للمعلم بعد" : r.teacherSig ? '✅ وقّع المعلم على الاستمارة<br><img src="' + r.teacherSig + '" alt="توقيع المعلم">' : r.replyAt && r.teacherSigned === false ? "👁️ اطّلع المعلم ولم يوقّع" : st && st.conf ? "✅ اطّلع المعلم" : "⏳ أُرسل الرابط — بانتظار توقيع المعلم") + "</div>"; })() +
-      '<div class="er-acts" style="margin-top:10px;"><button type="button" class="export-btn" id="phPrint">🖨️ ' + (r.editAt && r.savedSnap ? "طباعة الاستمارة المعتمدة الحالية" : "طباعة استمارة الاستئذان") + "</button>" + (r.editAt && r.savedSnap ? '<button type="button" class="export-btn" id="phDraft">👁️ معاينة الاستمارة المعدلة (قيد الاستكمال)</button>' : "") + '<button type="button" class="export-btn" id="phLink">📱 ' + (r.ackId ? "إعادة إرسال الرابط" : "إرسال رابط للمعلم") + "</button>" + ((r.apprAt || r.mgrAt || r.savedAt) && !r.editAt ? '<button type="button" class="export-btn" id="phEdit" style="background:#eef5fb; border-color:#7aa7c9; color:#1f4f7a;">✏️ تعديل الاستمارة</button>' : "") + (r.ackId ? '<button type="button" class="export-btn" id="phSync">🔄 تحديث حالة التوقيع</button><button type="button" class="export-btn" id="phAppr">📤 ' + (apprIds(r, "dep").length ? "إعادة إرساله لوكيل الشؤون التعليمية" : "إرساله لوكيل الشؤون التعليمية") + "</button>" + (r.apprAt ? '<button type="button" class="export-btn" id="phMgr">📤 ' + (apprIds(r, "mgr").length ? "إعادة إرساله لمدير المدرسة" : "إرساله لمدير المدرسة") + "</button>" : "") : "") + '<button type="button" class="export-btn" id="phGoWait">📋 فتح جدول الانتظار لهذا المستأذن</button></div></div>';
-    box.insertAdjacentHTML("beforeend", apprEditNote(r, "perm") + apprStatusHtml(r, "dep") + apprStatusHtml(r, "mgr") + apprDoneHtml(r, "perm", 'id="phSave"'));
+      '<div class="er-acts" style="margin-top:10px;"><button type="button" class="export-btn" id="phRet" style="background:#eef8f1; border-color:#9fd3b0; color:#146c3a;">↩️ وقت العودة' + (r.returnTime ? " (" + acEsc(r.returnTime) + ")" : "") + '</button><button type="button" class="export-btn" id="phPrint">🖨️ ' + (r.editAt && r.savedSnap ? "طباعة الاستمارة المعتمدة الحالية" : "طباعة استمارة الاستئذان") + "</button>" + (r.editAt && r.savedSnap ? '<button type="button" class="export-btn" id="phDraft">👁️ معاينة الاستمارة المعدلة (قيد الاستكمال)</button>' : "") + '<button type="button" class="export-btn" id="phLink">📱 ' + (r.ackId ? "إعادة إرسال الرابط" : "إرسال رابط للمعلم") + "</button>" + ((r.apprAt || r.mgrAt || r.savedAt) && !r.editAt ? '<button type="button" class="export-btn" id="phEdit" style="background:#eef5fb; border-color:#7aa7c9; color:#1f4f7a;">✏️ تعديل الاستمارة</button>' : "") + (r.ackId ? '<button type="button" class="export-btn" id="phSync">🔄 تحديث حالة التوقيع</button><button type="button" class="export-btn" id="phAppr">📤 ' + (apprIds(r, "dep").length ? "إعادة إرساله لوكيل الشؤون التعليمية" : "إرساله لوكيل الشؤون التعليمية") + "</button>" + (r.apprAt ? '<button type="button" class="export-btn" id="phMgr">📤 ' + (apprIds(r, "mgr").length ? "إعادة إرساله لمدير المدرسة" : "إرساله لمدير المدرسة") + "</button>" : "") : "") + '<button type="button" class="export-btn" id="phGoWait">📋 فتح جدول الانتظار لهذا المستأذن</button></div></div>';
+    box.insertAdjacentHTML("beforeend", (r.returnTime ? '<div class="apw-st ok">↩️ عاد المعلم الساعة <b>' + acEsc(r.returnTime) + "</b> — عُدّل الاستئذان: " + acEsc(permRangeTxt(r)) + "</div>" : "") + '<div id="phRetBox" class="ph-ret" style="display:none;"></div>' + apprEditNote(r, "perm") + apprStatusHtml(r, "dep") + apprStatusHtml(r, "mgr") + apprDoneHtml(r, "perm", 'id="phSave"'));
     if (document.getElementById("phSave")) document.getElementById("phSave").addEventListener("click", () => { const upd = !!r.savedAt; apprSnapSave(r); saveData(); phRender(); showToast("حُفظت الاستمارة" + " في سجل الاستئذان — مجلد " + t); });
     if (document.getElementById("phEdit")) document.getElementById("phEdit").addEventListener("click", () => { if (apprStartEdit(r, "perm")) { phRender(); showToast("وضع التعديل — عدّل ثم أرسل الرابط للمعلم"); } });
     document.getElementById("phLink").addEventListener("click", () => phSendLink(d, t));
+    document.getElementById("phRet").addEventListener("click", () => {
+      const rb = document.getElementById("phRetBox");
+      if (rb.style.display !== "none") { rb.style.display = "none"; return; }
+      const now = new Date(), nowV = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+      let val = r.returnTime || nowV;
+      rb.innerHTML = '<b>↩️ وقت عودة المعلم</b><div class="ph-ret-row"></div><div class="export-row"><button type="button" class="export-btn" id="phRetSave">💾 حفظ وقت العودة</button>' + (r.returnTime ? '<button type="button" class="export-btn" id="phRetUndo">إلغاء العودة</button>' : "") + "</div>";
+      rb.querySelector(".ph-ret-row").appendChild(ampmPicker(val, "وقت العودة", v => { val = v; }));
+      rb.style.display = "";
+      document.getElementById("phRetSave").addEventListener("click", () => {
+        if (!/^\d{2}:\d{2}$/.test(val)) { showToast("اختر وقت العودة"); return; }
+        if (r.time && val <= r.time) { showToast("وقت العودة يجب أن يكون بعد وقت الخروج (" + r.time + ")"); return; }
+        if (!r.returnTime) r.timeToPlanned = r.timeTo || "";
+        r.returnTime = val; r.timeTo = val; saveData(); phRender(); showToast("حُفظ وقت العودة — عُدّل الاستئذان إلى " + val);
+      });
+      if (document.getElementById("phRetUndo")) document.getElementById("phRetUndo").addEventListener("click", () => {
+        if (r.timeToPlanned) r.timeTo = r.timeToPlanned; else delete r.timeTo;
+        delete r.returnTime; delete r.timeToPlanned; saveData(); phRender(); showToast("أُلغي وقت العودة");
+      });
+    });
     const phSendTo = who => {
       r.hijri = wpDateParts(d).hijri; r.day = dayNameFromDate(d);
       let files = []; try { const cv = docCanvas(permDocSpec(d, t, r)); files = [{ name: "استمارة استئذان.jpg", type: "image/jpeg", data: cv.toDataURL("image/jpeg", 0.8).split(",")[1] }]; } catch (e) {}
@@ -12447,7 +12468,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     const les = data.schedule.filter(x => x.day === day && x.teacher === t).sort((a, b) => Number(a.period) - Number(b.period)).filter(x => wtAfterPerm(Number(x.period), r.time, d, r.timeTo));
     const sub = x => { const c = (data.coverageRecords || []).find(c => c.date === d && c.absentTeacher === t && Number(c.period) === Number(x.period)); return c && c.subTeacher ? c.subTeacher : ""; };
     return { title: "استمارة استئذان", dateIso: d, blocks: [
-      { t: "table", groups: [[["اسم المعلم", t, 1], ["السجل المدني", (data.teacherCivil || {})[t] || "", 1]], [["اليوم", q.dayName || ""], ["التاريخ", q.hijri + "\n" + erG(d)], ["وقت الخروج", r.time || ""], ["وقت العودة", permToTxt(r)]], [["سبب الاستئذان", r.reason || ""]]],
+      { t: "table", groups: [[["اسم المعلم", t, 1], ["السجل المدني", (data.teacherCivil || {})[t] || "", 1]], [["اليوم", q.dayName || ""], ["التاريخ", q.hijri + "\n" + erG(d)], ["من", r.time || ""], ["إلى", permToTxt(r)]], [["سبب الاستئذان", r.reason || ""]]],
         body: "السلام عليكم ورحمة الله وبركاته\nآمل الموافقة على طلب الاستئذان المقدم حسب البيانات الموضحة في الجدول أعلاه\nولكم جزيل الشكر" },
       { t: "grid", headers: ["م", "الحصة", "الفصل", "التأمين", "المعلم المنتظر"], widths: [1, 2, 1.6, 4, 3], rows: les.map((x, i) => [String(i + 1), shPer(Number(x.period)) || String(x.period), x.className, COV[(r.cover || {})[x.period]] || "", sub(x)]) },
       { t: "sig", items: ["وكيل الشؤون التعليمية: موسى آل ضاحي", "مدير المدرسة: موسى آل عبيد"] }
@@ -12482,7 +12503,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
         <tr><td style="${L}">اسم المعلم</td><td style="${B}" colspan="3"><b>${v(t)}</b></td></tr>
         <tr><td style="${L}">السجل المدني</td><td style="${B}">${v(civil)}</td><td style="${L}">العمل الحالي</td><td style="${B}">معلم</td></tr>
         <tr><td style="${L}">اليوم</td><td style="${B}">${v(q && q.dayName)}</td><td style="${L}">التاريخ</td><td style="${B}">${q ? wpEsc(q.hijri) : v("")}${q ? '<br><span style="font-size:12.5px; color:#4b5b58;">الموافق ' + wpEsc(erG(d)) + "</span>" : ""}</td></tr>
-        <tr><td style="${L}">وقت الخروج</td><td style="${B}">${v(r.time)}</td><td style="${L}">وقت العودة</td><td style="${B}">${v(permToTxt(r))}</td></tr>
+        <tr><td style="${L}">من</td><td style="${B}">${v(r.time)}</td><td style="${L}">إلى</td><td style="${B}">${v(permToTxt(r))}</td></tr>
         <tr><td style="${L}">سبب الاستئذان</td><td style="${B} height:60px;" colspan="3">${v(r.reason)}</td></tr>
       </table>
       <div style="border:1.5px solid #174a59; border-radius:10px; padding:12px 14px; margin-top:14px; font-size:15px; line-height:2;">
@@ -13431,7 +13452,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-23-01";
+window.APP_BUILD = "2026-11-23-02";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
