@@ -605,6 +605,9 @@
   .ph-tbl th { background: #174a59; color: #fff; padding: 6px 4px; }
   .ph-tbl td { border: 1px solid #c9d6d3; padding: 5px 4px; text-align: center; }
   .ph-tbl select { font: inherit; font-size: 12px; width: 100%; border: 1px solid var(--line); border-radius: 7px; padding: 4px; background: #fff; }
+  .perm-ft { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; } .perm-ft > b { font-size: 12.5px; color: #174a59; }
+  .perm-end { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 700; color: #174a59; border: 1px solid var(--line); border-radius: 9px; padding: 5px 9px; background: #fff; cursor: pointer; white-space: nowrap; }
+  .perm-end.on { background: #eef5fb; border-color: #7aa7c9; color: #1f4f7a; } .perm-end input { margin: 0; }
   .apw { margin-top: 10px; border: 1px solid #c9dcd8; border-radius: 10px; background: #f7fbfa; padding: 8px 10px; font-size: 13px; color: #174a59; }
   .apw-ed { border: 0; background: none; color: #1f5fa8; font: inherit; font-size: 12.5px; cursor: pointer; text-decoration: underline; }
   .apw-form { display: flex; flex-direction: column; gap: 6px; }
@@ -3971,7 +3974,7 @@
     const L = (data.workAttendance || []).filter(r => r.date === date && r.teacher === teacher);
     if (L.some(r => r.status === "absent")) return "absent";
     const w = L.find(r => r.status === "permission");
-    if (w && wtAfterPerm(period, w.time, date)) return "permission";
+    if (w && wtAfterPerm(period, w.time, date, w.timeTo)) return "permission";
     return "";
   }
   function subFor(date, period, cls, teacher) {
@@ -5340,7 +5343,7 @@
       if (status === "late" && time) diffMinutes = computeLateDiff(time, date);
       if (status === "early_leave" && time) diffMinutes = computeEarlyDiff(time, date);
       const rec = { date, teacher, status, time: time || "", diffMinutes };
-      if (old && old.status === status) ["excuse", "note", "reason", "alertSent", "inquiryFlagged", "inquirySent"].forEach(k => { if (old[k] != null) rec[k] = old[k]; });
+      if (old && old.status === status) Object.keys(old).forEach(k => { if (!(k in rec) && old[k] != null) rec[k] = old[k]; });
       data.workAttendance.push(rec);
     }
     saveData();
@@ -5450,13 +5453,21 @@
         s3.querySelector("select").addEventListener("change", e => { setWorkGroup(dateStr, name, "leave", e.target.value, ""); rerender(); });
         l3.appendChild(s3);
         if (leaveR) {
-          l3.appendChild(timeIn(leaveR, leaveR.status === "permission" ? "وقت الاستئذان" : "وقت الانصراف"));
           if (leaveR.status === "permission") {
+            const fromW = document.createElement("span"); fromW.className = "perm-ft"; fromW.innerHTML = "<b>من</b>"; fromW.appendChild(timeIn(leaveR, "وقت الخروج")); l3.appendChild(fromW);
+            const toW = document.createElement("span"); toW.className = "perm-ft"; toW.innerHTML = "<b>إلى</b>";
+            const isEnd = leaveR.timeTo === "end";
+            const endCk = document.createElement("label"); endCk.className = "perm-end" + (isEnd ? " on" : "");
+            endCk.innerHTML = '<input type="checkbox"' + (isEnd ? " checked" : "") + '> نهاية الدوام' + (isEnd ? " (" + (v => { const H = Number(String(v).split(":")[0]); return isNaN(H) ? v : (H % 12 || 12) + ":" + String(v).split(":")[1] + (H >= 12 ? " م" : " ص"); })(workTimesFor(dateStr).checkOut || "") + ")" : "");
+            const setTo = v => { const r = workRec(dateStr, name, "permission"); if (!r) return; if (v) r.timeTo = v; else delete r.timeTo; saveData(); rerender(); };
+            if (!isEnd) toW.appendChild(ampmPicker(leaveR.timeTo || "", "وقت العودة", setTo));
+            endCk.querySelector("input").addEventListener("change", e => setTo(e.target.checked ? "end" : ""));
+            toW.appendChild(endCk); l3.appendChild(toW);
             const rs = document.createElement("input");
             rs.type = "text"; rs.className = "work-reason"; rs.placeholder = "سبب الاستئذان"; rs.maxLength = 200; rs.value = leaveR.reason || "";
             rs.addEventListener("change", () => { const r = workRec(dateStr, name, "permission"); if (!r) return; const v = rs.value.trim(); if (v) r.reason = v; else delete r.reason; saveData(); showToast("حُفظ سبب الاستئذان"); });
             l3.appendChild(rs);
-          } else { const bg = badge(leaveR); if (bg) l3.appendChild(bg); l3.appendChild(excuseSel(leaveR)); }
+          } else { l3.appendChild(timeIn(leaveR, "وقت الانصراف")); const bg = badge(leaveR); if (bg) l3.appendChild(bg); l3.appendChild(excuseSel(leaveR)); }
         }
       }
 
@@ -5755,7 +5766,7 @@
     if (type === "work") {
       return data.workAttendance.map(r => {
         let detail = "";
-        if (r.status === "permission" && r.time) detail = "الساعة " + r.time;
+        if (r.status === "permission" && (r.time || r.timeTo)) detail = permRangeTxt(r);
         if ((r.status === "late" || r.status === "early_leave") && r.time) {
           const diff = r.status === "late" ? computeLateDiff(r.time, r.date) : computeEarlyDiff(r.time, r.date);
           detail = diff > 0 ? formatDurationBadge(diff) : "";
@@ -5849,7 +5860,7 @@
     // الدوام: صف واحد لكل معلم في اليوم؛ الحاضر تُكتب حالاته الأخرى (تأخر/انصراف/استئذان) مع العذر في الملاحظات
     if (mergeWork) {
       const exTxt = x => x.record && x.record.excuse === "yes" ? "بعذر" : x.record && x.record.excuse === "no" ? "بدون عذر" : "";
-      const fmt = x => [statusLabel(x.status) + (x.status === "permission" ? (x.record && x.record.time ? " الساعة " + x.record.time : "") : x.detail ? " " + x.detail : ""), x.status === "permission" ? (x.record && x.record.reason ? "السبب: " + x.record.reason : "") : exTxt(x)].filter(Boolean).join(" - ");
+      const fmt = x => [statusLabel(x.status) + (x.status === "permission" ? (x.record && (x.record.time || x.record.timeTo) ? " " + permRangeTxt(x.record) : "") : x.detail ? " " + x.detail : ""), x.status === "permission" ? (x.record && x.record.reason ? "السبب: " + x.record.reason : "") : exTxt(x)].filter(Boolean).join(" - ");
       const map = new Map(), keys = [];
       records.forEach(r => { const k = r.date + "|" + r.teacher; if (!map.has(k)) { map.set(k, []); keys.push(k); } map.get(k).push(r); });
       records = keys.map(k => {
@@ -7518,7 +7529,7 @@ ${bodyHTML}
       const L = data.workAttendance.filter(x => x.date === dateStr && x.teacher === name);
       if (!L.length) return [i + 1, name, "حاضر", "—", "—", "—"];
       const diffs = L.map(r => {
-        if (r.status === "permission") return (r.time ? "استئذان الساعة " + r.time : "استئذان") + (r.reason ? " (" + r.reason + ")" : "");
+        if (r.status === "permission") return (r.time || r.timeTo ? "استئذان " + permRangeTxt(r) : "استئذان") + (r.reason ? " (" + r.reason + ")" : "");
         if (r.time && (r.status === "late" || r.status === "early_leave")) { const m = r.status === "late" ? computeLateDiff(r.time, r.date) : computeEarlyDiff(r.time, r.date); return m > 0 ? formatDurationBadge(m) + (r.excuse === "yes" ? " بعذر" : "") : ""; }
         return r.excuse === "yes" ? "بعذر" : r.excuse === "no" ? "بدون عذر" : "";
       }).filter(Boolean);
@@ -7640,7 +7651,7 @@ ${bodyHTML}
     const rows = recs.map((r, i) => {
       const p = wpDateParts(r.date);
       const row = [i + 1, r.teacher, p.dayName || "—", p.hijri, p.greg];
-      if (isPerm) row.push(r.time || "—");
+      if (isPerm) row.push(permRangeTxt(r) || "—");
       if (isLate) { row.push(r.time || "—"); row.push(r.minutes ? formatDurationBadge(r.minutes) + (r.excused ? " (بعذر)" : "") : "—"); }
       return row;
     });
@@ -9241,16 +9252,22 @@ ${contentEl.innerHTML}
   // المستأذنون في التاريخ مع وقت الاستئذان
   function wtPermitted(date) {
     const m = new Map();
-    (data.workAttendance || []).filter(r => r.date === date && r.status === "permission" && data.teachers.includes(r.teacher)).forEach(r => m.set(r.teacher, r.time || ""));
-    return [...m.entries()].map(([teacher, time]) => ({ teacher, time })).sort((a, b) => a.teacher.localeCompare(b.teacher, "ar"));
+    (data.workAttendance || []).filter(r => r.date === date && r.status === "permission" && data.teachers.includes(r.teacher)).forEach(r => m.set(r.teacher, [r.time || "", r.timeTo || ""]));
+    return [...m.entries()].map(([teacher, tt]) => ({ teacher, time: tt[0], timeTo: tt[1] })).sort((a, b) => a.teacher.localeCompare(b.teacher, "ar"));
   }
   function wtPermTime(date, teacher) { const p = wtPermitted(date).find(x => x.teacher === teacher); return p ? p.time : ""; }
+  function wtPermTo(date, teacher) { const p = wtPermitted(date).find(x => x.teacher === teacher); return p ? p.timeTo : ""; }
   // الحصة لم تنتهِ قبل وقت الاستئذان ← تحتاج منتظراً
-  function wtAfterPerm(period, time, date) {
-    if (!time) return true;
+  function wtAfterPerm(period, time, date, timeTo) {
+    if (!time && !timeTo) return true;
     const pt = (periodTimesFor(date || todayISODate()) || [])[period - 1];
-    return !(pt && pt.end && pt.end <= time);
+    if (time && pt && pt.end && pt.end <= time) return false;
+    if (timeTo && timeTo !== "end" && pt && pt.start && pt.start >= timeTo) return false;
+    return true;
   }
+  // نص وقت الاستئذان: من … إلى …
+  const permToTxt = r => !r || !r.timeTo ? "" : r.timeTo === "end" ? "نهاية الدوام" : r.timeTo;
+  const permRangeTxt = r => r && (r.time || r.timeTo) ? (r.time ? "من " + r.time : "") + (r.timeTo ? (r.time ? " " : "") + "إلى " + permToTxt(r) : "") : "";
   function wtDates() {
     const set = new Set();
     const base = new Date(todayISODate() + "T12:00:00");
@@ -9311,7 +9328,7 @@ ${contentEl.innerHTML}
     if (!day || !wt.absent) return [];
     const ptime = wt.kind === "permission" ? wtPermTime(wt.date, wt.absent) : "";
     const dropped = (data.waitUncovered || []).filter(u => u.dropped && u.date === wt.date && u.absentTeacher === wt.absent);
-    return data.schedule.filter(s => s.day === day && s.teacher === wt.absent && (wt.kind !== "permission" || wtAfterPerm(Number(s.period), ptime, wt.date)))
+    return data.schedule.filter(s => s.day === day && s.teacher === wt.absent && (wt.kind !== "permission" || wtAfterPerm(Number(s.period), ptime, wt.date, wtPermTo(wt.date, wt.absent))))
       .filter(s => !dropped.some(u => u.period === Number(s.period) && u.className === s.className))
       .map(s => ({ period: Number(s.period), className: s.className }))
       .sort((a, b) => a.period - b.period || String(a.className).localeCompare(String(b.className), "ar"));
@@ -9321,7 +9338,7 @@ ${contentEl.innerHTML}
     if (t === wt.absent) return wt.kind === "permission" ? "مستأذن" : "غائب";
     if (absentSet.has(t)) return "غائب";
     const pt = wtPermitted(wt.date).find(x => x.teacher === t);
-    if (pt && wtAfterPerm(sl.period, pt.time, wt.date)) return "مستأذن";
+    if (pt && wtAfterPerm(sl.period, pt.time, wt.date, pt.timeTo)) return "مستأذن";
     if (getTeachersBusyAt(day, sl.period).includes(t)) return "لديه حصة";
     if (getSubTeachersAlreadyBooked(wt.date, sl.period, sl.className).filter(x => x).some(x => x === t)) {
       const r = data.coverageRecords.find(r => r.date === wt.date && r.period === sl.period && r.subTeacher === t && r.className !== sl.className);
@@ -10824,7 +10841,7 @@ ${contentEl.innerHTML}
     if (kind === "taklif") return "المكرم المعلم / " + r.teacher + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\n" + (r.body || "") + "\n\nشاكرين لكم تعاونكم، والله يحفظكم ويرعاكم.\n\nنأمل الاطلاع على التكليف المرفق، والتوقيع داخل المربع ثم اختيار «تم العلم والتوقيع».";
     if (kind === "perm") {
       const q = wpDateParts(r.date);
-      return "المكرم المعلم / " + r.teacher + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\nالتاريخ: " + (q.dayName || "") + " " + q.hijri + " — " + erG(r.date) + (r.time ? "\nوقت الخروج: " + r.time : "") + (r.reason ? "\nسبب الاستئذان: " + r.reason : "") +
+      return "المكرم المعلم / " + r.teacher + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\nالتاريخ: " + (q.dayName || "") + " " + q.hijri + " — " + erG(r.date) + (r.time ? "\nوقت الخروج: " + r.time : "") + (r.timeTo ? "\nوقت العودة: " + permToTxt(r) : "") + (r.reason ? "\nسبب الاستئذان: " + r.reason : "") +
         "\n\nنأمل الاطلاع على استمارة الاستئذان المرفقة، والتوقيع داخل المربع ثم اختيار «تم العلم والتوقيع» ليظهر توقيعكم في الاستمارة.\n\nوكيل الشؤون التعليمية: موسى آل ضاحي";
     }
     if (kind === "alert" && isLH(r.type)) {
@@ -10937,7 +10954,7 @@ ${contentEl.innerHTML}
       const id = Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-6);
       const h = await ackHash(a.civil, id), dp = wpDateParts(todayISODate());
       const body = "المكرم " + a.role + " / " + a.name + " وفقه الله\nالسلام عليكم ورحمة الله وبركاته\n\n" +
-        (kind === "perm" ? "نرفق لكم استمارة استئذان المعلم ( " + r.teacher + " ) ليوم " + (r.day || "") + " " + (r.hijri || "") + (r.time ? "\nوقت الخروج: " + r.time : "") + (r.reason ? "\nسبب الاستئذان: " + r.reason : "")
+        (kind === "perm" ? "نرفق لكم استمارة استئذان المعلم ( " + r.teacher + " ) ليوم " + (r.day || "") + " " + (r.hijri || "") + (r.time ? "\nوقت الخروج: " + r.time : "") + (r.timeTo ? "\nوقت العودة: " + permToTxt(r) : "") + (r.reason ? "\nسبب الاستئذان: " + r.reason : "")
           : "نرفق لكم (" + (r.title || ioTitleOf(r)) + ") للمعلم ( " + r.teacher + " )" + (r.hijri ? " بتاريخ " + r.hijri : "") + (r.teacherReply ? "\n\nإفادة المعلم:\n" + r.teacherReply : "")) +
         "\n\nحالة المعلم: " + (r.teacherSig ? "وقّع المعلم ✓" : r.teacherSigned ? "موقّع ✓" : "اطّلع ولم يوقّع") +
         (who === "mgr" && r.apprAt ? "\nرأي وكيل الشؤون التعليمية: " + String(r.apprReply || "").split("\n")[0] : "") +
@@ -11387,7 +11404,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
         // جميع المعلمين: «حاضر» هو الافتراضي ويُستكمل لكل معلم في أيام الدوام
         // الحاضر: تُكتب حالاته الأخرى (تأخر/انصراف مبكر/استئذان) مع العذر في الملاحظات
         const exT = x => x.record && x.record.excuse === "yes" ? "بعذر" : x.record && x.record.excuse === "no" ? "بدون عذر" : "";
-        const fmt = x => [statusLabel(x.status) + (x.status === "permission" ? (x.record && x.record.time ? " الساعة " + x.record.time : "") : x.detail ? " " + x.detail : ""), x.status === "permission" ? (x.record && x.record.reason ? "السبب: " + x.record.reason : "") : exT(x)].filter(Boolean).join(" - ");
+        const fmt = x => [statusLabel(x.status) + (x.status === "permission" ? (x.record && (x.record.time || x.record.timeTo) ? " " + permRangeTxt(x.record) : "") : x.detail ? " " + x.detail : ""), x.status === "permission" ? (x.record && x.record.reason ? "السبب: " + x.record.reason : "") : exT(x)].filter(Boolean).join(" - ");
         const grp = {}; recs.forEach(r => { (grp[r.date + "|" + r.teacher] = grp[r.date + "|" + r.teacher] || []).push(r); });
         const have = {}; Object.keys(grp).forEach(k => { const L = grp[k], ab = L.find(x => x.status === "absent"); have[k] = ab || Object.assign({}, L[0], { status: "present", record: null, lateMin: 0, composed: L.filter(x => ["late", "early_leave", "permission"].includes(x.status)).map(fmt).join(" — ") }); });
         let dates = [];
@@ -11400,7 +11417,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
         return out;
       } },
     perm: { t: "سجل الاستئذان", from: "متابعة الدوام", byTeacher: 1,
-      cols: [C_DAY, C_DATE, C_GREG, C_T, ["وقت الاستئذان", r => (r.record && r.record.time) || String(r.detail || "").replace(/^الساعة\s*/, "") || "—"], ["سبب الاستئذان", r => (r.record && r.record.reason) || "—"], ["الاعتماد", r => { const x = (r.record && (r.record.savedSnap || r.record)) || {}, a = []; if (x.apprAt) a.push("الوكيل: " + String(x.apprReply || "").split("\n")[0]); if (x.mgrAt) a.push("المدير: " + String(x.mgrReply || "").split("\n")[0]); return a.join(" / ") || "—"; }], ["ملاحظات", r => (r.record && r.record.note) || "", { edit: "note" }]],
+      cols: [C_DAY, C_DATE, C_GREG, C_T, ["وقت الاستئذان", r => (r.record && permRangeTxt(r.record)) || String(r.detail || "").replace(/^الساعة\s*/, "") || "—"], ["سبب الاستئذان", r => (r.record && r.record.reason) || "—"], ["الاعتماد", r => { const x = (r.record && (r.record.savedSnap || r.record)) || {}, a = []; if (x.apprAt) a.push("الوكيل: " + String(x.apprReply || "").split("\n")[0]); if (x.mgrAt) a.push("المدير: " + String(x.mgrReply || "").split("\n")[0]); return a.join(" / ") || "—"; }], ["ملاحظات", r => (r.record && r.record.note) || "", { edit: "note" }]],
       rows: () => erWork(["permission"], { permission: "الاستئذان" }) },
     duty: { t: "سجل المناوبة والإشراف", from: "المناوبة والطابور", dutyPages: 1, cols: [], rows: () => [] },
     lessons: { t: "سجل متابعة الحصص", from: "سجل متابعة الحصص", segs: [["absent", "الغياب عن الحصة"], ["late", "التأخر عن الحصة"], ["permission", "مستأذن"], ["all", "الكل"]],
@@ -12394,8 +12411,8 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     if (!t) { box.innerHTML = '<div class="sched-hint" style="text-align:right;">عدد المستأذنين في هذا اليوم: <b>' + L.length + "</b> — اختر المعلم لعرض التفاصيل وطباعة استمارته.</div>"; return; }
     const r = (data.workAttendance || []).find(x => x.date === d && x.teacher === t && x.status === "permission") || {};
     const day = dayNameFromDate(d), les = data.schedule.filter(x => x.day === day && x.teacher === t).sort((a, b) => Number(a.period) - Number(b.period));
-    const after = les.filter(x => wtAfterPerm(Number(x.period), r.time, d));
-    box.innerHTML = '<div class="ph-card"><div class="ph-row"><span>المعلم</span><b>' + acEsc(t) + '</b></div><div class="ph-row"><span>وقت الاستئذان</span><b>' + acEsc(r.time || "لم يُحدَّد") + '</b></div><div class="ph-row"><span>سبب الاستئذان</span><b>' + acEsc(r.reason || "—") + "</b></div>" +
+    const after = les.filter(x => wtAfterPerm(Number(x.period), r.time, d, r.timeTo));
+    box.innerHTML = '<div class="ph-card"><div class="ph-row"><span>المعلم</span><b>' + acEsc(t) + '</b></div><div class="ph-row"><span>وقت الاستئذان</span><b>' + acEsc(permRangeTxt(r) || "لم يُحدَّد") + '</b></div><div class="ph-row"><span>سبب الاستئذان</span><b>' + acEsc(r.reason || "—") + "</b></div>" +
       '<div class="ph-sub">حصص المعلم وقت الاستئذان (' + after.length + ")</div>" +
       (after.length ? '<table class="ph-tbl"><thead><tr><th>الحصة</th><th>الفصل</th><th>التأمين</th></tr></thead><tbody>' + after.map(x => { const cv = (r.cover || {})[x.period] || ""; return "<tr><td><b>" + acEsc(shPer(Number(x.period)) || x.period) + "</b></td><td>" + acEsc(x.className) + '</td><td><select class="ph-cov" data-p="' + acEsc(x.period) + '"><option value="">اختر</option><option value="teacher"' + (cv === "teacher" ? " selected" : "") + '>تم تأمينها من قبل المعلم</option><option value="admin"' + (cv === "admin" ? " selected" : "") + ">تم تأمينها من قبل الإدارة</option></select></td></tr>"; }).join("") + "</tbody></table>" : '<div class="sched-hint" style="text-align:right;">لا توجد حصص وقت الاستئذان.</div>') +
       (() => { const st = r.ackId ? linkState(r) : null;
@@ -12427,10 +12444,10 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
   function permDocSpec(d, t, r) {
     const q = wpDateParts(d), day = dayNameFromDate(d), dots = "...................";
     const COV = { teacher: "تم تأمينها من قبل المعلم", admin: "تم تأمينها من قبل الإدارة" };
-    const les = data.schedule.filter(x => x.day === day && x.teacher === t).sort((a, b) => Number(a.period) - Number(b.period)).filter(x => wtAfterPerm(Number(x.period), r.time, d));
+    const les = data.schedule.filter(x => x.day === day && x.teacher === t).sort((a, b) => Number(a.period) - Number(b.period)).filter(x => wtAfterPerm(Number(x.period), r.time, d, r.timeTo));
     const sub = x => { const c = (data.coverageRecords || []).find(c => c.date === d && c.absentTeacher === t && Number(c.period) === Number(x.period)); return c && c.subTeacher ? c.subTeacher : ""; };
     return { title: "استمارة استئذان", dateIso: d, blocks: [
-      { t: "table", groups: [[["اسم المعلم", t, 1], ["السجل المدني", (data.teacherCivil || {})[t] || "", 1]], [["اليوم", q.dayName || ""], ["التاريخ", q.hijri + "\n" + erG(d)], ["وقت الخروج", r.time || ""], ["وقت العودة", ""]], [["سبب الاستئذان", r.reason || ""]]],
+      { t: "table", groups: [[["اسم المعلم", t, 1], ["السجل المدني", (data.teacherCivil || {})[t] || "", 1]], [["اليوم", q.dayName || ""], ["التاريخ", q.hijri + "\n" + erG(d)], ["وقت الخروج", r.time || ""], ["وقت العودة", permToTxt(r)]], [["سبب الاستئذان", r.reason || ""]]],
         body: "السلام عليكم ورحمة الله وبركاته\nآمل الموافقة على طلب الاستئذان المقدم حسب البيانات الموضحة في الجدول أعلاه\nولكم جزيل الشكر" },
       { t: "grid", headers: ["م", "الحصة", "الفصل", "التأمين", "المعلم المنتظر"], widths: [1, 2, 1.6, 4, 3], rows: les.map((x, i) => [String(i + 1), shPer(Number(x.period)) || String(x.period), x.className, COV[(r.cover || {})[x.period]] || "", sub(x)]) },
       { t: "sig", items: ["وكيل الشؤون التعليمية: موسى آل ضاحي", "مدير المدرسة: موسى آل عبيد"] }
@@ -12452,7 +12469,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     const q = d && t ? wpDateParts(d) : null, civil = t ? ((data.teacherCivil || {})[t] || "") : "";
     const dots = "..............................";
     const day = d && t ? dayNameFromDate(d) : null;
-    const les = t && day ? data.schedule.filter(x => x.day === day && x.teacher === t).sort((a, b) => Number(a.period) - Number(b.period)).filter(x => wtAfterPerm(Number(x.period), r.time, d)) : [];
+    const les = t && day ? data.schedule.filter(x => x.day === day && x.teacher === t).sort((a, b) => Number(a.period) - Number(b.period)).filter(x => wtAfterPerm(Number(x.period), r.time, d, r.timeTo)) : [];
     const sub = x => { const c = (data.coverageRecords || []).find(c => c.date === d && c.absentTeacher === t && Number(c.period) === Number(x.period)); return c && c.subTeacher ? c.subTeacher : ""; };
     const B = "border:1.5px solid #174a59; padding:9px 8px; font-size:15px;", L = B + " background:#eef5f6; color:#174a59; font-weight:800; width:22%;", H = B + " background:#174a59; color:#fff; font-weight:700; text-align:center;";
     const v = x => x ? wpEsc(x) : '<span style="color:#9aa5a2;">' + dots + "</span>";
@@ -12465,7 +12482,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
         <tr><td style="${L}">اسم المعلم</td><td style="${B}" colspan="3"><b>${v(t)}</b></td></tr>
         <tr><td style="${L}">السجل المدني</td><td style="${B}">${v(civil)}</td><td style="${L}">العمل الحالي</td><td style="${B}">معلم</td></tr>
         <tr><td style="${L}">اليوم</td><td style="${B}">${v(q && q.dayName)}</td><td style="${L}">التاريخ</td><td style="${B}">${q ? wpEsc(q.hijri) : v("")}${q ? '<br><span style="font-size:12.5px; color:#4b5b58;">الموافق ' + wpEsc(erG(d)) + "</span>" : ""}</td></tr>
-        <tr><td style="${L}">وقت الخروج</td><td style="${B}">${v(r.time)}</td><td style="${L}">وقت العودة</td><td style="${B}">${v("")}</td></tr>
+        <tr><td style="${L}">وقت الخروج</td><td style="${B}">${v(r.time)}</td><td style="${L}">وقت العودة</td><td style="${B}">${v(permToTxt(r))}</td></tr>
         <tr><td style="${L}">سبب الاستئذان</td><td style="${B} height:60px;" colspan="3">${v(r.reason)}</td></tr>
       </table>
       <div style="border:1.5px solid #174a59; border-radius:10px; padding:12px 14px; margin-top:14px; font-size:15px; line-height:2;">
@@ -12502,7 +12519,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
     const day = dayNameFromDate(date);
     if (!day) return { day: null, items: [] };
     const abs = new Set(wtAbsentees(date)), perm = wtPermitted(date);
-    const unavail = (t, p) => abs.has(t) || perm.some(x => x.teacher === t && wtAfterPerm(p, x.time, date));
+    const unavail = (t, p) => abs.has(t) || perm.some(x => x.teacher === t && wtAfterPerm(p, x.time, date, x.timeTo));
     const entries = data.schedule.filter(x => x.day === day).map(x => ({ period: Number(x.period), className: x.className, teacher: x.teacher }));
     const state = {}, occ = {}, absentOf = {};
     entries.forEach(e => {
@@ -12867,7 +12884,7 @@ body { font-family: "Sakkal Majalla", "Traditional Arabic", Arial, sans-serif; f
       const day = shPlan.day, abs = new Set(wtAbsentees(date)), perm = wtPermitted(date);
       data.schedule.filter(e => e.day === day).forEach(e => {
         const t = e.teacher, per = Number(e.period);
-        const st = abs.has(t) ? "غائب" : perm.some(x => x.teacher === t && wtAfterPerm(per, x.time, date)) ? "مستأذن" : "";
+        const st = abs.has(t) ? "غائب" : perm.some(x => x.teacher === t && wtAfterPerm(per, x.time, date, x.timeTo)) ? "مستأذن" : "";
         if (st) { put(t, per, e.className, st); }
       });
       Object.keys(grid).forEach(t => affected.add(t));
@@ -13414,7 +13431,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-22-22";
+window.APP_BUILD = "2026-11-23-01";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
