@@ -2285,6 +2285,7 @@
         <button class="export-btn" id="ioNew">➕ مساءلة جديدة</button>
       </div>
       <div class="sched-hint" id="ioEditing" style="text-align:right; margin-top:6px; color:#8a5200; display:none;"></div>
+      <div id="ioFlow"></div>
       <div class="sched-hint" style="text-align:right; margin-top:8px;">يُطبع عنوان المساءلة أسفل الترويسة، ثم جدول: اسم المعلم وسجله المدني، ثم البيانات المختارة، ثم عبارة المساءلة. عند الطباعة تُحفظ المساءلة تلقائيًا في مجلد المعلم.</div>
     </div>
     <div class="detail-header" id="ioSavedHead" style="margin-top:18px;"><h2 style="font-size:18px;">📁 المساءلات المحفوظة</h2><span class="count-pill" id="ioSavedCount">0</span></div>
@@ -10242,7 +10243,29 @@ ${contentEl.innerHTML}
     const r = ioCurId && (data.officialInq || []).find(x => x.id === ioCurId);
     ioEl("ioEditing").style.display = r ? "" : "none";
     ioEl("ioEditing").textContent = r ? "✏️ تعدّل مساءلة محفوظة: " + r.title + " — " + r.teacher + " — " + (r.hijri || "") + (r.editAt ? " — بعد الحفظ أرسل الرابط للمعلم من جديد، ثم أرسلها للمدير بعد توقيعه." : " (اضغط «مساءلة جديدة» لبدء مساءلة أخرى)") : "";
+    ioFlowRender();
+  }  // مسار توقيع المساءلة في صفحة المساءلة نفسها: المعلم ← مدير المدرسة
+  function ioFlowRender() {
+    const box = document.getElementById("ioFlow"); if (!box) return;
+    const r = ioCurId && (data.officialInq || []).find(x => x.id === ioCurId);
+    if (!r) { box.innerHTML = ""; return; }
+    const tSigned = !!(r.replyAt || r.teacherSig), mIds = apprIds(r, "mgr").length;
+    const tSt = tSigned ? '<span class="tk-ok">✅ ردّ ووقّع</span>' : linkIds(r).length ? '<span class="tk-wait">⏳ أُرسل — بانتظار رد المعلم</span>' : '<span class="tk-off">لم يُرسل بعد — استخدم «إرسال رابط للمعلم»</span>';
+    const mSt = r.mgrAt ? '<span class="tk-ok">✅ ' + acEsc(String(r.mgrReply || "").split("\n")[0] || "وقّع") + "</span>" : mIds ? '<span class="tk-wait">⏳ أُرسل — بانتظار القرار</span>' : '<span class="tk-off">لم يُرسل بعد</span>';
+    box.innerHTML = '<div class="tk-flow" style="margin-top:10px;"><div class="tk-title">🔗 مسار توقيع المساءلة</div>' +
+      apprEditNote(r, "inq") +
+      '<div class="tk-step' + (tSigned ? " done" : "") + '"><div class="tk-h"><span class="tk-n">1</span><b>المعلم</b>' + tSt + "</div>" + (r.teacherSig ? '<img class="tk-sig" src="' + r.teacherSig + '" alt="توقيع">' : "") + "</div>" +
+      '<div class="tk-step' + (r.mgrAt ? " done" : "") + '"><div class="tk-h"><span class="tk-n">2</span><b>مدير المدرسة</b>' + mSt + "</div>" + (r.mgrSig ? '<img class="tk-sig" src="' + r.mgrSig + '" alt="توقيع">' : "") +
+        '<button type="button" class="export-btn" id="ioSendMgr"' + (tSigned ? "" : " disabled") + ">📤 " + (mIds ? "إعادة إرسالها لمدير المدرسة" : "إرسالها لمدير المدرسة") + "</button>" + (tSigned ? "" : '<div style="font-size:12px; color:#889; margin-top:4px;">يتفعّل بعد رد المعلم وتوقيعه</div>') + "</div>" +
+      '<div class="export-row" style="margin-top:6px;">' + (linkIds(r).length ? '<button type="button" class="export-btn" id="ioSync">🔄 تحديث حالة التوقيع</button>' : "") + ((r.mgrAt || r.savedAt) && !r.editAt ? '<button type="button" class="export-btn" id="ioEditFlow" style="background:#eef5fb; border-color:#7aa7c9; color:#1f4f7a;">✏️ تعديل المساءلة</button>' : "") + "</div>" +
+      apprDoneHtml(r, "inq", 'id="ioSaveFinal"') + "</div>";
+    const on = (id, f) => { const el = document.getElementById(id); if (el) el.addEventListener("click", f); };
+    on("ioSendMgr", () => { let files = []; try { const at = docAttachment("inq", r); if (at) files = [at]; } catch (e) {} apprSend("inq", r, files, "mgr"); });
+    on("ioSync", () => linkSyncAll(false));
+    on("ioSaveFinal", () => { apprSnapSave(r); saveData(); ioFlowRender(); try { laRender(); ioRenderSaved(); } catch (e) {} showToast("حُفظت المساءلة في مجلد " + r.teacher + " بسجل المسائلات"); });
+    on("ioEditFlow", () => { if (!apprStartEdit(r, "inq")) return; ioEditNote(); try { ioRenderSaved(); } catch (e) {} showToast("وضع التعديل — عدّل المساءلة واحفظها ثم أرسل الرابط للمعلم"); });
   }
+
   function ioPrintRec(v, asPage, draft) {
     if (!draft && v && v.editAt && v.savedSnap) v = Object.assign({}, v.savedSnap, { id: v.id });
     const T = Object.assign({}, IO_TYPES[v.type] || { cls: false }, { title: ioTitleOf(v) }), body = v.body || "";
@@ -10884,7 +10907,7 @@ ${contentEl.innerHTML}
     const done = (id, link) => {
       r.ackId = id; r.ackIds = [...new Set([...(r.ackIds || []), id])]; r.linkSentAt = Date.now(); r.linkSentCount = (r.linkSentCount || 0) + 1;
       if (files && files.length) r.attachNames = files.map(a => a.name);
-      saveData(); try { ioRenderSaved(); alRenderSaved(); laRender(); } catch (e) {} try { if (kind === "perm") phRender(); if (kind === "taklif") tkRender(); } catch (e) {}
+      saveData(); try { ioRenderSaved(); alRenderSaved(); laRender(); ioFlowRender(); } catch (e) {} try { if (kind === "perm") phRender(); if (kind === "taklif") tkRender(); } catch (e) {}
       go(wa(link));
     };
     const n = r.ackId && (data.notices || []).find(x => x.id === r.ackId);
@@ -10937,7 +10960,8 @@ ${contentEl.innerHTML}
     if (!data.approvers || typeof data.approvers !== "object") data.approvers = {};
     data.approvers[kind] = rec; apprEditing[kind] = false; saveData(); apprRefresh(); showToast("تم حفظ المعتمِد");
   });
-  function apprRefresh() { try { if (document.getElementById("permHubView").classList.contains("active")) phRender(); } catch (e) {} try { if (document.getElementById("taklifView").classList.contains("active")) tkRender(); } catch (e) {} try { if (laRecords().length) laRender(); } catch (e) {} }
+  function apprRefresh() { try { ioFlowRender(); } catch (e) {} apprRefresh0(); }
+  function apprRefresh0() { try { if (document.getElementById("permHubView").classList.contains("active")) phRender(); } catch (e) {} try { if (document.getElementById("taklifView").classList.contains("active")) tkRender(); } catch (e) {} try { if (laRecords().length) laRender(); } catch (e) {} }
   function apprOptions(kind, r, who) {
     if (kind === "perm") return who === "mgr" ? ["يُعتمد", "لا يُعتمد"] : ["موافق", "غير موافق"];
     const T = IO_TYPES[r.type] || {};
@@ -11084,6 +11108,7 @@ ${contentEl.innerHTML}
       saveData();
     } finally { linkSyncBusy = false; }
     try { laRender(); ioRenderSaved(); alRenderSaved(); } catch (e) {}
+    try { ioFlowRender(); } catch (e) {}
     try { if (document.getElementById("permHubView").classList.contains("active")) phRender(); } catch (e) {}
     if (fail) showToast("تعذر قراءة حالات التأكيد من السحابة (" + ((fail && (fail.code || fail.message)) || "خطأ") + ") — تأكد من تسجيل الدخول بحساب المدرسة وقواعد Firebase");
     else if (!quiet) showToast("تم تحديث حالات الاطلاع");
@@ -13452,7 +13477,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-23-02";
+window.APP_BUILD = "2026-11-23-03";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
