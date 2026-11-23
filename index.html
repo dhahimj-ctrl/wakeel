@@ -10381,6 +10381,9 @@ ${contentEl.innerHTML}
             '<label class="io-chk"><input type="checkbox" data-flag="delivered"' + (r.delivered ? " checked" : "") + '> 📨 تم تسليمها للمعلم</label>' +
             '<label class="io-chk"><input type="checkbox" data-flag="signed"' + (r.signed ? " checked" : "") + '> ✍️ تم توقيعها</label>' +
           "</div>" +
+          (r.replyAt || r.teacherSig ? '<div class="io-mgr">' + (apprStatusHtml(r, "mgr") || '<div class="apw-st" style="border-color:#c9dcd8; background:#f7fbfa; color:#174a59;">✍️ وقّع المعلم — أرسلها الآن لمدير المدرسة للاعتماد والتوقيع</div>') +
+            '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="mgr" style="background:#174a59; color:#fff; border-color:#174a59;">📤 ' + (apprIds(r, "mgr").length ? "إعادة إرسالها لمدير المدرسة" : "إرسالها لمدير المدرسة") + "</button>" + (apprIds(r, "mgr").length ? '<button class="export-btn" data-act="sync">🔄 تحديث حالة التوقيع</button>' : "") + "</div>" +
+            (r.mgrAt ? apprDoneHtml(r, "inq", 'data-act="savefinal"') : "") + "</div>" : "") +
           '<div class="export-row" style="margin-top:6px;"><button class="export-btn" data-act="print">' + (r.printedAt ? "🖨️ طباعة مرة أخرى" : "🖨️ طباعة") + '</button><button class="export-btn" data-act="edit">✏️ فتح وتعديل</button><button class="export-btn" data-act="del">🗑️ حذف</button></div></div>').join("") + "</div></div>";
     }).join("");
   }
@@ -10391,6 +10394,9 @@ ${contentEl.innerHTML}
     const id = btn.closest(".ack-item").dataset.id, r = (data.officialInq || []).find(x => x.id === id); if (!r) return;
     if (btn.dataset.act === "print") { ioPrintRec(r); ioMarkPrinted(id); }
     else if (btn.dataset.act === "edit") ioLoad(id);
+    else if (btn.dataset.act === "mgr") { let files = []; try { const at = docAttachment("inq", r); if (at) files = [at]; } catch (e) {} apprSend("inq", r, files, "mgr"); }
+    else if (btn.dataset.act === "sync") linkSyncAll(false);
+    else if (btn.dataset.act === "savefinal") { apprSnapSave(r); saveData(); ioRenderSaved(); try { ioFlowRender(); laRender(); } catch (e) {} showToast("حُفظت المساءلة في مجلد " + r.teacher + " بسجل المسائلات"); }
     else if (btn.dataset.act === "del") {
       if (btn.dataset.confirm !== "1") { btn.dataset.confirm = "1"; btn.textContent = "تأكيد الحذف"; setTimeout(() => { btn.dataset.confirm = ""; btn.textContent = "🗑️ حذف"; }, 4000); return; }
       data.officialInq = data.officialInq.filter(x => x.id !== id);
@@ -10960,7 +10966,7 @@ ${contentEl.innerHTML}
     if (!data.approvers || typeof data.approvers !== "object") data.approvers = {};
     data.approvers[kind] = rec; apprEditing[kind] = false; saveData(); apprRefresh(); showToast("تم حفظ المعتمِد");
   });
-  function apprRefresh() { try { ioFlowRender(); } catch (e) {} apprRefresh0(); }
+  function apprRefresh() { try { ioFlowRender(); ioRenderSaved(); } catch (e) {} apprRefresh0(); }
   function apprRefresh0() { try { if (document.getElementById("permHubView").classList.contains("active")) phRender(); } catch (e) {} try { if (document.getElementById("taklifView").classList.contains("active")) tkRender(); } catch (e) {} try { if (laRecords().length) laRender(); } catch (e) {} }
   function apprOptions(kind, r, who) {
     if (kind === "perm") return who === "mgr" ? ["يُعتمد", "لا يُعتمد"] : ["موافق", "غير موافق"];
@@ -13477,7 +13483,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-23-03";
+window.APP_BUILD = "2026-11-23-04";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
