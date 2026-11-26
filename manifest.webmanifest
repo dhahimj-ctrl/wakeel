@@ -1,0 +1,19 @@
+{
+  "name": "منصة وكيل الشؤون التعليمية",
+  "short_name": "منصة الوكيل",
+  "description": "متابعة الجدول المدرسي والدوام والانتظار والسجلات — مدرسة عطاء بن أبي رباح المتوسطة",
+  "lang": "ar",
+  "dir": "rtl",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FAF6EE",
+  "theme_color": "#174a59",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

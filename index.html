@@ -4,10 +4,51 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>متابعة الجدول المدرسي</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#174a59">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="منصة الوكيل">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script>
+  /* تطبيق خاص (PWA): تسجيل عامل الخدمة والتقاط طلب التثبيت */
+  (function () {
+    window.__bip = null;
+    window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__bip = e; });
+    window.addEventListener("appinstalled", function () { window.__bip = null; try { localStorage.setItem("wakeel_installed", "1"); } catch (x) {} });
+    if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+      window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+    }
+    function isStandalone() { return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true; }
+    function showHelp(html) {
+      var o = document.getElementById("pwaHelp");
+      if (!o) { o = document.createElement("div"); o.id = "pwaHelp"; o.className = "pwa-help"; document.body.appendChild(o);
+        o.addEventListener("click", function (e) { if (e.target === o || e.target.closest("[data-pwa-close]")) o.remove(); }); }
+      o.innerHTML = '<div class="pwa-box"><img src="icon-192.png" alt=""><h3>📲 تثبيت منصة الوكيل كتطبيق</h3>' + html + '<button type="button" data-pwa-close>حسنًا</button></div>';
+    }
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest("#pwaInstall")) return;
+      try { document.getElementById("qnavMenu").hidden = true; } catch (x) {}
+      if (isStandalone()) { showHelp("<p>✅ المنصة تعمل الآن كتطبيق مثبّت على هذا الجهاز.</p>"); return; }
+      if (window.__bip) { var p = window.__bip; window.__bip = null; p.prompt(); return; }
+      var ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      if (ios) showHelp("<p><b>آيفون / آيباد (من متصفح Safari):</b></p><ol><li>اضغط زر المشاركة <b>⬆️</b> أسفل الشاشة.</li><li>اختر <b>«إضافة إلى الشاشة الرئيسية»</b>.</li><li>اضغط <b>«إضافة»</b> — تظهر أيقونة «منصة الوكيل» كتطبيق.</li></ol>");
+      else if (/Android/.test(ua)) showHelp("<p><b>أندرويد (من متصفح Chrome):</b></p><ol><li>اضغط النقاط الثلاث <b>⋮</b> أعلى المتصفح.</li><li>اختر <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b>.</li><li>اضغط <b>«تثبيت»</b>.</li></ol>");
+      else showHelp("<p><b>الكمبيوتر (Chrome أو Edge):</b></p><ol><li>اضغط أيقونة التثبيت <b>⊕</b> في نهاية شريط العنوان، أو من القائمة <b>⋮</b> اختر <b>«تثبيت منصة الوكيل»</b>.</li><li>تفتح المنصة في نافذة مستقلة، ويُضاف لها اختصار في سطح المكتب وقائمة البرامج.</li></ol>");
+    });
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
+  .pwa-help { position: fixed; inset: 0; background: rgba(15, 30, 35, .55); z-index: 99999; display: grid; place-items: center; padding: 18px; }
+  .pwa-box { background: #FAF6EE; border-radius: 18px; padding: 18px 18px 14px; max-width: 380px; width: 100%; font-family: Tajawal, sans-serif; color: #174a59; text-align: right; box-shadow: 0 18px 50px rgba(0,0,0,.3); }
+  .pwa-box img { width: 64px; height: 64px; border-radius: 14px; display: block; margin: 0 auto 8px; }
+  .pwa-box h3 { margin: 0 0 8px; text-align: center; font-size: 17px; } .pwa-box p, .pwa-box li { font-size: 14.5px; line-height: 1.9; margin: 4px 0; } .pwa-box ol { padding-right: 20px; margin: 4px 0 10px; }
+  .pwa-box button { display: block; width: 100%; border: 0; background: #174a59; color: #fff; font: inherit; font-weight: 700; font-size: 15px; border-radius: 11px; padding: 10px; cursor: pointer; }
   :root {
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
@@ -1068,6 +1109,7 @@
       <button data-go="alert"><span class="qi" style="--c:#D35400">🔔</span>التنبيهات</button>
       <button data-go="taklif"><span class="qi" style="--c:#B5651D">📝</span>إنشاء تكليف</button>
       <button data-go="erec"><span class="qi" style="--c:#1F6F8B">🗂️</span>السجلات الإلكترونية</button>
+      <button id="pwaInstall" type="button"><span class="qi" style="--c:#174a59">📲</span>تثبيت التطبيق</button>
     </div>
   </div>
 
@@ -13483,7 +13525,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-23-04";
+window.APP_BUILD = "2026-11-26-01";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
