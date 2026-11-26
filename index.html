@@ -598,6 +598,7 @@
   .export-btn.danger { border-color: #b3261e !important; background: #fdecea !important; color: #8c1d18 !important; }
   body.ack-mode .app, body.ack-mode #clOverlay, body.ack-mode #clBar, body.ack-mode #toast { display: none !important; }
   .ack-page { min-height: 100vh; padding: 24px 16px; display: flex; justify-content: center; align-items: flex-start; }
+  [hidden] { display: none !important; }
   .ack-card { width: 100%; max-width: 520px; background: var(--paper-2); border: 1px solid var(--line); border-top: 4px solid #174a59; border-radius: 16px; padding: 20px 18px; box-shadow: 0 10px 30px var(--card-shadow); }
   .ack-school { color: #174a59; font-weight: 800; text-align: center; margin-bottom: 10px; }
   .ack-card h1 { font-size: 21px; text-align: center; margin: 6px 0; color: var(--ink); }
@@ -13525,7 +13526,7 @@ window.ackHash = async function (civil, noticeId) {
   return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
 };
 /* ===== فحص وجود نسخة أحدث من المنصة (يتجاوز ذاكرة المتصفح المؤقتة) ===== */
-window.APP_BUILD = "2026-11-26-01";
+window.APP_BUILD = "2026-11-26-02";
 (function () {
   if (location.protocol.indexOf("http") !== 0) return;
   window.addEventListener("load", function () {
